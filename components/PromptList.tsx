@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, File, MoreVertical } from "lucide-react";
+import { Plus, File, MoreVertical, CheckCircle2, AlertCircle, Clock } from "lucide-react";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,
@@ -11,19 +11,53 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Input } from "./ui/input";
+import { Badge } from "./ui/badge";
+import { Tooltip } from "./ui/tooltip";
 import { cn } from "@/lib/utils";
+import { formatDistanceToNow } from "date-fns";
 
 interface Prompt {
   id: string;
   name: string;
   lastModified: Date;
+  status: "draft" | "ready" | "needs-review";
+  testStats: {
+    passed: number;
+    total: number;
+  };
+  securityIssues: number;
+  category?: string;
 }
 
 export function PromptList() {
   const [prompts, setPrompts] = useState<Prompt[]>([
-    { id: "1", name: "Customer Support Assistant", lastModified: new Date() },
-    { id: "2", name: "Code Review Helper", lastModified: new Date() },
-    { id: "3", name: "Product Description Generator", lastModified: new Date() },
+    {
+      id: "1",
+      name: "Customer Support Assistant",
+      lastModified: new Date(Date.now() - 1000 * 60 * 30), // 30 mins ago
+      status: "ready",
+      testStats: { passed: 8, total: 10 },
+      securityIssues: 0,
+      category: "support",
+    },
+    {
+      id: "2",
+      name: "Code Review Helper",
+      lastModified: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
+      status: "needs-review",
+      testStats: { passed: 4, total: 6 },
+      securityIssues: 1,
+      category: "development",
+    },
+    {
+      id: "3",
+      name: "Product Description Generator",
+      lastModified: new Date(),
+      status: "draft",
+      testStats: { passed: 2, total: 5 },
+      securityIssues: 0,
+      category: "marketing",
+    },
   ]);
   const [selectedPrompt, setSelectedPrompt] = useState<string | null>(null);
   const [isRenaming, setIsRenaming] = useState<string | null>(null);
@@ -34,6 +68,9 @@ export function PromptList() {
       id: Math.random().toString(36).substring(7),
       name: "New Prompt",
       lastModified: new Date(),
+      status: "draft",
+      testStats: { passed: 0, total: 0 },
+      securityIssues: 0,
     };
     setPrompts([...prompts, newPrompt]);
     setSelectedPrompt(newPrompt.id);
@@ -48,7 +85,7 @@ export function PromptList() {
   const handleRenameSubmit = (promptId: string) => {
     if (newName.trim()) {
       setPrompts(prompts.map(p => 
-        p.id === promptId ? { ...p, name: newName.trim() } : p
+        p.id === promptId ? { ...p, name: newName.trim(), lastModified: new Date() } : p
       ));
     }
     setIsRenaming(null);
@@ -64,21 +101,45 @@ export function PromptList() {
 
   const handleDuplicate = (prompt: Prompt) => {
     const newPrompt: Prompt = {
+      ...prompt,
       id: Math.random().toString(36).substring(7),
       name: `${prompt.name} (Copy)`,
       lastModified: new Date(),
+      status: "draft",
     };
     setPrompts([...prompts, newPrompt]);
   };
 
+  const getStatusColor = (status: Prompt["status"]) => {
+    switch (status) {
+      case "ready":
+        return "text-green-500";
+      case "needs-review":
+        return "text-yellow-500";
+      default:
+        return "text-gray-400";
+    }
+  };
+
+  const getStatusIcon = (status: Prompt["status"]) => {
+    switch (status) {
+      case "ready":
+        return <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />;
+      case "needs-review":
+        return <AlertCircle className="h-3.5 w-3.5 text-yellow-500" />;
+      default:
+        return <Clock className="h-3.5 w-3.5 text-gray-400" />;
+    }
+  };
+
   return (
     <div className="h-full flex flex-col">
-      <div className="p-2 border-b flex items-center justify-between">
+      <div className="p-2 border-b flex items-center justify-between bg-gray-50/50">
         <h3 className="text-sm font-medium text-gray-700">Prompts</h3>
         <Button
           variant="ghost"
           size="icon"
-          className="h-6 w-6"
+          className="h-6 w-6 hover:bg-gray-100"
           onClick={handleNewPrompt}
         >
           <Plus className="h-4 w-4" />
@@ -89,56 +150,91 @@ export function PromptList() {
           <div
             key={prompt.id}
             className={cn(
-              "group flex items-center justify-between px-2 py-1.5 hover:bg-gray-100 cursor-pointer",
-              selectedPrompt === prompt.id && "bg-gray-100"
+              "group flex flex-col px-2 py-1.5 hover:bg-gray-100 cursor-pointer border-l-2 transition-colors",
+              selectedPrompt === prompt.id ? "bg-gray-100 border-l-blue-500" : "border-l-transparent"
             )}
             onClick={() => setSelectedPrompt(prompt.id)}
           >
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <File className="h-4 w-4 text-gray-400 flex-shrink-0" />
-              {isRenaming === prompt.id ? (
-                <Input
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  onBlur={() => handleRenameSubmit(prompt.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleRenameSubmit(prompt.id);
-                    }
-                  }}
-                  className="h-6 text-xs"
-                  autoFocus
-                />
-              ) : (
-                <span className="text-sm truncate">{prompt.name}</span>
+            <div className="flex items-center justify-between min-w-0">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <Tooltip content={prompt.status}>
+                  {getStatusIcon(prompt.status)}
+                </Tooltip>
+                {isRenaming === prompt.id ? (
+                  <Input
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    onBlur={() => handleRenameSubmit(prompt.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleRenameSubmit(prompt.id);
+                      }
+                    }}
+                    className="h-6 text-xs"
+                    autoFocus
+                  />
+                ) : (
+                  <span className="text-sm truncate font-medium">{prompt.name}</span>
+                )}
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => handleRename(prompt.id)}>
+                    Rename
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleDuplicate(prompt)}>
+                    Duplicate
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-red-600"
+                    onClick={() => handleDelete(prompt.id)}
+                  >
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <div className="flex items-center gap-2 mt-1 pl-5">
+              <Tooltip content="Test Cases">
+                <Badge 
+                  variant={prompt.testStats.passed === prompt.testStats.total ? "secondary" : "outline"}
+                  className="h-4 text-[10px]"
+                >
+                  {prompt.testStats.passed}/{prompt.testStats.total}
+                </Badge>
+              </Tooltip>
+              {prompt.securityIssues > 0 && (
+                <Tooltip content="Security Issues">
+                  <Badge 
+                    variant="destructive"
+                    className="h-4 text-[10px]"
+                  >
+                    {prompt.securityIssues} issue{prompt.securityIssues > 1 ? 's' : ''}
+                  </Badge>
+                </Tooltip>
+              )}
+              {prompt.category && (
+                <Badge 
+                  variant="secondary"
+                  className="h-4 text-[10px]"
+                >
+                  {prompt.category}
+                </Badge>
               )}
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                >
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => handleRename(prompt.id)}>
-                  Rename
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleDuplicate(prompt)}>
-                  Duplicate
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-red-600"
-                  onClick={() => handleDelete(prompt.id)}
-                >
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="text-[10px] text-gray-400 mt-0.5 pl-5">
+              Updated {formatDistanceToNow(prompt.lastModified, { addSuffix: true })}
+            </div>
           </div>
         ))}
       </div>

@@ -28,7 +28,7 @@ export function StatusBar({ className }: StatusBarProps) {
     security: {
       passed: 5,
       total: 6,
-    //   critical: 1,
+      critical: 1,
     },
     costs: {
       current: 0.015,
