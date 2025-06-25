@@ -12,15 +12,19 @@ import { History } from "@/components/History";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { PromptList } from "@/components/PromptList";
+import { DatabaseConfig } from "@/components/DatabaseConfig";
+import { useState } from "react";
 
 export default function Home() {
+	const [activeTab, setActiveTab] = useState("prompts");
+
 	return (
 		<>
 			<CommandPalette />
 			<div className="flex flex-col h-screen bg-white">
 				<Header />
 				<div className="flex-1 flex">
-					<ActivityBar />
+					<ActivityBar activeTab={activeTab} onTabChange={setActiveTab} />
 					<ResizablePanelGroup direction="horizontal" className="flex-1">
 						<ResizablePanel
 							defaultSize={15}
@@ -28,8 +32,12 @@ export default function Home() {
 							maxSize={20}
 							className="bg-gray-50"
 						>
-							{/* Left sidebar with prompt list */}
-							<PromptList />
+							{/* Left sidebar with prompt list or database config */}
+							{activeTab === "prompts" ? (
+								<PromptList />
+							) : activeTab === "database" ? (
+								<DatabaseConfig />
+							) : null}
 						</ResizablePanel>
 						<ResizableHandle withHandle />
 						<ResizablePanel defaultSize={60} className="bg-white">

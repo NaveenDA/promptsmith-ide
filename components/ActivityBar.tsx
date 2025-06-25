@@ -10,9 +10,11 @@ import {
   History,
   Shield,
   type LucideIcon,
+  Globe,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
 interface ActivityBarItem {
   icon: LucideIcon;
@@ -48,45 +50,79 @@ const items: ActivityBarItem[] = [
   },
 ];
 
-export function ActivityBar() {
-  const pathname = usePathname();
+interface ActivityBarProps {
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+}
 
+export function ActivityBar({ activeTab, onTabChange }: ActivityBarProps) {
   return (
-    <div className="w-12 bg-[#1e1e1e] flex flex-col items-center py-2 border-r border-[#333333]">
-      {items.map((item) => {
-        const Icon = item.icon;
-        const isActive = pathname === item.href;
-        return (
-          <Link key={item.href} href={item.href}>
+    <div className="w-12 border-r bg-gray-50/50 flex flex-col items-center py-2 gap-1">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
             <Button
-              variant="ghost"
+              variant={activeTab === "prompts" ? "secondary" : "ghost"}
               size="icon"
-              className={cn(
-                "w-12 h-12 rounded-none relative group",
-                isActive && "bg-[#2d2d2d] before:absolute before:left-0 before:top-0 before:h-full before:w-[2px] before:bg-white"
-              )}
+              className="h-10 w-10"
+              onClick={() => onTabChange("prompts")}
             >
-              <Icon className={cn(
-                "w-5 h-5",
-                isActive ? "text-white" : "text-gray-400"
-              )} />
-              <span className="sr-only">{item.label}</span>
-              <div className="absolute left-14 px-2 py-1 bg-[#252525] text-white text-xs rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible whitespace-nowrap">
-                {item.label}
-              </div>
+              <FileText className="h-5 w-5" />
             </Button>
-          </Link>
-        );
-      })}
-      <div className="flex-1" />
-      <Button
-        variant="ghost"
-        size="icon"
-        className="w-12 h-12 rounded-none text-gray-400 hover:text-white"
-      >
-        <Settings className="w-5 h-5" />
-        <span className="sr-only">Settings</span>
-      </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            <p>Prompts</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant={activeTab === "database" ? "secondary" : "ghost"}
+              size="icon"
+              className="h-10 w-10"
+              onClick={() => onTabChange("database")}
+            >
+              <Database className="h-5 w-5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            <p>Vector Databases</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant={activeTab === "api" ? "secondary" : "ghost"}
+              size="icon"
+              className="h-10 w-10"
+              onClick={() => onTabChange("api")}
+            >
+              <Globe className="h-5 w-5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            <p>API Keys</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant={activeTab === "settings" ? "secondary" : "ghost"}
+              size="icon"
+              className="h-10 w-10"
+              onClick={() => onTabChange("settings")}
+            >
+              <Settings className="h-5 w-5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            <p>Settings</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 } 

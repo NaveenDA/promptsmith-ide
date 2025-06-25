@@ -123,23 +123,6 @@ export function TestCaseDialog({
               </Select>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="group" className="text-right">
-                Group
-              </Label>
-              <Select value={groupName} onValueChange={setGroupName}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select group" />
-                </SelectTrigger>
-                <SelectContent>
-                  {groups.map((group) => (
-                    <SelectItem key={group.name} value={group.name}>
-                      {group.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="validation" className="text-right">
                 Validation
               </Label>
