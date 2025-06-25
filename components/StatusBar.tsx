@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/badge";
-import { Tooltip } from "./ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 interface StatusBarProps {
   className?: string;
@@ -88,15 +88,21 @@ export function StatusBar({ className }: StatusBarProps) {
       </div>
 
       {/* Costs */}
-      <Tooltip content={`Last 24h: $${stats.costs.last24h}`}>
+      <Tooltip>
+        <TooltipTrigger>
         <div className="flex items-center gap-1 px-2 border-r">
           <DollarSign className="w-3.5 h-3.5 text-blue-500" />
           <span>Cost: ${stats.costs.current}</span>
         </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          Last 24h: ${stats.costs.last24h}
+        </TooltipContent>
       </Tooltip>
 
       {/* Performance */}
-      <Tooltip content={`Last run: ${stats.performance.lastRun.toLocaleTimeString()}`}>
+      <Tooltip>
+        <TooltipTrigger>
         <div className="flex items-center gap-2 px-2 border-r">
           <div className="flex items-center gap-1">
             <Clock className="w-3.5 h-3.5 text-purple-500" />
@@ -107,11 +113,16 @@ export function StatusBar({ className }: StatusBarProps) {
             <span>{(stats.performance.tokensUsed / 1000).toFixed(1)}k tokens</span>
           </div>
         </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          Last run: ${stats.performance.lastRun.toLocaleTimeString()}
+        </TooltipContent>
       </Tooltip>
 
       {/* Model Info */}
       <div className="flex items-center gap-2 px-2 ml-auto">
-        <Tooltip content="Model Configuration">
+        <Tooltip>
+          <TooltipTrigger>
           <div className="flex items-center gap-1">
             <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
             <span>
@@ -121,13 +132,22 @@ export function StatusBar({ className }: StatusBarProps) {
               {stats.model.version}
             </Badge>
           </div>
-        </Tooltip>
-        <Tooltip content="Model Temperature">
+                </TooltipTrigger>
+        <TooltipContent>
+          Model Configuration
+        </TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger>
           <div className="flex items-center gap-1">
             <Cpu className="w-3.5 h-3.5 text-gray-400" />
             <span>{stats.model.temperature}</span>
           </div>
-        </Tooltip>
+        </TooltipTrigger>
+        <TooltipContent>
+          Model Temperature
+        </TooltipContent>
+      </Tooltip>
       </div>
     </div>
   );

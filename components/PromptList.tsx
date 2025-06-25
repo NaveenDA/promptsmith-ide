@@ -12,7 +12,7 @@ import {
 } from "./ui/dropdown-menu";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
-import { Tooltip } from "./ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 
@@ -157,8 +157,13 @@ export function PromptList() {
           >
             <div className="flex items-center justify-between min-w-0">
               <div className="flex items-center gap-2 min-w-0 flex-1">
-                <Tooltip content={prompt.status}>
-                  {getStatusIcon(prompt.status)}
+                <Tooltip>
+                  <TooltipTrigger>
+                    {getStatusIcon(prompt.status)}
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {prompt.status}
+                  </TooltipContent>
                 </Tooltip>
                 {isRenaming === prompt.id ? (
                   <Input
@@ -205,22 +210,32 @@ export function PromptList() {
               </DropdownMenu>
             </div>
             <div className="flex items-center gap-2 mt-1 pl-5">
-              <Tooltip content="Test Cases">
+              <Tooltip>
+                <TooltipTrigger>
                 <Badge 
                   variant={prompt.testStats.passed === prompt.testStats.total ? "secondary" : "outline"}
                   className="h-4 text-[10px]"
                 >
                   {prompt.testStats.passed}/{prompt.testStats.total}
                 </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Test Cases
+                </TooltipContent>
               </Tooltip>
               {prompt.securityIssues > 0 && (
-                <Tooltip content="Security Issues">
+                <Tooltip>
+                  <TooltipTrigger>
                   <Badge 
                     variant="destructive"
                     className="h-4 text-[10px]"
                   >
                     {prompt.securityIssues} issue{prompt.securityIssues > 1 ? 's' : ''}
                   </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Security Issues
+                  </TooltipContent>
                 </Tooltip>
               )}
               {prompt.category && (

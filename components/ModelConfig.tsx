@@ -21,7 +21,7 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 } from './ui/dropdown-menu'
-import { Tooltip } from './ui/tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 import { Badge } from './ui/badge'
 import { Slider } from './ui/slider'
 
@@ -102,8 +102,13 @@ export function ModelConfig({ className }: ModelConfigProps) {
                 <div className="flex items-center gap-2 mb-2">
                   <Thermometer className="h-4 w-4" />
                   <label className="text-sm font-medium">Temperature</label>
-                  <Tooltip content="Controls randomness: Lower values are more focused, higher values more creative">
-                    <Info className="h-3.5 w-3.5 text-gray-400" />
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="h-3.5 w-3.5 text-gray-400" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Controls randomness: Lower values are more focused, higher values more creative
+                    </TooltipContent>
                   </Tooltip>
                 </div>
                 <div className="flex items-center gap-4">
@@ -141,14 +146,26 @@ export function ModelConfig({ className }: ModelConfigProps) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Tooltip content="Response Time: ~1.2s">
+      <Tooltip>
+        <TooltipTrigger>
+          <Info className="h-3.5 w-3.5 text-gray-400" />
+        </TooltipTrigger>
+        <TooltipContent>
+          Response Time: ~1.2s
+        </TooltipContent>
         <Badge variant="outline" className="h-8 gap-1.5">
           <Clock className="h-3.5 w-3.5" />
           Fast
         </Badge>
       </Tooltip>
 
-      <Tooltip content="Estimated cost per request: $0.01">
+      <Tooltip>
+        <TooltipTrigger>
+          <Info className="h-3.5 w-3.5 text-gray-400" />
+        </TooltipTrigger>
+        <TooltipContent>
+          Estimated cost per request: $0.01
+        </TooltipContent>
         <Badge variant="outline" className="h-8 gap-1.5">
           <Zap className="h-3.5 w-3.5" />
           Low Cost

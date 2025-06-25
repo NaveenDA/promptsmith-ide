@@ -17,6 +17,9 @@ import {
   Edit,
   AlertCircle,
   Info,
+  MoreVertical,
+  Hash,
+  DollarSign,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from './ui/badge'
@@ -26,11 +29,13 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from './ui/dropdown-menu'
 import { TestCaseDialog } from "./TestCaseDialog";
 import { Switch } from "./ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "./ui/dialog";
 import { Label } from "./ui/label";
+import { Separator } from "./ui/separator";
 
 interface TestCase {
   id: string
@@ -106,6 +111,7 @@ export function TestCases() {
           latency: 900,
           tokens: 120,
           cost: 0.0015,
+          validationMethod: 'manual'
         },
       ],
     },
@@ -423,9 +429,14 @@ Keep the explanation under 100 characters.
       <div className="flex items-center justify-between px-4 py-2 border-b">
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-semibold">Test Cases</h2>
-          <Badge variant="outline" className="text-xs">
-            {groups.reduce((acc, group) => acc + group.tests.length, 0)} total
-          </Badge>
+          <div className="flex items-center gap-1">
+            <Badge variant="outline" className="text-xs">
+              {groups.reduce((acc, group) => acc + group.tests.length, 0)} total
+            </Badge>
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+              {groups.reduce((acc, group) => acc + group.tests.filter(t => t.status === "passed").length, 0)} passed
+            </Badge>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -459,52 +470,41 @@ Keep the explanation under 100 characters.
         {groups.map((group) => (
           <div key={group.name} className="border-b last:border-b-0">
             <div
-              className="flex items-center gap-2 p-2 hover:bg-gray-50 cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-50/50 cursor-pointer select-none"
               onClick={() => toggleGroup(group.name)}
             >
-              {expandedGroups.has(group.name) ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-              <div>
-                <div className="font-medium text-sm">{group.name}</div>
-                <div className="text-xs text-gray-500">{group.description}</div>
-              </div>
-              <Badge variant="secondary" className="ml-auto">
+              <ChevronRight
+                className={cn(
+                  "h-4 w-4 text-gray-500 transition-transform",
+                  expandedGroups.has(group.name) && "rotate-90"
+                )}
+              />
+              <span className="text-sm font-medium">{group.name}</span>
+              <Badge variant="outline" className="text-xs">
                 {group.tests.length}
               </Badge>
             </div>
 
             {expandedGroups.has(group.name) && (
-              <div className="pb-2">
+              <div className="py-1">
                 {group.tests.map((test) => (
                   <div
                     key={test.id}
                     className={cn(
-                      'group flex items-center gap-2 px-8 py-1.5 hover:bg-gray-50 cursor-pointer',
-                      selectedTest === test.id && 'bg-gray-50'
+                      "group px-8 py-2 hover:bg-gray-50 cursor-pointer border-l-2",
+                      selectedTest === test.id ? "bg-gray-50 border-l-blue-500" : "border-l-transparent"
                     )}
                     onClick={() => setSelectedTest(test.id)}
                   >
-                    {getStatusIcon(test.status)}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm truncate">{test.name}</span>
-                        {getStatusBadge(test)}
-                      </div>
-                      {test.actualOutput && (
-                        <div className="mt-1 text-xs">
-                          <span className="text-gray-500">Output: </span>
-                          <span className="font-mono">{test.actualOutput}</span>
-                        </div>
-                      )}
+                    <div className="flex items-center gap-2 mb-1">
+                      {getStatusIcon(test.status)}
+                      <span className="text-sm font-medium">{test.name}</span>
                       {test.status === "needs-review" && test.validationMethod === "manual" && (
-                        <div className="flex items-center gap-2 mt-2">
+                        <div className="flex items-center gap-1">
                           <Button
                             size="sm"
                             variant="outline"
-                            className="h-7 text-green-600 hover:text-green-700"
+                            className="h-6 text-xs text-green-600 hover:text-green-700"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleValidateOutput(test, true, "Manually approved");
@@ -515,7 +515,7 @@ Keep the explanation under 100 characters.
                           <Button
                             size="sm"
                             variant="outline"
-                            className="h-7 text-red-600 hover:text-red-700"
+                            className="h-6 text-xs text-red-600 hover:text-red-700"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleValidateOutput(test, false, "Manually rejected");
@@ -525,21 +525,7 @@ Keep the explanation under 100 characters.
                           </Button>
                         </div>
                       )}
-                      {test.reviewNotes && (
-                        <div className="flex items-center gap-1 mt-1 text-xs text-gray-600">
-                          <Info className="h-3 w-3" />
-                          {test.reviewNotes}
-                        </div>
-                      )}
-                      {test.status !== "not-run" && (
-                        <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-                          <span>{test.latency}ms</span>
-                          <span>{test.tokens} tokens</span>
-                          <span>${test.cost?.toFixed(4)}</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1">
+                      <div className="flex-1" />
                       <Button
                         variant="ghost"
                         size="icon"
@@ -558,33 +544,49 @@ Keep the explanation under 100 characters.
                             size="icon"
                             className="h-6 w-6 opacity-0 group-hover:opacity-100"
                           >
-                            <ChevronDown className="h-4 w-4" />
+                            <MoreVertical className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-32">
-                          <DropdownMenuItem
-                            className="gap-2"
-                            onClick={() => handleEditTest(test, group.name)}
-                          >
-                            <Edit className="h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="gap-2"
-                            onClick={() => handleDuplicateTest(test, group.name)}
-                          >
-                            <Copy className="h-4 w-4" />
-                            Duplicate
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="gap-2 text-red-600"
-                            onClick={() => handleDeleteTest(test.id, group.name)}
-                          >
-                            <Trash2 className="h-4 w-4" />
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>Edit</DropdownMenuItem>
+                          <DropdownMenuItem>Duplicate</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-red-600">
                             Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
+                    </div>
+
+                    <div className="pl-6 space-y-1">
+                      {test.actualOutput && (
+                        <div className="text-xs">
+                          <span className="text-gray-500">Output: </span>
+                          <span className="font-mono">{test.actualOutput}</span>
+                        </div>
+                      )}
+                      {test.reviewNotes && (
+                        <div className="flex items-center gap-1 text-xs text-gray-600">
+                          <Info className="h-3 w-3" />
+                          {test.reviewNotes}
+                        </div>
+                      )}
+                      {test.status !== "not-run" && (
+                        <div className="flex items-center gap-3 text-xs text-gray-500">
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {test.latency}ms
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Hash className="h-3 w-3" />
+                            {test.tokens} tokens
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <DollarSign className="h-3 w-3" />
+                            ${test.cost?.toFixed(4)}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -667,7 +669,7 @@ Keep the explanation under 100 characters.
       <TestCaseDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        onSave={handleSaveTest}
+        onSave={handleSaveTest as (testCase: { name: string; type: "basic" | "edge" | "security"; input: string; expectedOutput?: string; groupName: string; validationMethod: "manual" | "exact" | "ai"; validationRules?: string; aiValidationPrompt?: string; }) => void}
         groups={groups}
         initialData={
           editingTest
