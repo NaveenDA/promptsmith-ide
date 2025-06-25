@@ -2,166 +2,175 @@
 
 import { useState } from "react";
 import { Button } from "./ui/button";
-import { PlusIcon, SaveIcon, Settings, Sparkles } from "lucide-react";
+import { Input } from "./ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import {
+  Play,
+  Save,
+  Shield,
+  Settings,
+  Variable,
+  FileJson,
+  AlertTriangle,
+  Sparkles,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Badge } from "./ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-//
-const userMessages = [
-  {
-    id: "#122313",
-    scenario: "Normal Use Case",
-    message: [
-      "Hello, I need to extract the invoice information from the following text: Invoice Number: 1234567890, Invoice Date: 2021-01-01, Invoice Amount: $100.00, Invoice Due Date: 2021-01-01, Invoice Status: Paid, Invoice Payment Status: Paid, Invoice Payment Method: Credit Card, Invoice Payment Date: 2021-01-01, Invoice Payment Amount: $100.00",
-      "Let me know if you need any more information.",
-    ],
-  },
-  {
-    id: "#12231412",
-    scenario: "Different Format",
-    message: [
-      `INVOICE
-ELLINGTON
-Ellington Wood Decor, 36 Terrick Rd, Ellington PE18 2NT, United Kingdom
-BILL TO
-Your client
-11 Beech Dr
-Ellington
-NE61 SEU
-United Kingdom
-Invoice No.
-Issue date:
-Due date:
-Reference:
-042022
-30/04/2022
-14/05/2022
-042022
-DESCRIPTION
-Sample service
-Sample wood decoration service
-Sample sarvice 1
-Sample wood decoration service 1
-QUANTITY
-UNIT PRICE (E)
-400.00
-AMOUNT (E)
-400.00
-200.00
-200.00
-TOTAL (GBP):
-TOTAL DUE (GBP)
-£600.00
-£800.00
-Issued by, signature:
-Ellington Wood Decor`,
-    ],
-  },
-  {
-    id: "#122314",
-    scenario: "Different Currency",
-    message: [
-      "Invoice Number: 1234567890, Invoice Date: 2021-01-01, Invoice Amount: 100.00 EUR, Invoice Due Date: 2021-01-01, Invoice Status: Paid, Invoice Payment Status: Paid, Invoice Payment Method: Credit Card, Invoice Payment Date: 2021-01-01, Invoice Payment Amount: 100.00 EUR",
-    ],
-  },
-  {
-    id: "#122315",
-    scenario: "Invalid Data",
-    message: [
-      "Invoice Number {{ObjectNotFound}}",
-    ],
-  },
-];
-const PromptEditor = () => {
+
+interface Variable {
+  name: string;
+  type: "string" | "number" | "boolean" | "array" | "object";
+  description: string;
+  required: boolean;
+}
+
+interface PromptVersion {
+  id: string;
+  content: string;
+  variables: Variable[];
+  createdAt: Date;
+  model: string;
+  temperature: number;
+}
+
+export default function PromptEditor() {
+  const [title, setTitle] = useState("Extract Model Names");
+  const [content, setContent] = useState(`Your task is to extract model names from machine learning paper abstracts. Your response is an array of the model names in the format [\\\"model_name\\\"]. If you don't find model names in the abstract or you are not sure, return [\\\"NA\\\"]\n\nAbstract: Large Language Models (LLMs), such as ChatGPT and GPT-4, have revolutionized natural language processing research and demonstrated potential in Artificial General Intelligence (AGI). However, the expensive training and deployment of LLMs present challenges to transparent and open academic research. To address these issues, this project open-sources the Chinese LLaMA and Alpaca…`);
+  const [variables, setVariables] = useState<Variable[]>([]);
+  const [activeTab, setActiveTab] = useState("edit");
+  const [model, setModel] = useState({
+    provider: "OpenAI",
+    name: "gpt-4",
+    temperature: 0.7,
+    maxTokens: 2000,
+  });
+
   return (
-    <div className="w-full border-r">
-      <div className="flex justify-between items-center border-b p-4 px-6">
-        <div className="">
-          <h3 className="text-lg font-bold ">Invoice Extractor</h3>
-          <Settings className="w-4 h-4 inline-block" /> &nbsp;
-          <Badge variant="outline" className="">
-            OpenAI
-          </Badge>{" "}
-          &nbsp;
-          <Badge variant="outline" className="">
-            GPT-4o
-          </Badge>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button size="sm">
-            <Sparkles className="w-4 h-4" />
-            Validate
-          </Button>
-          <Button size="sm" disabled>
-            <SaveIcon className="w-4 h-4" />
-            Save
-          </Button>
-        </div>
-      </div>
-      <div className="p-4 px-6 border-b">
-        <h3 className="text-lg font-bold">System Instructions</h3>
-        <div className="">
-          <Textarea
-            placeholder="Enter your system instructions here"
-            className="w-full"
-            rows={5}
-            defaultValue={`You are a helpful assistant that can extract information from the invoice.
+    <div className="h-full flex flex-col">
+      {/* Title and Model Info Bar */}
+      <div className="border-b bg-gray-50 p-2">
+        <div className="flex items-center gap-2 mb-2">
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="text-lg font-semibold bg-transparent border-0 px-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-700"
+            placeholder="Enter prompt title..."
 
-Please extract the following information from the invoice:
-- Invoice Number
-- Invoice Date
-- Invoice Amount
-- Invoice Due Date
-- Invoice Status
-- Invoice Payment Status
-- Invoice Payment Method
-- Invoice Payment Date
-- Invoice Payment Amount
-
-Return JSON format.`}
           />
         </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-gray-600">
+              {model.provider}
+            </Badge>
+            <Badge variant="outline" className="text-gray-600">
+              {model.name}
+            </Badge>
+            <Badge variant="outline" className="text-gray-600">
+              temp: {model.temperature}
+            </Badge>
+            <Button variant="ghost" size="sm" className="gap-1">
+              <Settings className="w-3 h-3" />
+              Configure
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" className="gap-2">
+              <Shield className="w-4 h-4" />
+              Security Check
+            </Button>
+            <Button variant="ghost" size="sm" className="gap-2">
+              <Play className="w-4 h-4" />
+              Run
+            </Button>
+            <Button variant="default" size="sm" className="gap-2">
+              <Save className="w-4 h-4" />
+              Save
+            </Button>
+          </div>
+        </div>
       </div>
-      <div className="p-4 px-6 border-b">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-bold">User Messages</h3>
-          <Button variant="outline" size="sm">
-            <PlusIcon className="w-4 h-4" />
-            New Group
-          </Button>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
+        <div className="border-b bg-gray-50">
+          <TabsList className="p-0 bg-transparent border-0">
+            <TabsTrigger
+              value="edit"
+              className="rounded-none border-0 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-blue-500"
+            >
+              Edit
+            </TabsTrigger>
+            <TabsTrigger
+              value="variables"
+              className="rounded-none border-0 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-blue-500"
+            >
+              Variables
+            </TabsTrigger>
+          </TabsList>
         </div>
 
-        <ol className="relative border-s border-gray-200 dark:border-gray-700">
-          {userMessages.map((message) => (
-            <li className="mb-10 ms-4 group" key={message.id}>
-              <div className="absolute w-3 h-3 bg-gray-200 rounded-full mt-1.5 -start-1.5 border border-white dark:border-gray-900 dark:bg-gray-700" />
-              <span className="mb-1 text-sm font-normal leading-none text-gray-400 dark:text-gray-500">
-                {message.id}
-              </span>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {message.scenario}
-              </h3>
-              {message.message.map((msg, index) => (
-                <p
-                  className="mb-4 text-base font-normal border p-2 rounded-md text-gray-500 dark:text-gray-400"
-                  key={index}
-                >
-                  {msg}
-                </p>
-              ))}
-              {/* Add a button to add a new message */}
-              <Button
-                variant="outline"
-                size="sm"
-                className="group-hover:inline-block hidden duration-700 ease-in-out"
-              >
-                Add Message
+        <TabsContent value="edit" className="flex-1 p-0 m-0">
+          <div className="relative h-full">
+            <div className="absolute inset-0 p-4">
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                className="w-full h-full bg-transparent resize-none outline-none text-gray-700 font-mono"
+                placeholder="Enter your prompt here..."
+                
+              />
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="preview" className="flex-1 p-4 m-0 bg-white">
+          <div className="prose max-w-none">
+            {/* Rendered preview with variables replaced */}
+            {content}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="variables" className="flex-1 p-4 m-0 bg-white">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-gray-700">Variables</h3>
+              <Button variant="outline" size="sm">
+                Add Variable
               </Button>
-            </li>
-          ))}
-        </ol>
-      </div>
+            </div>
+            {variables.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <AlertTriangle className="w-8 h-8 mx-auto mb-2" />
+                <p>No variables defined yet.</p>
+                <p className="text-sm">
+                  Variables help make your prompts more dynamic and reusable.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {variables.map((variable) => (
+                  <div
+                    key={variable.name}
+                    className="p-3 rounded bg-gray-50 border"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-sm text-gray-700">
+                        {variable.name}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {variable.type}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {variable.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
-};
-
-export default PromptEditor;
+}

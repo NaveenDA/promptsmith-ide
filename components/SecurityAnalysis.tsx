@@ -1,107 +1,217 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { Button } from './ui/button'
+import {
+  Shield,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  Info,
+  ChevronRight,
+  ChevronDown,
+  ExternalLink,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { Badge } from './ui/badge'
 
 interface SecurityIssue {
   id: string
-  severity: 'low' | 'medium' | 'high'
+  type: 'critical' | 'warning' | 'info'
   title: string
   description: string
-  suggestion: string
+  recommendation: string
+  example?: string
+  learnMoreUrl?: string
 }
 
-interface SecurityAnalysisProps {
-  promptContent: string
+interface SecurityCategory {
+  id: string
+  name: string
+  description: string
+  issues: SecurityIssue[]
 }
 
-export function SecurityAnalysis({ promptContent }: SecurityAnalysisProps) {
-  const [vulnerabilityScore, setVulnerabilityScore] = useState(0)
-  const [issues, setIssues] = useState<SecurityIssue[]>([])
+export function SecurityAnalysis() {
+  const [categories, setCategories] = useState<SecurityCategory[]>([
+    {
+      id: 'injection',
+      name: 'Prompt Injection',
+      description: 'Analysis of potential prompt injection vulnerabilities',
+      issues: [
+        {
+          id: 'direct-injection',
+          type: 'critical',
+          title: 'Direct Prompt Injection Vulnerability',
+          description: 'The prompt contains unvalidated user input that could be used to manipulate the model\'s behavior.',
+          recommendation: 'Add input validation and sanitization. Consider using a template system with clear boundaries between static and dynamic content.',
+          example: 'Instead of: "Process this text: {{user_input}}"\nUse: "Process this invoice using the following format: {{sanitized_input}}"',
+          learnMoreUrl: 'https://example.com/prompt-injection',
+        },
+        {
+          id: 'indirect-injection',
+          type: 'warning',
+          title: 'Indirect Prompt Manipulation',
+          description: 'User input could indirectly influence the model\'s behavior through context manipulation.',
+          recommendation: 'Implement strict input validation and consider using role-based prompting.',
+          learnMoreUrl: 'https://example.com/indirect-injection',
+        },
+      ],
+    },
+    {
+      id: 'data-leakage',
+      name: 'Data Leakage',
+      description: 'Detection of potential sensitive data exposure',
+      issues: [
+        {
+          id: 'pii-exposure',
+          type: 'critical',
+          title: 'PII Exposure Risk',
+          description: 'The prompt might expose or process Personally Identifiable Information (PII) without proper safeguards.',
+          recommendation: 'Implement PII detection and redaction. Use data minimization principles.',
+          example: 'Use regex patterns to detect and redact email addresses, phone numbers, etc.',
+        },
+      ],
+    },
+    {
+      id: 'output-validation',
+      name: 'Output Validation',
+      description: 'Analysis of output validation and sanitization',
+      issues: [
+        {
+          id: 'format-validation',
+          type: 'info',
+          title: 'Missing Output Format Validation',
+          description: 'The prompt doesn\'t explicitly validate or sanitize the model\'s output format.',
+          recommendation: 'Add explicit output format requirements and validation steps.',
+          example: 'Add: "Your response must be valid JSON with the following schema: {...}"',
+        },
+      ],
+    },
+  ])
 
-  // This is a placeholder for actual security analysis logic
-  useEffect(() => {
-    if (!promptContent) return
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
+    injection: true,
+    'data-leakage': true,
+    'output-validation': true,
+  })
 
-    // Example security checks (to be replaced with actual implementation)
-    const newIssues: SecurityIssue[] = []
-    let score = 100
+  const toggleCategory = (categoryId: string) => {
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [categoryId]: !prev[categoryId],
+    }))
+  }
 
-    // Check for common vulnerabilities
-    if (promptContent.includes('system')) {
-      newIssues.push({
-        id: '1',
-        severity: 'high',
-        title: 'System Command Reference',
-        description: 'Found reference to system commands which could be exploited',
-        suggestion: 'Avoid using system command references in prompts'
-      })
-      score -= 30
+  const getIssueIcon = (type: SecurityIssue['type']) => {
+    switch (type) {
+      case 'critical':
+        return <XCircle className="w-4 h-4 text-red-500" />
+      case 'warning':
+        return <AlertTriangle className="w-4 h-4 text-yellow-500" />
+      case 'info':
+        return <Info className="w-4 h-4 text-blue-500" />
     }
+  }
 
-    if (promptContent.toLowerCase().includes('ignore')) {
-      newIssues.push({
-        id: '2',
-        severity: 'medium',
-        title: 'Instruction Override Attempt',
-        description: 'Found potential instruction override keywords',
-        suggestion: 'Remove or rephrase instructions that could be used to override system prompts'
-      })
-      score -= 20
+  const getIssueBadge = (type: SecurityIssue['type']) => {
+    switch (type) {
+      case 'critical':
+        return (
+          <Badge variant="destructive" className="text-xs">
+            Critical
+          </Badge>
+        )
+      case 'warning':
+        return (
+          <Badge variant="outline" className="text-xs text-yellow-500 border-yellow-500">
+            Warning
+          </Badge>
+        )
+      case 'info':
+        return (
+          <Badge variant="outline" className="text-xs text-blue-500 border-blue-500">
+            Info
+          </Badge>
+        )
     }
-
-    setIssues(newIssues)
-    setVulnerabilityScore(Math.max(0, score))
-  }, [promptContent])
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Vulnerability Score */}
-      <div className="p-4 rounded-lg bg-card border">
-        <h3 className="text-lg font-semibold mb-4">Vulnerability Score</h3>
-        <div className="flex items-center">
-          <div className="relative w-full h-4 bg-gray-200 rounded-full overflow-hidden">
-            <div
-              className={`absolute left-0 top-0 h-full rounded-full transition-all duration-500 ${
-                vulnerabilityScore > 70 ? 'bg-green-500' :
-                vulnerabilityScore > 40 ? 'bg-yellow-500' :
-                'bg-red-500'
-              }`}
-              style={{ width: `${vulnerabilityScore}%` }}
-            />
-          </div>
-          <span className="ml-4 font-medium">{vulnerabilityScore}</span>
+    <div className="h-full flex flex-col bg-white">
+      <div className="border-b p-2 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Shield className="w-4 h-4" />
+          <h3 className="text-sm font-medium text-gray-700">Security Analysis</h3>
         </div>
+        <Button variant="default" size="sm" className="gap-2">
+          <Shield className="w-4 h-4" />
+          Run Analysis
+        </Button>
       </div>
 
-      {/* Security Issues */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Detected Issues</h3>
-        {issues.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No security issues detected</p>
-        ) : (
-          <div className="space-y-3">
-            {issues.map((issue) => (
-              <div
-                key={issue.id}
-                className="p-4 rounded-lg bg-card border"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-medium">{issue.title}</h4>
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    issue.severity === 'high' ? 'bg-red-100 text-red-800' :
-                    issue.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-blue-100 text-blue-800'
-                  }`}>
-                    {issue.severity.toUpperCase()}
-                  </span>
+      <div className="flex-1 overflow-auto">
+        {categories.map((category) => (
+          <div key={category.id} className="border-b">
+            <button
+              onClick={() => toggleCategory(category.id)}
+              className="w-full px-3 py-2 flex items-center gap-2 hover:bg-gray-50 transition-colors"
+            >
+              {expandedCategories[category.id] ? (
+                <ChevronDown className="w-4 h-4" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
+              <span className="font-medium text-gray-700">{category.name}</span>
+              <Badge variant="outline" className="text-xs ml-2">
+                {category.issues.length}
+              </Badge>
+            </button>
+
+            {expandedCategories[category.id] && (
+              <div className="px-3 pb-2">
+                <p className="text-sm text-gray-500 mb-2">{category.description}</p>
+                <div className="space-y-2">
+                  {category.issues.map((issue) => (
+                    <div
+                      key={issue.id}
+                      className="p-3 rounded bg-gray-50 hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        {getIssueIcon(issue.type)}
+                        <span className="flex-1 font-medium text-gray-700">
+                          {issue.title}
+                        </span>
+                        {getIssueBadge(issue.type)}
+                      </div>
+                      <p className="mt-2 text-sm text-gray-600">{issue.description}</p>
+                      <div className="mt-2 text-sm text-gray-700">
+                        <span className="font-medium">Recommendation: </span>
+                        {issue.recommendation}
+                      </div>
+                      {issue.example && (
+                        <div className="mt-2 text-sm font-mono bg-white p-2 rounded border">
+                          {issue.example}
+                        </div>
+                      )}
+                      {issue.learnMoreUrl && (
+                        <a
+                          href={issue.learnMoreUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-2 text-xs text-blue-500 hover:text-blue-400 flex items-center gap-1"
+                        >
+                          Learn more
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                    </div>
+                  ))}
                 </div>
-                <p className="text-sm text-muted-foreground mb-2">{issue.description}</p>
-                <p className="text-sm font-medium">Suggestion:</p>
-                <p className="text-sm text-muted-foreground">{issue.suggestion}</p>
               </div>
-            ))}
+            )}
           </div>
-        )}
+        ))}
       </div>
     </div>
   )
