@@ -91,25 +91,7 @@ export default function PromptEditor() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-        <div className="border-b bg-gray-50">
-          <TabsList className="p-0 bg-transparent border-0">
-            <TabsTrigger
-              value="edit"
-              className="rounded-none border-0 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-blue-500"
-            >
-              Edit
-            </TabsTrigger>
-            <TabsTrigger
-              value="variables"
-              className="rounded-none border-0 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-blue-500"
-            >
-              Variables
-            </TabsTrigger>
-          </TabsList>
-        </div>
-
-        <TabsContent value="edit" className="flex-1 p-0 m-0">
+    
           <div className="relative h-full">
             <div className="absolute inset-0 p-4">
               <textarea
@@ -121,56 +103,9 @@ export default function PromptEditor() {
               />
             </div>
           </div>
-        </TabsContent>
 
-        <TabsContent value="preview" className="flex-1 p-4 m-0 bg-white">
-          <div className="prose max-w-none">
-            {/* Rendered preview with variables replaced */}
-            {content}
-          </div>
-        </TabsContent>
 
-        <TabsContent value="variables" className="flex-1 p-4 m-0 bg-white">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-700">Variables</h3>
-              <Button variant="outline" size="sm">
-                Add Variable
-              </Button>
-            </div>
-            {variables.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <AlertTriangle className="w-8 h-8 mx-auto mb-2" />
-                <p>No variables defined yet.</p>
-                <p className="text-sm">
-                  Variables help make your prompts more dynamic and reusable.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {variables.map((variable) => (
-                  <div
-                    key={variable.name}
-                    className="p-3 rounded bg-gray-50 border"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-sm text-gray-700">
-                        {variable.name}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {variable.type}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {variable.description}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
+
     </div>
   );
 }
