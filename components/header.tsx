@@ -17,7 +17,7 @@ export default function Header() {
   return (
     <div className="h-10 bg-white border-b flex items-center px-4 justify-between sticky top-0 z-10">
       <div className="flex items-center gap-2">
-        <Image src="/logo.svg" alt="Promptsmith"  height={32}  width={100}/>
+        <Image src="/logo.svg" alt="Promptsmith"  height={40}  width={130}/>
       </div>
       <div className="flex items-center gap-4">
         <ApiKeysDialog />

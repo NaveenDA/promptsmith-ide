@@ -29,26 +29,37 @@ interface TestCaseDialogProps {
     name: string;
     type: "basic" | "edge" | "security";
     input: string;
-    dbConfig?: {
-      database: string;
-      query: string;
-      numResults: number;
-    };
+    expectedOutput?: string;
+    groupName: string;
+    validationMethod: "manual" | "exact" | "ai";
+    validationRules?: string;
+    aiValidationPrompt?: string;
   }) => void;
-  connectedDatabases?: { name: string; type: string }[];
+  groups: { name: string; description: string }[];
+  initialData?: {
+    name: string;
+    type: "basic" | "edge" | "security";
+    input: string;
+    expectedOutput?: string;
+    groupName: string;
+    validationMethod: "manual" | "exact" | "ai";
+    validationRules?: string;
+    aiValidationPrompt?: string;
+  };
 }
 
 export function TestCaseDialog({
   open,
   onOpenChange,
   onSave,
-  connectedDatabases = [],
+  groups,
+  initialData,
 }: TestCaseDialogProps) {
   const [name, setName] = useState("");
   const [type, setType] = useState<"basic" | "edge" | "security">("basic");
   const [input, setInput] = useState("");
   const [useDB, setUseDB] = useState(false);
-  const [selectedDB, setSelectedDB] = useState(connectedDatabases[0]?.name || "");
+  const [selectedDB, setSelectedDB] = useState(groups[0]?.name || "");
   const [dbQuery, setDBQuery] = useState("");
   const [numResults, setNumResults] = useState(3);
 
@@ -58,11 +69,11 @@ export function TestCaseDialog({
       name,
       type,
       input,
-      dbConfig: useDB ? {
-        database: selectedDB,
-        query: dbQuery,
-        numResults,
-      } : undefined,
+      expectedOutput: initialData?.expectedOutput,
+      groupName: initialData?.groupName || "",
+      validationMethod: initialData?.validationMethod || "manual",
+      validationRules: initialData?.validationRules,
+      aiValidationPrompt: initialData?.aiValidationPrompt,
     });
     onOpenChange(false);
   };
@@ -73,14 +84,6 @@ export function TestCaseDialog({
         <div className="p-6 space-y-6">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl">Add Test Case</DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => onOpenChange(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
           </div>
 
           <div className="space-y-6">
@@ -170,9 +173,9 @@ export function TestCaseDialog({
                             <SelectValue placeholder="Select database" />
                           </SelectTrigger>
                           <SelectContent>
-                            {connectedDatabases.map((db) => (
-                              <SelectItem key={db.name} value={db.name}>
-                                {db.name}
+                            {groups.map((group) => (
+                              <SelectItem key={group.name} value={group.name}>
+                                {group.name}
                               </SelectItem>
                             ))}
                           </SelectContent>

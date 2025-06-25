@@ -22,9 +22,7 @@ export default function RootLayout({
 					<meta name="apple-mobile-web-app-title" content="Prompt Smith IDE" />
 				</Head>
 
-				<TooltipProvider>
-					{children}
-				</TooltipProvider>
+				<TooltipProvider>{children}</TooltipProvider>
 			</body>
 		</html>
 	);

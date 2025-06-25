@@ -4,7 +4,11 @@ import Header from "@/components/header";
 import { ActivityBar } from "@/components/ActivityBar";
 import { StatusBar } from "@/components/StatusBar";
 import { CommandPalette } from "@/components/CommandPalette";
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import {
+	ResizableHandle,
+	ResizablePanel,
+	ResizablePanelGroup,
+} from "@/components/ui/resizable";
 import PromptEditor from "@/components/PromptEditor";
 import { TestCases } from "@/components/TestCases";
 import { SecurityAnalysis } from "@/components/SecurityAnalysis";

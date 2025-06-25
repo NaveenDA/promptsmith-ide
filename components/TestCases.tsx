@@ -429,14 +429,6 @@ Keep the explanation under 100 characters.
       <div className="flex items-center justify-between px-4 py-2 border-b">
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-semibold">Test Cases</h2>
-          <div className="flex items-center gap-1">
-            <Badge variant="outline" className="text-xs">
-              {groups.reduce((acc, group) => acc + group.tests.length, 0)} total
-            </Badge>
-            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
-              {groups.reduce((acc, group) => acc + group.tests.filter(t => t.status === "passed").length, 0)} passed
-            </Badge>
-          </div>
         </div>
         <div className="flex items-center gap-2">
           <Button

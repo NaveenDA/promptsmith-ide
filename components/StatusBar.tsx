@@ -13,12 +13,17 @@ import { cn } from "@/lib/utils";
 import { Badge } from "./ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import Image from "next/image";
+import { useModelStore } from "@/lib/store";
+import { ModelConfigDialog } from "./ModelConfigDialog";
+import { Button } from "./ui/button";
 
 interface StatusBarProps {
   className?: string;
 }
 
 export function StatusBar({ className }: StatusBarProps) {
+  const { config } = useModelStore();
+  
   // Example data - in real app, this would come from state/props
   const stats = {
     tests: {
@@ -34,12 +39,6 @@ export function StatusBar({ className }: StatusBarProps) {
     costs: {
       current: 0.015,
       last24h: 0.125,
-    },
-    model: {
-      provider: "OpenAI",
-      name: "gpt-4",
-      version: "0125-preview",
-      temperature: 0.7,
     },
     performance: {
       avgLatency: 850, // ms
@@ -122,33 +121,26 @@ export function StatusBar({ className }: StatusBarProps) {
 
       {/* Model Info */}
       <div className="flex items-center gap-2 px-2 ml-auto">
+        <ModelConfigDialog />
+        <Button variant="ghost" size="sm" className="h-5 px-1">
+          <div className="flex items-center gap-1">
+            <Image src={`/logos/${config.provider.toLowerCase()}.svg`} alt={config.provider} width={12} height={12} />
+            <span>
+              {config.provider} / {config.name}
+            </span>
+          </div>
+        </Button>
         <Tooltip>
           <TooltipTrigger>
-          <div className="flex items-center gap-1">
-            <Image src={`/logos/${stats.model.provider}.svg`} alt={stats.model.provider} width={12} height={12} />
-            <span>
-              {stats.model.provider} / {stats.model.name}
-            </span>
-            <Badge variant="outline" className="text-[10px] h-4">
-              {stats.model.version}
-            </Badge>
-          </div>
-                </TooltipTrigger>
-        <TooltipContent>
-          Model Configuration
-        </TooltipContent>
-      </Tooltip>
-      <Tooltip>
-        <TooltipTrigger>
-          <div className="flex items-center gap-1">
-            <Cpu className="w-3.5 h-3.5 text-gray-400" />
-            <span>{stats.model.temperature}</span>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          Model Temperature
-        </TooltipContent>
-      </Tooltip>
+            <div className="flex items-center gap-1">
+              <Cpu className="w-3.5 h-3.5 text-gray-400" />
+              <span>{config.parameters.temperature}</span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            Model Temperature
+          </TooltipContent>
+        </Tooltip>
       </div>
     </div>
   );
