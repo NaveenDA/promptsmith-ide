@@ -7,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogDescription,
 } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -20,8 +19,8 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Label } from "./ui/label";
-import { Info } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Switch } from "./ui/switch";
+import { Beaker, Bug, Shield, X, Info } from "lucide-react";
 
 interface TestCaseDialogProps {
   open: boolean;
@@ -30,44 +29,28 @@ interface TestCaseDialogProps {
     name: string;
     type: "basic" | "edge" | "security";
     input: string;
-    expectedOutput?: string;
-    groupName: string;
-    validationMethod: "exact" | "manual" | "ai";
-    validationRules?: string;
-    aiValidationPrompt?: string;
+    dbConfig?: {
+      database: string;
+      query: string;
+      numResults: number;
+    };
   }) => void;
-  groups: { name: string }[];
-  initialData?: {
-    name: string;
-    type: "basic" | "edge" | "security";
-    input: string;
-    expectedOutput?: string;
-    groupName: string;
-    validationMethod: "exact" | "manual" | "ai";
-    validationRules?: string;
-    aiValidationPrompt?: string;
-  };
+  connectedDatabases?: { name: string; type: string }[];
 }
 
 export function TestCaseDialog({
   open,
   onOpenChange,
   onSave,
-  groups,
-  initialData,
+  connectedDatabases = [],
 }: TestCaseDialogProps) {
-  const [name, setName] = useState(initialData?.name || "");
-  const [type, setType] = useState<"basic" | "edge" | "security">(
-    initialData?.type || "basic"
-  );
-  const [input, setInput] = useState(initialData?.input || "");
-  const [expectedOutput, setExpectedOutput] = useState(initialData?.expectedOutput || "");
-  const [groupName, setGroupName] = useState(initialData?.groupName || groups[0]?.name);
-  const [validationMethod, setValidationMethod] = useState<"exact" | "manual" | "ai">(
-    initialData?.validationMethod || "manual"
-  );
-  const [validationRules, setValidationRules] = useState(initialData?.validationRules || "");
-  const [aiValidationPrompt, setAiValidationPrompt] = useState(initialData?.aiValidationPrompt || "");
+  const [name, setName] = useState("");
+  const [type, setType] = useState<"basic" | "edge" | "security">("basic");
+  const [input, setInput] = useState("");
+  const [useDB, setUseDB] = useState(false);
+  const [selectedDB, setSelectedDB] = useState(connectedDatabases[0]?.name || "");
+  const [dbQuery, setDBQuery] = useState("");
+  const [numResults, setNumResults] = useState(3);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,129 +58,164 @@ export function TestCaseDialog({
       name,
       type,
       input,
-      expectedOutput,
-      groupName,
-      validationMethod,
-      validationRules,
-      aiValidationPrompt,
+      dbConfig: useDB ? {
+        database: selectedDB,
+        query: dbQuery,
+        numResults,
+      } : undefined,
     });
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>Add Test Case</DialogTitle>
-            <DialogDescription>
-              Create a new test case to validate your prompt's behavior.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Name
-              </Label>
+      <DialogContent className="sm:max-w-[500px] p-0 gap-0">
+        <div className="p-6 space-y-6">
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-xl">Add Test Case</DialogTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => onOpenChange(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <div className="space-y-6">
+            {/* Name */}
+            <div className="space-y-2">
+              <Label>Name</Label>
               <Input
-                id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="col-span-3"
+                placeholder="Enter test case name"
                 required
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="type" className="text-right">
-                Type
-              </Label>
-              <Select value={type} onValueChange={(value: any) => setType(value)}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select test type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="basic">Basic</SelectItem>
-                  <SelectItem value="edge">Edge Case</SelectItem>
-                  <SelectItem value="security">Security</SelectItem>
-                </SelectContent>
-              </Select>
+
+            {/* Type Selection */}
+            <div className="space-y-2">
+              <Label>Type</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={type === "basic" ? "default" : "outline"}
+                  className="flex-1 gap-2"
+                  onClick={() => setType("basic")}
+                >
+                  <Beaker className="h-4 w-4" />
+                  Basic
+                </Button>
+                <Button
+                  type="button"
+                  variant={type === "edge" ? "default" : "outline"}
+                  className="flex-1 gap-2"
+                  onClick={() => setType("edge")}
+                >
+                  <Bug className="h-4 w-4" />
+                  Edge
+                </Button>
+                <Button
+                  type="button"
+                  variant={type === "security" ? "default" : "outline"}
+                  className="flex-1 gap-2"
+                  onClick={() => setType("security")}
+                >
+                  <Shield className="h-4 w-4" />
+                  Security
+                </Button>
+              </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="validation" className="text-right">
-                Validation
-              </Label>
-              <Select value={validationMethod} onValueChange={(value: any) => setValidationMethod(value)}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select validation method" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="exact">Exact Match</SelectItem>
-                  <SelectItem value="manual">Manual Review</SelectItem>
-                  <SelectItem value="ai">AI Validation</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="input" className="text-right pt-2">
-                Input
-              </Label>
+
+            {/* Input */}
+            <div className="space-y-2">
+              <Label>Input</Label>
               <Textarea
-                id="input"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                className="col-span-3"
+                placeholder="Enter your prompt"
+                className="min-h-[120px]"
                 required
               />
             </div>
-            {validationMethod === "exact" && (
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label htmlFor="expectedOutput" className="text-right pt-2">
-                  Expected Output
-                </Label>
-                <Textarea
-                  id="expectedOutput"
-                  value={expectedOutput}
-                  onChange={(e) => setExpectedOutput(e.target.value)}
-                  className="col-span-3"
-                  required
+
+            {/* Database Switch */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="cursor-pointer" onClick={() => setUseDB(!useDB)}>Use Database</Label>
+                <Switch
+                  checked={useDB}
+                  onCheckedChange={setUseDB}
                 />
               </div>
-            )}
-            {validationMethod === "ai" && (
-              <>
-                <div className="grid grid-cols-4 items-start gap-4">
-                  <Label htmlFor="validationRules" className="text-right pt-2">
-                    Validation Rules
-                  </Label>
-                  <Textarea
-                    id="validationRules"
-                    value={validationRules}
-                    onChange={(e) => setValidationRules(e.target.value)}
-                    className="col-span-3"
-                    placeholder="Define rules for AI to validate the output (e.g., 'Must contain both positive and negative sentiments')"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-start gap-4">
-                  <Label htmlFor="aiValidationPrompt" className="text-right pt-2">
-                    AI Validation Prompt
-                  </Label>
-                  <Textarea
-                    id="aiValidationPrompt"
-                    value={aiValidationPrompt}
-                    onChange={(e) => setAiValidationPrompt(e.target.value)}
-                    className="col-span-3"
-                    placeholder="Prompt for AI to validate the output (e.g., 'Does the output correctly identify mixed sentiments?')"
-                    required
-                  />
-                </div>
-              </>
-            )}
+
+              {useDB && (
+                <>
+                  {/* Info Message */}
+                  <div className="flex items-start gap-2 text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                    <Info className="h-4 w-4 mt-0.5" />
+                    <p>Use <code className="bg-muted px-1 py-0.5 rounded">$db_results</code> in your prompt where you want to include the database results</p>
+                  </div>
+
+                  {/* Database Configuration */}
+                  <div className="space-y-4 border rounded-lg p-4">
+                    <div className="space-y-4">
+                      {/* Database Selection */}
+                      <div className="space-y-2">
+                        <Label>Database</Label>
+                        <Select value={selectedDB} onValueChange={setSelectedDB}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select database" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {connectedDatabases.map((db) => (
+                              <SelectItem key={db.name} value={db.name}>
+                                {db.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Results</Label>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={10}
+                            value={numResults}
+                            onChange={(e) => setNumResults(Number(e.target.value))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Query</Label>
+                          <Input
+                            value={dbQuery}
+                            onChange={(e) => setDBQuery(e.target.value)}
+                            placeholder="Search terms"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-          <DialogFooter>
-            <Button type="submit">Save Test Case</Button>
-          </DialogFooter>
-        </form>
+        </div>
+
+        <DialogFooter className="p-6 pt-0">
+          <Button
+            className="w-full"
+            type="submit"
+            onClick={handleSubmit}
+          >
+            Save Test Case
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

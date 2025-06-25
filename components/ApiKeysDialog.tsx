@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ExternalLink, Eye, EyeOff, Key } from "lucide-react";
+import Image from "next/image";
 
 interface ApiKeyConfig {
   id: string;
@@ -25,6 +26,7 @@ const API_PROVIDERS: ApiKeyConfig[] = [
   {
     id: "openai",
     name: "OpenAI",
+    
     key: "",
     docLink: "https://platform.openai.com/docs/api-reference",
     getKeyLink: "https://platform.openai.com/api-keys",
@@ -56,6 +58,14 @@ const API_PROVIDERS: ApiKeyConfig[] = [
     key: "",
     docLink: "https://docs.perplexity.ai",
     getKeyLink: "https://www.perplexity.ai/settings/api",
+  },
+  // deepseek r1
+  {
+    id: "deepseek",
+    name: "DeepSeek",
+    key: "",
+    docLink: "https://api-docs.deepseek.com",
+    getKeyLink: "https://platform.deepseek.com/api_keys",
   },
 ];
 
@@ -101,6 +111,7 @@ export function ApiKeysDialog() {
             <div key={provider.id} className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
+                  <Image src={`/logos/${provider.id}.svg`} alt={provider.name} width={20} height={20} />
                   <span className="font-medium">{provider.name}</span>
                   <a
                     href={provider.docLink}

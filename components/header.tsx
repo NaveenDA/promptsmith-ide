@@ -11,13 +11,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, LogOut, Settings, User } from "lucide-react";
 import { ApiKeysDialog } from "./ApiKeysDialog";
+import Image from "next/image";
 
 export default function Header() {
   return (
     <div className="h-10 bg-white border-b flex items-center px-4 justify-between sticky top-0 z-10">
       <div className="flex items-center gap-2">
-        <div className="h-5 w-5 bg-purple-500 rounded-sm"></div>
-        <h3 className="text-lg font-bold">Promptsmith IDE</h3>
+        <Image src="/logo.svg" alt="Promptsmith"  height={32}  width={100}/>
       </div>
       <div className="flex items-center gap-4">
         <ApiKeysDialog />

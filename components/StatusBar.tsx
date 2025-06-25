@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import Image from "next/image";
 
 interface StatusBarProps {
   className?: string;
@@ -124,7 +125,7 @@ export function StatusBar({ className }: StatusBarProps) {
         <Tooltip>
           <TooltipTrigger>
           <div className="flex items-center gap-1">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+            <Image src={`/logos/${stats.model.provider}.svg`} alt={stats.model.provider} width={12} height={12} />
             <span>
               {stats.model.provider} / {stats.model.name}
             </span>

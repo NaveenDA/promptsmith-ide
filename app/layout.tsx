@@ -1,6 +1,7 @@
 import "./globals.css";
 import { Inter } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import Head from "next/head";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,6 +18,10 @@ export default function RootLayout({
 	return (
 		<html lang="en">
 			<body className={inter.className}>
+				<Head>
+					<meta name="apple-mobile-web-app-title" content="Prompt Smith IDE" />
+				</Head>
+
 				<TooltipProvider>
 					{children}
 				</TooltipProvider>

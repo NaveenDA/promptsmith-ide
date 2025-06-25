@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/badge";
+import Image from "next/image";
 
 interface Variable {
   name: string;
@@ -61,6 +62,7 @@ export default function PromptEditor() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-gray-600">
+              <Image src={`/logos/${model.provider}.svg`} alt={model.provider} width={12} height={12} /> &nbsp;
               {model.provider}
             </Badge>
             <Badge variant="outline" className="text-gray-600">
