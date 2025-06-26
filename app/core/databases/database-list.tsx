@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Database, ExternalLink, Plus, Search, Settings2 } from "lucide-react";
+import { ExternalLink, Plus, Search, Settings2 } from "lucide-react";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +9,7 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { DatabaseConfig } from "@/components/DatabaseConfig";
+import { DatabaseConfig } from "./database-config";
 
 const dbtype_images = {
     "chroma": "/logos/chroma.webp",
@@ -144,6 +144,11 @@ const DatabaseList = () => {
                         }
                         `}
                         onClick={() => setSelectedDb(db.name)}
+                        onKeyUp={(e) => {
+                            if (e.key === "Enter") {
+                                setSelectedDb(db.name);
+                            }
+                        }}
                     >
                         <div className="flex items-center gap-3">
                             <div className="relative shrink-0">

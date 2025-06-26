@@ -1,24 +1,24 @@
 "use client";
 
 import Header from "@/components/header";
-import { ActivityBar } from "@/components/ActivityBar";
-import { StatusBar } from "@/components/StatusBar";
-import { CommandPalette } from "@/components/CommandPalette";
+import { StatusBar } from "@/components/status-bar";
+import { CommandPalette } from "@/components/command-palette";
 import {
 	ResizableHandle,
 	ResizablePanel,
 	ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import PromptEditor from "@/components/PromptEditor";
-import { TestCases } from "@/components/TestCases";
-import { SecurityAnalysis } from "@/components/SecurityAnalysis";
-import { History } from "@/components/History";
+import PromptEditor from "./core/prompts/prompt-editor";
+import { TestCases } from "./core/testcases/testcases";
+import { SecurityAnalysis } from "@/app/core/security/security-analysis";
+import { History } from "@/app/core/history/history";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAtom } from "jotai";
 import { SELECTED_ACTIVITY_BAR_TAB } from "@/components/atoms";
-import { PromptList } from "./pages/prompt-list";
-import DatabaseList from "./pages/database-list";
-import ToolsList from "./pages/tools-list";
+import { PromptList } from "@/app/core/prompts/prompt-list";
+import DatabaseList from "@/app/core/databases/database-list";
+import ToolsList from "@/app/core/tools/tools-list";
+import { ActivityBar } from "@/components/activity-bar";
 
 export default function Home() {
 	const [selectedTab] = useAtom(SELECTED_ACTIVITY_BAR_TAB);
@@ -62,23 +62,23 @@ export default function Home() {
 								className="h-full flex flex-col"
 							>
 								<div className=" border-b rounded-none w-full">
-								<TabsList className="p-0 bg-transparent border-0">
-									<TabsTrigger
-										value="tests"
-										className="rounded-none border-0 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-blue-500"
-									>
-										Test Cases
-									</TabsTrigger>
-									<TabsTrigger
-										value="security"
-										className="rounded-none border-0 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-blue-500"
-									>
-										Security
-									</TabsTrigger>
-									<TabsTrigger
-										value="history"
-										className="rounded-none border-0 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-blue-500"
-									>
+									<TabsList className="p-0 bg-transparent border-0">
+										<TabsTrigger
+											value="tests"
+											className="rounded-none border-0 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-blue-500"
+										>
+											Test Cases
+										</TabsTrigger>
+										<TabsTrigger
+											value="security"
+											className="rounded-none border-0 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-blue-500"
+										>
+											Security
+										</TabsTrigger>
+										<TabsTrigger
+											value="history"
+											className="rounded-none border-0 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-blue-500"
+										>
 											History
 										</TabsTrigger>
 									</TabsList>

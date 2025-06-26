@@ -6,19 +6,19 @@ import {
 	DialogContent,
 	DialogTitle,
 	DialogFooter,
-} from "./ui/dialog";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Textarea } from "./ui/textarea";
+} from "../../../components/ui/dialog";
+import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
+import { Textarea } from "../../../components/ui/textarea";
 import {
 	Select,
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from "./ui/select";
-import { Label } from "./ui/label";
-import { Switch } from "./ui/switch";
+} from "../../../components/ui/select";
+import { Label } from "../../../components/ui/label";
+import { Switch } from "../../../components/ui/switch";
 import { Beaker, Bug, Shield, X, Info } from "lucide-react";
 import Image from "next/image";
 

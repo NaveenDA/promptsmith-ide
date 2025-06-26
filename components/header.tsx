@@ -10,7 +10,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, LogOut, Settings, User } from "lucide-react";
-import { ApiKeysDialog } from "./ApiKeysDialog";
+import { ApiKeysDialog } from "../app/core/models/api-keys-dialog";
 import Image from "next/image";
 
 export default function Header() {

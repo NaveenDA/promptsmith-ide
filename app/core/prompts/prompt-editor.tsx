@@ -1,18 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
-	Play,
 	Save,
-	Shield,
-	Variable,
 } from "lucide-react";
-import { Badge } from "./ui/badge";
+import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { useModelStore } from "@/lib/store";
-import { ModelConfigDialog } from "./ModelConfigDialog";
+import { ModelConfigDialog } from "@/app/core/models/model-config";
 
 interface Variable {
 	name: string;

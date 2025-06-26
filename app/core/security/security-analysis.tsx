@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { SecurityAnalysisDialog } from "./SecurityAnalysisDialog";
+import { SecurityAnalysisDialog } from "./security-analysis-dialog";
 import { Shield, AlertTriangle, CheckCircle, XCircle, Eye, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
 
 interface SecurityTest {
 	id: string;

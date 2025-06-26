@@ -13,7 +13,7 @@ import { Badge } from "./ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import Image from "next/image";
 import { useModelStore } from "@/lib/store";
-import { ModelConfigDialog } from "./ModelConfigDialog";
+import { ModelConfigDialog } from "../app/core/models/model-config";
 import { Button } from "./ui/button";
 
 interface StatusBarProps {

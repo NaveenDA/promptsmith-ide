@@ -138,6 +138,11 @@ export function PromptList() {
       <div className="flex-1 overflow-auto">
         {prompts.map((prompt) => (
           <div
+            onKeyUp={(e) => {
+              if (e.key === "Enter") {
+                setSelectedPrompt(prompt.id);
+              }
+            }}
             key={prompt.id}
             className={cn(
               "group flex flex-col px-2 py-1.5 hover:bg-gray-100 cursor-pointer border-l-2 transition-colors border-b",

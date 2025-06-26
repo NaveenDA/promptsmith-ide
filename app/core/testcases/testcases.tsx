@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import {
 	AlertCircle,
 	CheckCircle2,
@@ -16,30 +16,30 @@ import {
 	XCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Badge } from "./ui/badge";
+import { Badge } from "@/components/ui/badge";
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipProvider,
 	TooltipTrigger,
-} from "./ui/tooltip";
+} from "@/components/ui/tooltip";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
-import { TestCaseDialog } from "./TestCaseDialog";
-import { Switch } from "./ui/switch";
+} from "@/components/ui/dropdown-menu";
+import { TestCaseDialog } from "./testcases-dialog";
+import { Switch } from "@/components/ui/switch";
 import {
 	Dialog,
 	DialogContent,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-} from "./ui/dialog";
-import { Label } from "./ui/label";
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 interface TestCase {
 	id: string;

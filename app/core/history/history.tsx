@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import {
 	Clock,
 	ChevronRight,
@@ -10,7 +10,7 @@ import {
 	RotateCcw,
 	Copy,
 } from "lucide-react";
-import { Badge } from "./ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 
 interface PromptVersion {
@@ -84,6 +84,7 @@ export function History() {
 				{versions.map((version) => (
 					<div key={version.id} className="border-b">
 						<button
+							type="button"
 							onClick={() => toggleVersion(version.id)}
 							className="w-full px-3 py-2 flex items-center gap-2 hover:bg-gray-50 transition-colors"
 						>

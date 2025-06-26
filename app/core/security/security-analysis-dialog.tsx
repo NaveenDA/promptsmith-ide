@@ -115,6 +115,7 @@ export function SecurityAnalysisDialog({ onAnalysisStart }: SecurityAnalysisDial
 		Math.ceil((totalTests * depth) / 100);
 
 	// Calculate total test cases and cost
+	// biome-ignore lint/correctness/useExhaustiveDependencies: we included all the required dependencies
 	const { totalTests, totalCost } = useMemo(() => {
 		const isCustom = depth > 80;
 		const types = isCustom ? selectedTypes : ANALYSIS_TYPES.map((t) => t.id);

@@ -1,6 +1,6 @@
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 import { useState } from "react";
 import {
@@ -16,8 +16,7 @@ import {
 	DialogDescription,
 	DialogHeader,
 	DialogTitle,
-} from "./ui/dialog";
-import { Textarea } from "./ui/textarea";
+} from "@/components/ui/dialog";
 import Image from "next/image";
 import {
 	Tooltip,
@@ -209,6 +208,7 @@ export function DatabaseConfig({ open, onOpenChange }: DatabaseConfigProps) {
 					<div className="grid grid-cols-3 gap-3 py-4">
 						{DATABASE_TYPES.map((type) => (
 							<button
+								type="button"
 								key={type.id}
 								className={cn(
 									"flex flex-col items-center gap-2 p-4 rounded-lg border",
