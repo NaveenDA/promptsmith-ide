@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import TitleBar from "@/components/ui/title-bar";
 import Fuse from "fuse.js";
+import { sample_prompts } from "@/lib/sample-db";
 
 interface Prompt {
 	id: string;
@@ -43,32 +44,7 @@ interface Prompt {
 }
 
 export function PromptList() {
-	const [prompts, setPrompts] = useState<Prompt[]>([
-		{
-			id: "1",
-			name: "Customer Support Assistant",
-			lastModified: new Date(Date.now() - 1000 * 60 * 30), // 30 mins ago
-			status: "ready",
-			testStats: { passed: 8, total: 10 },
-			securityIssues: 0,
-		},
-		{
-			id: "2",
-			name: "Code Review Helper",
-			lastModified: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-			status: "needs-review",
-			testStats: { passed: 4, total: 6 },
-			securityIssues: 1,
-		},
-		{
-			id: "3",
-			name: "Product Description Generator",
-			lastModified: new Date(),
-			status: "draft",
-			testStats: { passed: 2, total: 5 },
-			securityIssues: 0,
-		},
-	]);
+	const [prompts, setPrompts] = useState<Prompt[]>(sample_prompts as Prompt[]);
 	const [selectedPrompt, setSelectedPrompt] = useState<string | null>(null);
 	const [isRenaming, setIsRenaming] = useState<string | null>(null);
 	const [newName, setNewName] = useState("");

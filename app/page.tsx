@@ -37,7 +37,7 @@ export default function Home() {
 						<ResizablePanel
 							defaultSize={20}
 							minSize={20}
-							maxSize={25}
+							maxSize={20}
 							className="bg-gray-50"
 						>
 							{/* Left sidebar with prompt list or database config */}
@@ -55,15 +55,15 @@ export default function Home() {
 							</SwitchCase>
 						</ResizablePanel>
 						<ResizableHandle withHandle />
-						<ResizablePanel defaultSize={60} className="bg-white">
+						<ResizablePanel defaultSize={50} className="bg-white">
 							{/* Main editor area */}
 							<PromptEditor />
 						</ResizablePanel>
 						<ResizableHandle withHandle />
 						<ResizablePanel
-							defaultSize={20}
-							minSize={20}
-							maxSize={25}
+							defaultSize={30}
+							minSize={25}
+							maxSize={30}
 							className="bg-gray-50"
 						>
 							{/* Right sidebar with test cases, security analysis, and history */}

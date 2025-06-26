@@ -1,13 +1,9 @@
 import { Button } from "@/components/ui/button";
 import {
-	ArrowRight,
 	Cloud,
 	CloudOff,
 	ExternalLink,
 	Info,
-	Plus,
-	Shield,
-	Zap,
 } from "lucide-react";
 import {
 	Tooltip,
@@ -15,8 +11,6 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import TitleBar from "@/components/ui/title-bar";
 
 interface Tool {

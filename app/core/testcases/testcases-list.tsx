@@ -15,10 +15,11 @@ import {
 	MoreVertical,
 	Play,
 	Plus,
+	ThumbsDown,
+	ThumbsUp,
 	XCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import {
 	Tooltip,
 	TooltipContent,
@@ -186,6 +187,8 @@ export function TestCases() {
 	const [selectedTests, setSelectedTests] = useState<TestCase[]>([]);
 	const [useAiJudge, setUseAiJudge] = useState(false);
 	const [isExpanded, setIsExpanded] = useState(false);
+	const [qaDialogOpen, setQaDialogOpen] = useState(false);
+	const [qaTest, setQaTest] = useState<TestCase | null>(null);
 
 	const toggleGroup = (groupName: string) => {
 		const newExpanded = new Set(expandedGroups);
@@ -442,12 +445,23 @@ Keep the explanation under 100 characters.
 		);
 	};
 
+	const handleApprove = (test: TestCase) => {
+		handleValidateOutput(test, true, "Approved by user");
+		setQaDialogOpen(false);
+	};
+	const handleDisapprove = (test: TestCase) => {
+		handleValidateOutput(test, false, "Disapproved by user");
+		setQaDialogOpen(false);
+	};
+
 	return (
 		<div className="h-full flex flex-col">
 			<TitleBar
 				title="Test Cases"
 				extra={
 					<div className="flex items-center gap-2">
+						<Tooltip>
+							<TooltipTrigger asChild>
 						<Button
 							size="icon"
 							variant="ghost"
@@ -459,6 +473,13 @@ Keep the explanation under 100 characters.
 						>
 							<Plus className="w-4 h-4" />
 						</Button>
+						</TooltipTrigger>
+						<TooltipContent>
+							<p>Add Test</p>
+						</TooltipContent>
+						</Tooltip>
+						<Tooltip>
+							<TooltipTrigger asChild>
 						<Button
 							size="icon"
 							variant="ghost"
@@ -476,7 +497,14 @@ Keep the explanation under 100 characters.
 						>
 							<Play className="w-4 h-4" />
 						</Button>
+						</TooltipTrigger>
+						<TooltipContent>
+							<p>Run All Tests</p>
+						</TooltipContent>
+						</Tooltip>
 						{/* Expand / Collapse all */}
+						<Tooltip>
+							<TooltipTrigger asChild>
 						<Button
 							size="icon"
 							variant="ghost"
@@ -495,25 +523,29 @@ Keep the explanation under 100 characters.
 						>
 							{isExpanded
 								? <ChevronDown className="w-4 h-4" />
-								: <ChevronUp className="w-4 h-4" />}
-						</Button>
+									: <ChevronUp className="w-4 h-4" />}
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>
+							{isExpanded ? "Collapse all" : "Expand all"}
+						</TooltipContent>
+						</Tooltip>
 					</div>
 				}
 			/>
-			<div className="p-2">
+			<div className="">
 				<Accordion
-					type="single"
-					collapsible
+					type="multiple"
 					className="w-full"
-					defaultValue={groups[0].name}
+					value={Array.from(expandedGroups)}
+					onValueChange={(values) => setExpandedGroups(new Set(values))}
 				>
 					{groups.map((group) => (
 						<AccordionItem
 							value={group.name}
 							key={group.name}
-							className="pl-2"
 						>
-							<AccordionTrigger className="h-10 hover:border-none">
+							<AccordionTrigger className="h-10 hover:border-none pl-3">
 								{group.name}
 							</AccordionTrigger>
 							<AccordionContent className="">
@@ -522,13 +554,16 @@ Keep the explanation under 100 characters.
 										<div
 											key={test.id}
 											className={cn(
-												"border-b mt-2",
-												// remove last border
+												"border-b group relative cursor-pointer transition bg-white p-2",
 												group.tests.indexOf(test) ===
 														group.tests.length - 1
 													? "border-b-0"
 													: "border-b",
 											)}
+											onClick={() => {
+												setQaTest(test);
+												setQaDialogOpen(true);
+											}}
 										>
 											{/* Status Icon */}
 											<p className="flex items-center">
@@ -540,18 +575,132 @@ Keep the explanation under 100 characters.
 												</span>
 											</p>
 											{test.actualOutput && (
-												<p className="text-xs text-gray-500">
+												<p className="text-xs text-gray-500 w-2/3 break-words whitespace-pre-wrap truncate">
 													Output: {test.actualOutput}
 												</p>
 											)}
 											<div className="flex gap-2">
-												{/* Cost and Latency */}
 												<p className="text-xs text-gray-500">
 													Cost: ${test.cost}
 												</p>
 												<p className="text-xs text-gray-500">
 													Latency: {test.latency}ms
 												</p>
+											</div>
+											{/* Dropdown menu for actions */}
+											<div className="absolute right-10 top-1/2 -translate-y-1/2 z-10">
+												<DropdownMenu>
+													<DropdownMenuTrigger
+														asChild
+													>
+														<Button
+															size="icon"
+															variant="ghost"
+															onClick={(e) =>
+																e.stopPropagation()}
+															title="Actions"
+														>
+															<MoreVertical className="w-4 h-4" />
+														</Button>
+													</DropdownMenuTrigger>
+													<DropdownMenuContent align="end">
+														<DropdownMenuItem
+															onClick={(e) => {
+																e.stopPropagation();
+																handleRunTest(
+																	test,
+																);
+															}}
+														>
+															Re-run
+														</DropdownMenuItem>
+														<DropdownMenuItem
+															onClick={(e) => {
+																e.stopPropagation();
+																setEditingTest({
+																	test,
+																	groupName:
+																		group
+																			.name,
+																});
+																setDialogOpen(
+																	true,
+																);
+															}}
+														>
+															Edit
+														</DropdownMenuItem>
+														<DropdownMenuItem
+															onClick={(e) => {
+																e.stopPropagation();
+																handleDuplicateTest(
+																	test,
+																	group.name,
+																);
+															}}
+														>
+															Duplicate
+														</DropdownMenuItem>
+														<DropdownMenuSeparator />
+														<DropdownMenuItem
+															onClick={(e) => {
+																e.stopPropagation();
+																handleDeleteTest(
+																	test.id,
+																	group.name,
+																);
+															}}
+															variant="destructive"
+														>
+															Delete
+														</DropdownMenuItem>
+													</DropdownMenuContent>
+												</DropdownMenu>
+											</div>
+											{/* Approve/Disapprove always visible at bottom right, small */}
+											<div className=" flex gap-1">
+												<Tooltip>
+													<TooltipTrigger asChild>
+														<Button
+															size="xs"
+															variant="ghost"
+															onClick={(e) => {
+																e.stopPropagation();
+																handleApprove(
+																	test,
+																);
+															}}
+															title="Approve"
+															className="scale-75"
+														>
+															<ThumbsUp className="w-3 h-3 text-green-500" />
+														</Button>
+													</TooltipTrigger>
+													<TooltipContent>
+														<p>Approve</p>
+													</TooltipContent>
+												</Tooltip>
+												<Tooltip>
+													<TooltipTrigger asChild>
+														<Button
+															size="xs"
+															variant="ghost"
+															onClick={(e) => {
+																e.stopPropagation();
+																handleDisapprove(
+																	test,
+																);
+															}}
+															title="Disapprove"
+															className="scale-75"
+														>
+															<ThumbsDown className="w-3 h-3 text-red-500" />
+														</Button>
+													</TooltipTrigger>
+													<TooltipContent>
+														<p>Disapprove</p>
+													</TooltipContent>
+												</Tooltip>
 											</div>
 										</div>
 									);
@@ -685,6 +834,54 @@ Keep the explanation under 100 characters.
 					}
 					: undefined}
 			/>
+
+			{/* Q&A Dialog */}
+			<Dialog open={qaDialogOpen} onOpenChange={setQaDialogOpen}>
+				<DialogContent className="max-w-2xl">
+					<DialogHeader>
+						<DialogTitle>Test Case Details</DialogTitle>
+					</DialogHeader>
+					{qaTest && (
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+							<div className="space-y-2">
+								<p className="font-semibold text-sm text-gray-700">
+									Input
+								</p>
+								<pre className="bg-gray-100 rounded p-2 text-xs whitespace-pre-wrap">{qaTest.input}</pre>
+								
+							</div>
+							<div className="space-y-2">
+								<p className="font-semibold text-sm text-gray-700">
+									Response
+								</p>
+								<pre className="bg-gray-100 rounded p-2 text-xs whitespace-pre-wrap break-words max-h-40 overflow-auto">{qaTest.actualOutput || "-"}</pre>
+							</div>
+						</div>
+					)}
+					<DialogFooter className="mt-4 flex gap-2">
+						{qaTest && (
+							<>
+								<Button
+									variant="outline"
+									onClick={() => handleApprove(qaTest)}
+								>
+									<ThumbsUp className="w-4 h-4 mr-1 text-green-500" />
+									{" "}
+									Approve
+								</Button>
+								<Button
+									variant="destructive"
+									onClick={() => handleDisapprove(qaTest)}
+								>
+									<ThumbsDown className="w-4 h-4 mr-1 " />
+									{" "}
+									Disapprove
+								</Button>
+							</>
+						)}
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }

@@ -4,23 +4,24 @@ import { useState } from "react";
 import {
 	Dialog,
 	DialogContent,
-	DialogTitle,
 	DialogFooter,
-} from "../../../components/ui/dialog";
-import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
-import { Textarea } from "../../../components/ui/textarea";
+	DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
 	Select,
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from "../../../components/ui/select";
-import { Label } from "../../../components/ui/label";
-import { Switch } from "../../../components/ui/switch";
-import { Beaker, Bug, Shield, X, Info } from "lucide-react";
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Beaker, Bug, Info, Shield, X } from "lucide-react";
 import Image from "next/image";
+import { Slider } from "@/components/ui/slider";
 
 interface TestCaseDialogProps {
 	open: boolean;
@@ -47,6 +48,69 @@ interface TestCaseDialogProps {
 		aiValidationPrompt?: string;
 	};
 }
+
+const sample_databases = [
+	{
+		name: "Website Index",
+		type: "chroma",
+		description:
+			"Semantic search index for website content and documentation",
+		documentCount: 15234,
+		lastUpdated: "2024-03-15",
+		status: "active",
+	},
+	{
+		name: "Product Index",
+		type: "chroma",
+		description: "Product catalog with semantic search capabilities",
+		documentCount: 8756,
+		lastUpdated: "2024-03-14",
+		status: "indexing",
+	},
+	{
+		name: "Customer Support",
+		type: "pinecone",
+		description: "Support tickets and knowledge base articles",
+		documentCount: 25689,
+		lastUpdated: "2024-03-13",
+		status: "active",
+	},
+	{
+		name: "Scientific Research",
+		type: "pgvector",
+		description: "Research papers and academic publications",
+		documentCount: 42156,
+		lastUpdated: "2024-03-12",
+		status: "active",
+	},
+	{
+		name: "Financial Data",
+		type: "qdrant",
+		description: "Financial reports and market analysis",
+		documentCount: 12567,
+		lastUpdated: "2024-03-10",
+		status: "error",
+	},
+	//
+	{
+		name: "Product Index A very long name that should be truncated",
+		type: "chroma",
+		description: "Product catalog with semantic search capabilities",
+		documentCount: 8756,
+		lastUpdated: "2024-03-14",
+		status: "indexing",
+	},
+];
+
+const dbtype_images = {
+	chroma: "/logos/chroma.webp",
+	faiss: "/logos/meta.png",
+	pinecone: "/logos/pinecone.png",
+	pgvector: "/logos/pg-vector.png",
+	qdrant: "/logos/qdrant.png",
+	weaviate: "/logos/weaviate.png",
+	milvus: "/logos/milvus.png",
+} as const;
 
 const textEmbeddingModels = [
 	{
@@ -87,12 +151,15 @@ export function TestCaseDialog({
 	const [type, setType] = useState<"basic" | "edge" | "security">("basic");
 	const [input, setInput] = useState("");
 	const [useDB, setUseDB] = useState(false);
-	const [selectedDB, setSelectedDB] = useState(groups[0]?.name || "");
+	const [selectedDB, setSelectedDB] = useState(
+		sample_databases[0]?.name || "",
+	);
 	const [dbQuery, setDBQuery] = useState("");
 	const [numResults, setNumResults] = useState(3);
 	const [embeddingModel, setEmbeddingModel] = useState(
 		"text-embedding-3-small",
 	);
+	const [similarityThreshold, setSimilarityThreshold] = useState(0.5);
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
@@ -114,7 +181,9 @@ export function TestCaseDialog({
 			<DialogContent className="sm:max-w-[500px] p-0 gap-0">
 				<div className="p-6 space-y-6">
 					<div className="flex items-center justify-between">
-						<DialogTitle className="text-xl">Add Test Case</DialogTitle>
+						<DialogTitle className="text-xl">
+							Add Test Case
+						</DialogTitle>
 					</div>
 
 					<div className="space-y-6">
@@ -135,7 +204,9 @@ export function TestCaseDialog({
 							<div className="flex gap-2">
 								<Button
 									type="button"
-									variant={type === "basic" ? "default" : "outline"}
+									variant={type === "basic"
+										? "default"
+										: "outline"}
 									className="flex-1 gap-2"
 									onClick={() => setType("basic")}
 								>
@@ -144,7 +215,9 @@ export function TestCaseDialog({
 								</Button>
 								<Button
 									type="button"
-									variant={type === "edge" ? "default" : "outline"}
+									variant={type === "edge"
+										? "default"
+										: "outline"}
 									className="flex-1 gap-2"
 									onClick={() => setType("edge")}
 								>
@@ -153,7 +226,9 @@ export function TestCaseDialog({
 								</Button>
 								<Button
 									type="button"
-									variant={type === "security" ? "default" : "outline"}
+									variant={type === "security"
+										? "default"
+										: "outline"}
 									className="flex-1 gap-2"
 									onClick={() => setType("security")}
 								>
@@ -184,7 +259,10 @@ export function TestCaseDialog({
 								>
 									Use Database
 								</Label>
-								<Switch checked={useDB} onCheckedChange={setUseDB} />
+								<Switch
+									checked={useDB}
+									onCheckedChange={setUseDB}
+								/>
 							</div>
 
 							{useDB && (
@@ -197,8 +275,8 @@ export function TestCaseDialog({
 											<code className="bg-muted px-1 py-0.5 rounded">
 												$db_results
 											</code>{" "}
-											in your prompt where you want to include the database
-											results
+											in your prompt where you want to
+											include the database results
 										</p>
 									</div>
 
@@ -219,26 +297,36 @@ export function TestCaseDialog({
 															<SelectValue placeholder="Select database" />
 														</SelectTrigger>
 														<SelectContent>
-															{groups.map((group) => (
-																<SelectItem
-																	key={group.name}
-																	value={group.name}
-																	className="py-2.5"
-																>
-																	<div className="flex items-center gap-2">
-																		<Image
-																			src={`/db-icons/${group.name.toLowerCase()}.svg`}
-																			alt={group.name}
-																			width={16}
-																			height={16}
-																			className="object-contain"
-																		/>
-																		<span className="font-medium">
-																			{group.name}
-																		</span>
-																	</div>
-																</SelectItem>
-															))}
+															{sample_databases
+																.map((db) => (
+																	<SelectItem
+																		key={db
+																			.name}
+																		value={db
+																			.name}
+																		className="py-2.5 truncate w-48"
+																	>
+																		<div className="flex items-center gap-2">
+																			<Image
+																				src={dbtype_images[
+																					db.type as keyof typeof dbtype_images
+																				]}
+																				alt={db
+																					.name}
+																				width={16}
+																				height={16}
+																				className="object-contain"
+																			/>
+																			<span
+																				className="font-medium truncate overflow-hidden whitespace-nowrap max-w-[10rem]"
+																				title={db
+																					.name}
+																			>
+																				{db.name}
+																			</span>
+																		</div>
+																	</SelectItem>
+																))}
 														</SelectContent>
 													</Select>
 												</div>
@@ -256,7 +344,17 @@ export function TestCaseDialog({
 															<SelectValue>
 																<div className="flex items-center gap-2">
 																	<Image
-																		src={`/logos/${textEmbeddingModels.find((m) => m.name === embeddingModel)?.provider.toLowerCase()}.svg`}
+																		src={`/logos/${
+																			textEmbeddingModels
+																				.find(
+																					(
+																						m,
+																					) => m
+																						.name ===
+																						embeddingModel
+																				)?.provider
+																				.toLowerCase()
+																		}.svg`}
 																		alt={embeddingModel}
 																		width={14}
 																		height={14}
@@ -269,31 +367,39 @@ export function TestCaseDialog({
 															</SelectValue>
 														</SelectTrigger>
 														<SelectContent>
-															{textEmbeddingModels.map((model) => (
-																<SelectItem
-																	key={model.name}
-																	value={model.name}
-																	className="py-2.5"
-																>
-																	<div className="flex items-center gap-2">
-																		<Image
-																			src={`/logos/${model.provider.toLowerCase()}.svg`}
-																			alt={model.provider}
-																			width={16}
-																			height={16}
-																			className="object-contain"
-																		/>
-																		<div>
-																			<div className="font-medium">
-																				{model.name}
-																			</div>
-																			<div className="text-xs text-gray-500">
-																				{model.description}
+															{textEmbeddingModels
+																.map((
+																	model,
+																) => (
+																	<SelectItem
+																		key={model
+																			.name}
+																		value={model
+																			.name}
+																		className="py-2.5"
+																	>
+																		<div className="flex items-center gap-2">
+																			<Image
+																				src={`/logos/${model.provider.toLowerCase()}.svg`}
+																				alt={model
+																					.provider}
+																				width={16}
+																				height={16}
+																				className="object-contain"
+																			/>
+																			<div>
+																				<div className="font-medium truncate ">
+																					{model
+																						.name}
+																				</div>
+																				<div className="text-xs text-gray-500">
+																					{model
+																						.description}
+																				</div>
 																			</div>
 																		</div>
-																	</div>
-																</SelectItem>
-															))}
+																	</SelectItem>
+																))}
 														</SelectContent>
 													</Select>
 												</div>
@@ -301,25 +407,46 @@ export function TestCaseDialog({
 
 											<div className="grid grid-cols-2 gap-4">
 												<div className="space-y-2">
-													<Label className="text-sm font-medium">Results</Label>
+													<Label className="text-sm font-medium">
+														Results
+													</Label>
 													<Input
 														type="number"
 														min={1}
 														max={10}
 														value={numResults}
 														onChange={(e) =>
-															setNumResults(Number(e.target.value))
-														}
+															setNumResults(
+																Number(
+																	e.target
+																		.value,
+																),
+															)}
 														className="h-9"
 													/>
 												</div>
+												{/* Similarity threshold */}
 												<div className="space-y-2">
-													<Label className="text-sm font-medium">Query</Label>
-													<Input
-														value={dbQuery}
-														onChange={(e) => setDBQuery(e.target.value)}
-														placeholder="Search terms"
-														className="h-9"
+													<Label className="text-sm font-medium">
+														Similarity Threshold
+														(0-1)
+													</Label>
+													<p className="h-1 text-xs text-muted-foreground">
+														{similarityThreshold}
+													</p>
+													<Slider
+														min={0}
+														max={1}
+														step={0.01}
+														value={[
+															similarityThreshold,
+														]}
+														onValueChange={(
+															value,
+														) => setSimilarityThreshold(
+															value[0],
+														)}
+														className="w-full mt-4"
 													/>
 												</div>
 											</div>
@@ -332,7 +459,11 @@ export function TestCaseDialog({
 				</div>
 
 				<DialogFooter className="p-6 pt-0">
-					<Button className="w-full" type="submit" onClick={handleSubmit}>
+					<Button
+						className="w-full"
+						type="submit"
+						onClick={handleSubmit}
+					>
 						Save Test Case
 					</Button>
 				</DialogFooter>
