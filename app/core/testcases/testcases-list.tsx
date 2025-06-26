@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import {
 	AlertCircle,
 	CheckCircle2,
+	ChevronDown,
 	ChevronRight,
+	ChevronUp,
 	Clock,
 	DollarSign,
 	Hash,
@@ -41,6 +43,12 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import TitleBar from "@/components/ui/title-bar";
+import {
+	Accordion,
+	AccordionContent,
+	AccordionItem,
+	AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface TestCase {
 	id: string;
@@ -102,6 +110,44 @@ export function TestCases() {
 					tokens: 100,
 					cost: 0.001,
 				},
+				{
+					// json output
+					id: "3",
+					name: "JSON Output",
+					status: "passed",
+					type: "basic",
+					input: "Hi this is naveen, and I am happy today.",
+					expectedOutput: "positive, happy",
+					validationMethod: "manual",
+					reviewNotes: "✓ Correctly identified happy sentiment",
+					latency: 1200,
+					tokens: 150,
+					cost: 0.002,
+					actualOutput:
+						'{"max_tokens":1000,"temperature":0.5,"top_p":1,"frequency_penalty":0,"presence_penalty":0,"stop":null,"n":1,"stream":false,"logprobs":null,"echo":false,"message":[{"role":"user","content":"What is the melting point of aluminum?"},{"role":"assistant","content":"The melting point of aluminum is 660 °C."}]}',
+				},
+			],
+		},
+		{
+			name: "Edge Tests",
+			description: "Edge functionality tests",
+			tests: [
+				{
+					id: "3",
+					name: "Mixed Sentiment",
+					status: "needs-review",
+					type: "edge",
+					input: "I got promoted but I have to relocate.",
+					actualOutput: "mixed, positive, negative",
+					validationMethod: "ai",
+					validationRules:
+						"Check if output contains both positive and negative aspects",
+					aiValidationPrompt:
+						"Does the output correctly identify mixed sentiments? The text contains both a positive event (promotion) and a potential negative aspect (relocation).",
+					latency: 800,
+					tokens: 100,
+					cost: 0.001,
+				},
 			],
 		},
 		{
@@ -111,7 +157,7 @@ export function TestCases() {
 				{
 					id: "3",
 					name: "Prompt Injection",
-					status: "running",
+					status: "passed",
 					type: "security",
 					input: "Attempt to inject malicious prompt...",
 					expectedOutput: "Safe response",
@@ -119,6 +165,7 @@ export function TestCases() {
 					tokens: 120,
 					cost: 0.0015,
 					validationMethod: "manual",
+					actualOutput: "Safe response",
 				},
 			],
 		},
@@ -129,13 +176,16 @@ export function TestCases() {
 	);
 	const [selectedTest, setSelectedTest] = useState<string | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
-	const [editingTest, setEditingTest] = useState<{
-		test: TestCase;
-		groupName: string;
-	} | null>(null);
+	const [editingTest, setEditingTest] = useState<
+		{
+			test: TestCase;
+			groupName: string;
+		} | null
+	>(null);
 	const [runDialogOpen, setRunDialogOpen] = useState(false);
 	const [selectedTests, setSelectedTests] = useState<TestCase[]>([]);
 	const [useAiJudge, setUseAiJudge] = useState(false);
+	const [isExpanded, setIsExpanded] = useState(false);
 
 	const toggleGroup = (groupName: string) => {
 		const newExpanded = new Set(expandedGroups);
@@ -194,7 +244,7 @@ export function TestCases() {
 						return {
 							...group,
 							tests: group.tests.map((t) =>
-								t.id === editingTest.test.id ? newTest : t,
+								t.id === editingTest.test.id ? newTest : t
 							),
 						};
 					}
@@ -224,7 +274,7 @@ export function TestCases() {
 					};
 				}
 				return group;
-			}),
+			})
 		);
 		if (selectedTest === testId) {
 			setSelectedTest(null);
@@ -248,7 +298,7 @@ export function TestCases() {
 					};
 				}
 				return group;
-			}),
+			})
 		);
 	};
 
@@ -265,13 +315,13 @@ export function TestCases() {
 
 			// AI validation cost if applicable
 			if (test.validationMethod !== "exact" && useAiJudge) {
-				const validationTokens =
-					((test.validationRules?.length || 0) +
-						(test.aiValidationPrompt?.length || 0) +
-						test.input.length +
-						200) / // Buffer for validation response
+				const validationTokens = ((test.validationRules?.length || 0) +
+					(test.aiValidationPrompt?.length || 0) +
+					test.input.length +
+					200) / // Buffer for validation response
 					4;
-				costs.totalAiValidationCost += (validationTokens / 1000) * 0.0015;
+				costs.totalAiValidationCost += (validationTokens / 1000) *
+					0.0015;
 			}
 		}
 
@@ -298,9 +348,9 @@ export function TestCases() {
 			currentGroups.map((group) => ({
 				...group,
 				tests: group.tests.map((t) =>
-					t.id === test.id ? { ...t, status: "running" } : t,
+					t.id === test.id ? { ...t, status: "running" } : t
 				),
-			})),
+			}))
 		);
 
 		// TODO: Actual test execution logic here
@@ -317,7 +367,9 @@ export function TestCases() {
 		let additionalCost = 0;
 
 		if (test.validationMethod === "exact") {
-			status = test.expectedOutput === result.output ? "passed" : "failed";
+			status = test.expectedOutput === result.output
+				? "passed"
+				: "failed";
 		} else if (useAiJudge) {
 			// TODO: Implement AI validation
 			const aiValidationPrompt = `
@@ -339,10 +391,9 @@ Keep the explanation under 100 characters.
 
 			// Simulate AI validation for now
 			status = Math.random() > 0.5 ? "passed" : "failed";
-			reviewNotes =
-				status === "passed"
-					? "✓ AI Judge: Output correctly identifies the sentiment"
-					: "✗ AI Judge: Output missing key sentiment aspects";
+			reviewNotes = status === "passed"
+				? "✓ AI Judge: Output correctly identifies the sentiment"
+				: "✗ AI Judge: Output missing key sentiment aspects";
 
 			// Calculate AI validation cost
 			const promptTokens = aiValidationPrompt.length / 4;
@@ -356,17 +407,17 @@ Keep the explanation under 100 characters.
 				tests: group.tests.map((t) =>
 					t.id === test.id
 						? {
-								...t,
-								actualOutput: result.output,
-								latency: result.latency,
-								tokens: result.tokens,
-								cost: (result.cost || 0) + additionalCost,
-								status,
-								reviewNotes,
-							}
-						: t,
+							...t,
+							actualOutput: result.output,
+							latency: result.latency,
+							tokens: result.tokens,
+							cost: (result.cost || 0) + additionalCost,
+							status,
+							reviewNotes,
+						}
+						: t
 				),
-			})),
+			}))
 		);
 	};
 
@@ -381,204 +432,134 @@ Keep the explanation under 100 characters.
 				tests: group.tests.map((t) =>
 					t.id === test.id
 						? {
-								...t,
-								status: isValid ? "passed" : "failed",
-								reviewNotes: notes || t.reviewNotes,
-							}
-						: t,
+							...t,
+							status: isValid ? "passed" : "failed",
+							reviewNotes: notes || t.reviewNotes,
+						}
+						: t
 				),
-			})),
+			}))
 		);
 	};
 
 	return (
 		<div className="h-full flex flex-col">
-				<TitleBar title="Test Cases"
+			<TitleBar
+				title="Test Cases"
 				extra={
 					<div className="flex items-center gap-2">
 						<Button
-						size="xs"
-						variant="outline"
-						className="text-xs"
-						onClick={() => {
-							setEditingTest(null);
-							setDialogOpen(true);
-						}}
-					>
-						<Plus className="w-4 h-4" />
-						Add Test
-					</Button>
-					<Button
-						size="xs"
-						variant="outline"
-						className="text-xs"
-						onClick={() => {
-							setSelectedTests(
-								groups.flatMap((g) =>
-									g.tests.filter((t) => t.status !== "running"),
-								),
-							);
-							setRunDialogOpen(true);
-						}}
-					>
-						<Play className="w-4 h-4" />
-						Run All
-					</Button>
-					</div>
-				}
-				/>
-
-		
-
-			<div className="flex-1 overflow-auto">
-				{groups.map((group) => (
-					<div key={group.name} className="border-b last:border-b-0">
-						<div
-							className="flex items-center gap-2 px-4 py-2 bg-gray-50/50 cursor-pointer select-none"
-							onClick={() => toggleGroup(group.name)}
-							onKeyDown={(e) => {
-								if (e.key === "Enter" || e.key === " ") {
-									toggleGroup(group.name);
+							size="icon"
+							variant="ghost"
+							className="text-xs hover:bg-gray-100"
+							onClick={() => {
+								setEditingTest(null);
+								setDialogOpen(true);
+							}}
+						>
+							<Plus className="w-4 h-4" />
+						</Button>
+						<Button
+							size="icon"
+							variant="ghost"
+							className="text-xs hover:bg-gray-100"
+							onClick={() => {
+								setSelectedTests(
+									groups.flatMap((g) =>
+										g.tests.filter((t) =>
+											t.status !== "running"
+										)
+									),
+								);
+								setRunDialogOpen(true);
+							}}
+						>
+							<Play className="w-4 h-4" />
+						</Button>
+						{/* Expand / Collapse all */}
+						<Button
+							size="icon"
+							variant="ghost"
+							className="text-xs hover:bg-gray-100"
+							onClick={() => {
+								if (!isExpanded) {
+									setExpandedGroups(
+										new Set(groups.map((g) => g.name)),
+									);
+									setIsExpanded(true);
+								} else {
+									setExpandedGroups(new Set());
+									setIsExpanded(false);
 								}
 							}}
 						>
-							<ChevronRight
-								className={cn(
-									"h-4 w-4 text-gray-500 transition-transform",
-									expandedGroups.has(group.name) && "rotate-90",
-								)}
-							/>
-							<span className="text-sm font-medium">{group.name}</span>
-							<Badge variant="outline" className="text-xs">
-								{group.tests.length}
-							</Badge>
-						</div>
-
-						{expandedGroups.has(group.name) && (
-							<div className="py-1">
-								{group.tests.map((test) => (
-									<div
-										key={test.id}
-										className={cn(
-											"group px-8 py-2 hover:bg-gray-50 cursor-pointer border-l-2",
-											selectedTest === test.id
-												? "bg-gray-50 border-l-blue-500"
-												: "border-l-transparent",
-										)}
-										onClick={() => setSelectedTest(test.id)}
-										onKeyDown={(e) => {
-											if (e.key === "Enter" || e.key === " ") {
-												setSelectedTest(test.id);
-											}
-										}}
-									>
-										<div className="flex items-center gap-2 mb-1">
-											{getStatusIcon(test.status)}
-											<span className="text-sm font-medium">{test.name}</span>
-											{test.status === "needs-review" &&
-												test.validationMethod === "manual" && (
-													<div className="flex items-center gap-1">
-														<Button
-															size="sm"
-															variant="outline"
-															className="h-6 text-xs text-green-600 hover:text-green-700"
-															onClick={(e) => {
-																e.stopPropagation();
-																handleValidateOutput(
-																	test,
-																	true,
-																	"Manually approved",
-																);
-															}}
-														>
-															Approve
-														</Button>
-														<Button
-															size="sm"
-															variant="outline"
-															className="h-6 text-xs text-red-600 hover:text-red-700"
-															onClick={(e) => {
-																e.stopPropagation();
-																handleValidateOutput(
-																	test,
-																	false,
-																	"Manually rejected",
-																);
-															}}
-														>
-															Reject
-														</Button>
-													</div>
-												)}
-											<div className="flex-1" />
-											<Button
-												variant="ghost"
-												size="icon"
-												className="h-6 w-6 opacity-0 group-hover:opacity-100"
-												onClick={(e) => {
-													e.stopPropagation();
-													handleRunTest(test);
-												}}
-											>
-												<Play className="h-4 w-4" />
-											</Button>
-											<DropdownMenu>
-												<DropdownMenuTrigger asChild>
-													<Button
-														variant="ghost"
-														size="icon"
-														className="h-6 w-6 opacity-0 group-hover:opacity-100"
-													>
-														<MoreVertical className="h-4 w-4" />
-													</Button>
-												</DropdownMenuTrigger>
-												<DropdownMenuContent align="end">
-													<DropdownMenuItem>Edit</DropdownMenuItem>
-													<DropdownMenuItem>Duplicate</DropdownMenuItem>
-													<DropdownMenuSeparator />
-													<DropdownMenuItem className="text-red-600">
-														Delete
-													</DropdownMenuItem>
-												</DropdownMenuContent>
-											</DropdownMenu>
-										</div>
-
-										<div className="pl-6 space-y-1">
-											{test.actualOutput && (
-												<div className="text-xs">
-													<span className="text-gray-500">Output:</span>
-													<span className="font-mono">{test.actualOutput}</span>
-												</div>
-											)}
-											{test.reviewNotes && (
-												<div className="flex items-center gap-1 text-xs text-gray-600">
-													<Info className="h-3 w-3" />
-													{test.reviewNotes}
-												</div>
-											)}
-											{test.status !== "not-run" && (
-												<div className="flex items-center gap-3 text-xs text-gray-500">
-													<div className="flex items-center gap-1">
-														<Clock className="h-3 w-3" />
-														{test.latency}ms
-													</div>
-													<div className="flex items-center gap-1">
-														<Hash className="h-3 w-3" />
-														{test.tokens} tokens
-													</div>
-													<div className="flex items-center gap-1">
-														<DollarSign className="h-3 w-3" />$
-														{test.cost?.toFixed(4)}
-													</div>
-												</div>
-											)}
-										</div>
-									</div>
-								))}
-							</div>
-						)}
+							{isExpanded
+								? <ChevronDown className="w-4 h-4" />
+								: <ChevronUp className="w-4 h-4" />}
+						</Button>
 					</div>
-				))}
+				}
+			/>
+			<div className="p-2">
+				<Accordion
+					type="single"
+					collapsible
+					className="w-full"
+					defaultValue={groups[0].name}
+				>
+					{groups.map((group) => (
+						<AccordionItem
+							value={group.name}
+							key={group.name}
+							className="pl-2"
+						>
+							<AccordionTrigger className="h-10 hover:border-none">
+								{group.name}
+							</AccordionTrigger>
+							<AccordionContent className="">
+								{group.tests.map((test) => {
+									return (
+										<div
+											key={test.id}
+											className={cn(
+												"border-b mt-2",
+												// remove last border
+												group.tests.indexOf(test) ===
+														group.tests.length - 1
+													? "border-b-0"
+													: "border-b",
+											)}
+										>
+											{/* Status Icon */}
+											<p className="flex items-center">
+												{getStatusIcon(test.status)}
+												{" "}
+												&nbsp;{" "}
+												<span className="text-sm ">
+													{test.name}
+												</span>
+											</p>
+											{test.actualOutput && (
+												<p className="text-xs text-gray-500">
+													Output: {test.actualOutput}
+												</p>
+											)}
+											<div className="flex gap-2">
+												{/* Cost and Latency */}
+												<p className="text-xs text-gray-500">
+													Cost: ${test.cost}
+												</p>
+												<p className="text-xs text-gray-500">
+													Latency: {test.latency}ms
+												</p>
+											</div>
+										</div>
+									);
+								})}
+							</AccordionContent>
+						</AccordionItem>
+					))}
+				</Accordion>
 			</div>
 
 			<Dialog open={runDialogOpen} onOpenChange={setRunDialogOpen}>
@@ -589,13 +570,18 @@ Keep the explanation under 100 characters.
 					<div className="py-4">
 						<div className="flex items-center gap-4 mb-4">
 							<div className="flex-1">
-								<h3 className="text-sm font-medium mb-1">Selected Tests</h3>
+								<h3 className="text-sm font-medium mb-1">
+									Selected Tests
+								</h3>
 								<p className="text-sm text-gray-500">
 									{selectedTests.length} test
-									{selectedTests.length !== 1 ? "s" : ""} selected
+									{selectedTests.length !== 1 ? "s" : ""}{" "}
+									selected
 								</p>
 							</div>
-							{selectedTests.some((t) => t.validationMethod !== "exact") && (
+							{selectedTests.some((t) =>
+								t.validationMethod !== "exact"
+							) && (
 								<div className="flex items-center gap-2">
 									<Switch
 										id="aiJudge"
@@ -603,7 +589,10 @@ Keep the explanation under 100 characters.
 										onCheckedChange={setUseAiJudge}
 									/>
 									<div className="flex items-center gap-1">
-										<Label htmlFor="aiJudge" className="text-sm">
+										<Label
+											htmlFor="aiJudge"
+											className="text-sm"
+										>
 											Use AI Judge
 										</Label>
 										<TooltipProvider>
@@ -613,8 +602,9 @@ Keep the explanation under 100 characters.
 												</TooltipTrigger>
 												<TooltipContent>
 													<p>
-														AI will automatically validate test outputs using
-														GPT-3.5-turbo
+														AI will automatically
+														validate test outputs
+														using GPT-3.5-turbo
 													</p>
 												</TooltipContent>
 											</Tooltip>
@@ -627,13 +617,17 @@ Keep the explanation under 100 characters.
 						<div className="space-y-3 mb-4">
 							<div className="flex justify-between text-sm">
 								<span>Execution Cost</span>
-								<span>${calculateCosts().totalExecutionCost.toFixed(4)}</span>
+								<span>
+									${calculateCosts().totalExecutionCost
+										.toFixed(4)}
+								</span>
 							</div>
 							{useAiJudge && (
 								<div className="flex justify-between text-sm">
 									<span>AI Validation Cost</span>
 									<span>
-										${calculateCosts().totalAiValidationCost.toFixed(4)}
+										${calculateCosts().totalAiValidationCost
+											.toFixed(4)}
 									</span>
 								</div>
 							)}
@@ -650,7 +644,10 @@ Keep the explanation under 100 characters.
 						</div>
 					</div>
 					<DialogFooter>
-						<Button variant="outline" onClick={() => setRunDialogOpen(false)}>
+						<Button
+							variant="outline"
+							onClick={() => setRunDialogOpen(false)}
+						>
 							Cancel
 						</Button>
 						<Button onClick={handleRunSelectedTests}>
@@ -664,33 +661,29 @@ Keep the explanation under 100 characters.
 			<TestCaseDialog
 				open={dialogOpen}
 				onOpenChange={setDialogOpen}
-				onSave={
-					handleSaveTest as (testCase: {
-						name: string;
-						type: "basic" | "edge" | "security";
-						input: string;
-						expectedOutput?: string;
-						groupName: string;
-						validationMethod: "manual" | "exact" | "ai";
-						validationRules?: string;
-						aiValidationPrompt?: string;
-					}) => void
-				}
+				onSave={handleSaveTest as (testCase: {
+					name: string;
+					type: "basic" | "edge" | "security";
+					input: string;
+					expectedOutput?: string;
+					groupName: string;
+					validationMethod: "manual" | "exact" | "ai";
+					validationRules?: string;
+					aiValidationPrompt?: string;
+				}) => void}
 				groups={groups}
-				initialData={
-					editingTest
-						? {
-								name: editingTest.test.name,
-								type: editingTest.test.type,
-								input: editingTest.test.input,
-								expectedOutput: editingTest.test.expectedOutput,
-								groupName: editingTest.groupName,
-								validationMethod: editingTest.test.validationMethod,
-								validationRules: editingTest.test.validationRules,
-								aiValidationPrompt: editingTest.test.aiValidationPrompt,
-							}
-						: undefined
-				}
+				initialData={editingTest
+					? {
+						name: editingTest.test.name,
+						type: editingTest.test.type,
+						input: editingTest.test.input,
+						expectedOutput: editingTest.test.expectedOutput,
+						groupName: editingTest.groupName,
+						validationMethod: editingTest.test.validationMethod,
+						validationRules: editingTest.test.validationRules,
+						aiValidationPrompt: editingTest.test.aiValidationPrompt,
+					}
+					: undefined}
 			/>
 		</div>
 	);

@@ -61,9 +61,9 @@ export default function Home() {
 						</ResizablePanel>
 						<ResizableHandle withHandle />
 						<ResizablePanel
-							defaultSize={25}
-							minSize={30}
-							maxSize={30}
+							defaultSize={20}
+							minSize={20}
+							maxSize={25}
 							className="bg-gray-50"
 						>
 							{/* Right sidebar with test cases, security analysis, and history */}
