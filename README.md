@@ -1,39 +1,51 @@
 # 🧠 PromptSmith IDE
 
-**PromptSmith IDE** is a web-based IDE designed for professional-grade prompt engineering. It helps developers craft, debug, and **secure** prompts for LLMs by combining a powerful editor, real-time injection analysis, and best-practice linting.
+**PromptSmith IDE** is the ultimate web-based IDE built for prompt engineers, LLM developers, and AI researchers who demand **precision, security, and speed** in crafting production-ready prompts. From debugging to injection hardening, PromptSmith streamlines your workflow with intelligent tools designed to reduce risk and boost output quality.
 
 ![PromptSmith IDE](./public/logo.svg)
 
 ---
 
-## 🚀 Features
+## 🚀 What Makes PromptSmith Powerful
 
-- 🧰 **Live Prompt Editor** – VSCode-like editing with syntax highlighting and templates
-- 🛡️ **Prompt Injection Detection** – Real-time analysis of common injection vectors
-- 🧪 **Prompt Linting Engine** – Catch anti-patterns like overlong system prompts, bad temperature usage, missing delimiters, etc.
-- 🔄 **Multi-Model Support** – Test prompts across OpenAI, Claude, and more (planned)
-- 📊 **Prompt Metrics** – View cost, token usage, risk level, entropy (coming soon)
-- 📁 **Versioned Prompt Storage** – Save, fork, and share prompts (optional login)
-- 💻 **Open Source** – Built with Next.js + FastAPI + Tailwind + Pydantic
+* 🧰 **Live Prompt Editor**
+  Write and debug prompts with syntax-aware editing, auto-formatting, and structured templates.
+
+* 🛡️ **Built-in Security Analysis**
+  Get real-time alerts on prompt injection risks and overrides — powered by dynamic test cases.
+
+* 🧪 **AI-Powered Prompt Linting**
+  Catch issues like vague roles, excessive temperature, missing delimiters, and prompt anti-patterns.
+
+* 🔄 **Multi-Model Testing**
+  Seamlessly evaluate across OpenAI, Claude, Mistral, Perplexity, and more (support expanding rapidly).
+
+* 📊 **Prompt Intelligence Dashboard** *(coming soon)*
+  Visualize cost estimates, token distribution, entropy, risk scores, and expected behavior deltas.
+
+* 📁 **Versioned Prompt Management**
+  Fork, store, and share prompts with full version control and team collaboration.
+
+* 🔓 **Open Source & Extensible**
+  Built for developers. Contribute, self-host, or extend it to fit your stack.
+
 
 ---
 
-## 🧱 Tech Stack
+## 🧠 Why PromptSmith?
 
-| Layer        | Technology        |
-|--------------|-------------------|
-| Frontend     | Next.js 14, React, Tailwind CSS, Monaco Editor |
-| Backend      | FastAPI, Pydantic, async LLM API clients |
-| Storage      | Supabase / PostgreSQL (for saved prompts) |
-| Auth (opt)   | Supabase Auth / Clerk / custom JWT |
-| Deployment   | Vercel (Frontend) + Render/Fly.io (Backend) |
+Because "just writing prompts" isn't enough anymore.
+You need analysis, simulation, security, and speed — all in one place.
 
-<!-- Contribution are welcome -->
+---
 
-## 🤝 Contributing
+## 🤝 Contribute to the Future of Prompt Engineering
 
-Contributions are welcome! Please feel free to submit a pull request.
+PromptSmith is open source and community-driven. Contributions, ideas, and pull requests are welcome.
+
+---
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Licensed under [MIT](LICENSE) — free to use, build on, or commercialize.
+
