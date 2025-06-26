@@ -12,16 +12,17 @@ import { cn } from "@/lib/utils";
 import { Badge } from "./ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import Image from "next/image";
-import { useModelStore } from "@/lib/store";
+import { modelConfigAtom } from "@/lib/store";
 import { ModelConfigDialog } from "../app/core/models/model-config";
 import { Button } from "./ui/button";
+import { useAtom } from "jotai";
 
 interface StatusBarProps {
 	className?: string;
 }
 
 export function StatusBar({ className }: StatusBarProps) {
-	const { config } = useModelStore();
+	const [config] = useAtom(modelConfigAtom);
 
 	// Example data - in real app, this would come from state/props
 	const stats = {

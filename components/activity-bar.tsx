@@ -13,12 +13,12 @@ import {
 	TooltipTrigger,
 } from "./ui/tooltip";
 import { useAtom } from "jotai";
-import { SELECTED_ACTIVITY_BAR_TAB } from "./atoms";
+import { selectedActivityBarTabAtom } from "@/lib/store";
 
 
 
 export function ActivityBar() {
-	const [selectedTab, setSelectedTab] = useAtom(SELECTED_ACTIVITY_BAR_TAB);
+	const [selectedTab, setSelectedTab] = useAtom(selectedActivityBarTabAtom);
 	return (
 		<div className="w-12 border-r bg-gray-50/50 flex flex-col items-center py-2 gap-1">
 			<TooltipProvider>

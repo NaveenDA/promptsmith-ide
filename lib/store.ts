@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { atom } from "jotai";
 import { z } from "zod";
 
 // Define model parameters schema
@@ -45,36 +45,33 @@ export const ModelConfigSchema = z.object({
 
 export type ModelConfig = z.infer<typeof ModelConfigSchema>;
 
-// Define store
-interface ModelStore {
-	config: ModelConfig;
-	setConfig: (config: Partial<ModelConfig>) => void;
-	setParameters: (parameters: Partial<ModelParameters>) => void;
-}
-
-// Create store
-export const useModelStore = create<ModelStore>((set) => ({
-	config: {
-		provider: "OpenAI",
-		name: "gpt-4",
-		parameters: {
-			temperature: 0.7,
-			max_tokens: 2000,
-			top_p: 1,
-			frequency_penalty: 0,
-			presence_penalty: 0,
-			stream: true,
-		},
+// Define default config
+const defaultConfig: ModelConfig = {
+	provider: "OpenAI",
+	name: "gpt-4",
+	parameters: {
+		temperature: 0.7,
+		max_tokens: 2000,
+		top_p: 1,
+		frequency_penalty: 0,
+		presence_penalty: 0,
+		stream: true,
 	},
-	setConfig: (newConfig) =>
-		set((state) => ({
-			config: { ...state.config, ...newConfig },
-		})),
-	setParameters: (newParameters) =>
-		set((state) => ({
-			config: {
-				...state.config,
-				parameters: { ...state.config.parameters, ...newParameters },
-			},
-		})),
-}));
+};
+
+// Create atoms
+export const modelConfigAtom = atom<ModelConfig>(defaultConfig);
+
+// Derived atoms for specific updates
+export const modelParametersAtom = atom(
+	(get) => get(modelConfigAtom).parameters,
+	(get, set, newParameters: Partial<ModelParameters>) => {
+		const currentConfig = get(modelConfigAtom);
+		set(modelConfigAtom, {
+			...currentConfig,
+			parameters: { ...currentConfig.parameters, ...newParameters },
+		});
+	}
+);
+
+export const selectedActivityBarTabAtom = atom<"prompts" | "database" | "tools">("prompts");

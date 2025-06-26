@@ -79,7 +79,6 @@ export function History() {
 
 	return (
 		<div className="h-full flex flex-col bg-white">
-
 			<div className="flex-1 overflow-auto">
 				{versions.map((version) => (
 					<div key={version.id} className="border-b">

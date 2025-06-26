@@ -3,12 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { useState } from "react";
-import {
-	ExternalLink,
-	Info,
-	Lock,
-	ChevronLeft,
-} from "lucide-react";
+import { ExternalLink, Info, Lock, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
 	Dialog,

@@ -128,12 +128,10 @@ export function TestCases() {
 	);
 	const [selectedTest, setSelectedTest] = useState<string | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
-	const [editingTest, setEditingTest] = useState<
-		{
-			test: TestCase;
-			groupName: string;
-		} | null
-	>(null);
+	const [editingTest, setEditingTest] = useState<{
+		test: TestCase;
+		groupName: string;
+	} | null>(null);
 	const [runDialogOpen, setRunDialogOpen] = useState(false);
 	const [selectedTests, setSelectedTests] = useState<TestCase[]>([]);
 	const [useAiJudge, setUseAiJudge] = useState(false);
@@ -165,8 +163,6 @@ export function TestCases() {
 		}
 	};
 
-
-
 	const handleSaveTest = (testData: {
 		name: string;
 		type: "basic" | "edge" | "security";
@@ -197,24 +193,23 @@ export function TestCases() {
 						return {
 							...group,
 							tests: group.tests.map((t) =>
-								t.id === editingTest.test.id ? newTest : t
+								t.id === editingTest.test.id ? newTest : t,
 							),
 						};
 					}
 					return group;
 				});
-			} else {
-				// Adding new test
-				return currentGroups.map((group) => {
-					if (group.name === testData.groupName) {
-						return {
-							...group,
-							tests: [...group.tests, newTest],
-						};
-					}
-					return group;
-				});
 			}
+			// Adding new test
+			return currentGroups.map((group) => {
+				if (group.name === testData.groupName) {
+					return {
+						...group,
+						tests: [...group.tests, newTest],
+					};
+				}
+				return group;
+			});
 		});
 	};
 
@@ -228,7 +223,7 @@ export function TestCases() {
 					};
 				}
 				return group;
-			})
+			}),
 		);
 		if (selectedTest === testId) {
 			setSelectedTest(null);
@@ -252,7 +247,7 @@ export function TestCases() {
 					};
 				}
 				return group;
-			})
+			}),
 		);
 	};
 
@@ -262,23 +257,22 @@ export function TestCases() {
 			totalExecutionCost: 0,
 			totalAiValidationCost: 0,
 		};
-
-		selectedTests.forEach((test) => {
+		for (const test of selectedTests) {
 			// Base execution cost (assuming average token usage)
 			const executionTokens = test.input.length / 4 + 50; // Input tokens + average output tokens
 			costs.totalExecutionCost += (executionTokens / 1000) * 0.0015;
 
 			// AI validation cost if applicable
 			if (test.validationMethod !== "exact" && useAiJudge) {
-				const validationTokens = ((test.validationRules?.length || 0) +
-					(test.aiValidationPrompt?.length || 0) +
-					test.input.length +
-					200) / // Buffer for validation response
+				const validationTokens =
+					((test.validationRules?.length || 0) +
+						(test.aiValidationPrompt?.length || 0) +
+						test.input.length +
+						200) / // Buffer for validation response
 					4;
-				costs.totalAiValidationCost += (validationTokens / 1000) *
-					0.0015;
+				costs.totalAiValidationCost += (validationTokens / 1000) * 0.0015;
 			}
-		});
+		}
 
 		return costs;
 	};
@@ -288,13 +282,13 @@ export function TestCases() {
 		setRunDialogOpen(false);
 
 		// Run each test
-		groups.forEach((group) => {
-			group.tests.forEach((test) => {
+		for (const group of groups) {
+			for (const test of group.tests) {
 				if (selectedTestIds.has(test.id)) {
 					handleRunTest(test);
 				}
-			});
-		});
+			}
+		}
 	};
 
 	const handleRunTest = async (test: TestCase) => {
@@ -303,9 +297,9 @@ export function TestCases() {
 			currentGroups.map((group) => ({
 				...group,
 				tests: group.tests.map((t) =>
-					t.id === test.id ? { ...t, status: "running" } : t
+					t.id === test.id ? { ...t, status: "running" } : t,
 				),
-			}))
+			})),
 		);
 
 		// TODO: Actual test execution logic here
@@ -322,9 +316,7 @@ export function TestCases() {
 		let additionalCost = 0;
 
 		if (test.validationMethod === "exact") {
-			status = test.expectedOutput === result.output
-				? "passed"
-				: "failed";
+			status = test.expectedOutput === result.output ? "passed" : "failed";
 		} else if (useAiJudge) {
 			// TODO: Implement AI validation
 			const aiValidationPrompt = `
@@ -346,9 +338,10 @@ Keep the explanation under 100 characters.
 
 			// Simulate AI validation for now
 			status = Math.random() > 0.5 ? "passed" : "failed";
-			reviewNotes = status === "passed"
-				? "✓ AI Judge: Output correctly identifies the sentiment"
-				: "✗ AI Judge: Output missing key sentiment aspects";
+			reviewNotes =
+				status === "passed"
+					? "✓ AI Judge: Output correctly identifies the sentiment"
+					: "✗ AI Judge: Output missing key sentiment aspects";
 
 			// Calculate AI validation cost
 			const promptTokens = aiValidationPrompt.length / 4;
@@ -362,17 +355,17 @@ Keep the explanation under 100 characters.
 				tests: group.tests.map((t) =>
 					t.id === test.id
 						? {
-							...t,
-							actualOutput: result.output,
-							latency: result.latency,
-							tokens: result.tokens,
-							cost: (result.cost || 0) + additionalCost,
-							status,
-							reviewNotes,
-						}
-						: t
+								...t,
+								actualOutput: result.output,
+								latency: result.latency,
+								tokens: result.tokens,
+								cost: (result.cost || 0) + additionalCost,
+								status,
+								reviewNotes,
+							}
+						: t,
 				),
-			}))
+			})),
 		);
 	};
 
@@ -387,13 +380,13 @@ Keep the explanation under 100 characters.
 				tests: group.tests.map((t) =>
 					t.id === test.id
 						? {
-							...t,
-							status: isValid ? "passed" : "failed",
-							reviewNotes: notes || t.reviewNotes,
-						}
-						: t
+								...t,
+								status: isValid ? "passed" : "failed",
+								reviewNotes: notes || t.reviewNotes,
+							}
+						: t,
 				),
-			}))
+			})),
 		);
 	};
 
@@ -423,9 +416,7 @@ Keep the explanation under 100 characters.
 						onClick={() => {
 							setSelectedTests(
 								groups.flatMap((g) =>
-									g.tests.filter((t) =>
-										t.status !== "running"
-									)
+									g.tests.filter((t) => t.status !== "running"),
 								),
 							);
 							setRunDialogOpen(true);
@@ -442,19 +433,20 @@ Keep the explanation under 100 characters.
 					<div key={group.name} className="border-b last:border-b-0">
 						<div
 							className="flex items-center gap-2 px-4 py-2 bg-gray-50/50 cursor-pointer select-none"
-							onClick={() =>
-								toggleGroup(group.name)}
+							onClick={() => toggleGroup(group.name)}
+							onKeyDown={(e) => {
+								if (e.key === "Enter" || e.key === " ") {
+									toggleGroup(group.name);
+								}
+							}}
 						>
 							<ChevronRight
 								className={cn(
 									"h-4 w-4 text-gray-500 transition-transform",
-									expandedGroups.has(group.name) &&
-										"rotate-90",
+									expandedGroups.has(group.name) && "rotate-90",
 								)}
 							/>
-							<span className="text-sm font-medium">
-								{group.name}
-							</span>
+							<span className="text-sm font-medium">{group.name}</span>
 							<Badge variant="outline" className="text-xs">
 								{group.tests.length}
 							</Badge>
@@ -472,16 +464,17 @@ Keep the explanation under 100 characters.
 												: "border-l-transparent",
 										)}
 										onClick={() => setSelectedTest(test.id)}
+										onKeyDown={(e) => {
+											if (e.key === "Enter" || e.key === " ") {
+												setSelectedTest(test.id);
+											}
+										}}
 									>
 										<div className="flex items-center gap-2 mb-1">
 											{getStatusIcon(test.status)}
-											<span className="text-sm font-medium">
-												{test.name}
-											</span>
+											<span className="text-sm font-medium">{test.name}</span>
 											{test.status === "needs-review" &&
-												test.validationMethod ===
-													"manual" &&
-												(
+												test.validationMethod === "manual" && (
 													<div className="flex items-center gap-1">
 														<Button
 															size="sm"
@@ -538,12 +531,8 @@ Keep the explanation under 100 characters.
 													</Button>
 												</DropdownMenuTrigger>
 												<DropdownMenuContent align="end">
-													<DropdownMenuItem>
-														Edit
-													</DropdownMenuItem>
-													<DropdownMenuItem>
-														Duplicate
-													</DropdownMenuItem>
+													<DropdownMenuItem>Edit</DropdownMenuItem>
+													<DropdownMenuItem>Duplicate</DropdownMenuItem>
 													<DropdownMenuSeparator />
 													<DropdownMenuItem className="text-red-600">
 														Delete
@@ -555,12 +544,8 @@ Keep the explanation under 100 characters.
 										<div className="pl-6 space-y-1">
 											{test.actualOutput && (
 												<div className="text-xs">
-													<span className="text-gray-500">
-														Output:
-													</span>
-													<span className="font-mono">
-														{test.actualOutput}
-													</span>
+													<span className="text-gray-500">Output:</span>
+													<span className="font-mono">{test.actualOutput}</span>
 												</div>
 											)}
 											{test.reviewNotes && (
@@ -602,18 +587,13 @@ Keep the explanation under 100 characters.
 					<div className="py-4">
 						<div className="flex items-center gap-4 mb-4">
 							<div className="flex-1">
-								<h3 className="text-sm font-medium mb-1">
-									Selected Tests
-								</h3>
+								<h3 className="text-sm font-medium mb-1">Selected Tests</h3>
 								<p className="text-sm text-gray-500">
 									{selectedTests.length} test
-									{selectedTests.length !== 1 ? "s" : ""}{" "}
-									selected
+									{selectedTests.length !== 1 ? "s" : ""} selected
 								</p>
 							</div>
-							{selectedTests.some((t) =>
-								t.validationMethod !== "exact"
-							) && (
+							{selectedTests.some((t) => t.validationMethod !== "exact") && (
 								<div className="flex items-center gap-2">
 									<Switch
 										id="aiJudge"
@@ -621,10 +601,7 @@ Keep the explanation under 100 characters.
 										onCheckedChange={setUseAiJudge}
 									/>
 									<div className="flex items-center gap-1">
-										<Label
-											htmlFor="aiJudge"
-											className="text-sm"
-										>
+										<Label htmlFor="aiJudge" className="text-sm">
 											Use AI Judge
 										</Label>
 										<TooltipProvider>
@@ -634,9 +611,8 @@ Keep the explanation under 100 characters.
 												</TooltipTrigger>
 												<TooltipContent>
 													<p>
-														AI will automatically
-														validate test outputs
-														using GPT-3.5-turbo
+														AI will automatically validate test outputs using
+														GPT-3.5-turbo
 													</p>
 												</TooltipContent>
 											</Tooltip>
@@ -649,17 +625,13 @@ Keep the explanation under 100 characters.
 						<div className="space-y-3 mb-4">
 							<div className="flex justify-between text-sm">
 								<span>Execution Cost</span>
-								<span>
-									${calculateCosts().totalExecutionCost
-										.toFixed(4)}
-								</span>
+								<span>${calculateCosts().totalExecutionCost.toFixed(4)}</span>
 							</div>
 							{useAiJudge && (
 								<div className="flex justify-between text-sm">
 									<span>AI Validation Cost</span>
 									<span>
-										${calculateCosts().totalAiValidationCost
-											.toFixed(4)}
+										${calculateCosts().totalAiValidationCost.toFixed(4)}
 									</span>
 								</div>
 							)}
@@ -676,10 +648,7 @@ Keep the explanation under 100 characters.
 						</div>
 					</div>
 					<DialogFooter>
-						<Button
-							variant="outline"
-							onClick={() => setRunDialogOpen(false)}
-						>
+						<Button variant="outline" onClick={() => setRunDialogOpen(false)}>
 							Cancel
 						</Button>
 						<Button onClick={handleRunSelectedTests}>
@@ -693,29 +662,33 @@ Keep the explanation under 100 characters.
 			<TestCaseDialog
 				open={dialogOpen}
 				onOpenChange={setDialogOpen}
-				onSave={handleSaveTest as (testCase: {
-					name: string;
-					type: "basic" | "edge" | "security";
-					input: string;
-					expectedOutput?: string;
-					groupName: string;
-					validationMethod: "manual" | "exact" | "ai";
-					validationRules?: string;
-					aiValidationPrompt?: string;
-				}) => void}
+				onSave={
+					handleSaveTest as (testCase: {
+						name: string;
+						type: "basic" | "edge" | "security";
+						input: string;
+						expectedOutput?: string;
+						groupName: string;
+						validationMethod: "manual" | "exact" | "ai";
+						validationRules?: string;
+						aiValidationPrompt?: string;
+					}) => void
+				}
 				groups={groups}
-				initialData={editingTest
-					? {
-						name: editingTest.test.name,
-						type: editingTest.test.type,
-						input: editingTest.test.input,
-						expectedOutput: editingTest.test.expectedOutput,
-						groupName: editingTest.groupName,
-						validationMethod: editingTest.test.validationMethod,
-						validationRules: editingTest.test.validationRules,
-						aiValidationPrompt: editingTest.test.aiValidationPrompt,
-					}
-					: undefined}
+				initialData={
+					editingTest
+						? {
+								name: editingTest.test.name,
+								type: editingTest.test.type,
+								input: editingTest.test.input,
+								expectedOutput: editingTest.test.expectedOutput,
+								groupName: editingTest.groupName,
+								validationMethod: editingTest.test.validationMethod,
+								validationRules: editingTest.test.validationRules,
+								aiValidationPrompt: editingTest.test.aiValidationPrompt,
+							}
+						: undefined
+				}
 			/>
 		</div>
 	);

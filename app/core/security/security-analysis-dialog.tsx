@@ -12,12 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import {
-	Shield,
-	Zap,
-} from "lucide-react";
+import { Shield, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
-
 
 interface AnalysisType {
 	id: string;
@@ -102,13 +98,13 @@ interface SecurityAnalysisDialogProps {
 	}) => void;
 }
 
-export function SecurityAnalysisDialog({ onAnalysisStart }: SecurityAnalysisDialogProps) {
+export function SecurityAnalysisDialog({
+	onAnalysisStart,
+}: SecurityAnalysisDialogProps) {
 	const [open, setOpen] = useState(false);
 	const [depth, setDepth] = useState(40);
 	const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
 	const [useAIJudge, setUseAIJudge] = useState(true);
-
-
 
 	// Calculate number of test cases based on depth
 	const getTestCount = (totalTests: number) =>
@@ -140,10 +136,11 @@ export function SecurityAnalysisDialog({ onAnalysisStart }: SecurityAnalysisDial
 		if (onAnalysisStart) {
 			onAnalysisStart({
 				depth,
-				selectedTypes: depth > 80 ? selectedTypes : ANALYSIS_TYPES.map(t => t.id),
+				selectedTypes:
+					depth > 80 ? selectedTypes : ANALYSIS_TYPES.map((t) => t.id),
 				useAIJudge,
 				totalTests,
-				totalCost
+				totalCost,
 			});
 		}
 		setOpen(false);

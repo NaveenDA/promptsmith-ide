@@ -21,11 +21,21 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
 import { Settings } from "lucide-react";
-import { useModelStore, AVAILABLE_MODELS } from "@/lib/store";
+import {
+	modelConfigAtom,
+	AVAILABLE_MODELS,
+	ModelParametersSchema,
+	type ModelConfig,
+} from "@/lib/store";
+import { useAtom } from "jotai";
 
 export function ModelConfigDialog() {
-	const { config, setConfig, setParameters } = useModelStore();
+	const [config, setConfig] = useAtom(modelConfigAtom);
 	const [open, setOpen] = useState(false);
+
+	const updateConfig = (partialConfig: Partial<ModelConfig>) => {
+		setConfig({ ...config, ...partialConfig });
+	};
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
@@ -49,9 +59,16 @@ export function ModelConfigDialog() {
 						<Select
 							value={config.provider}
 							onValueChange={(value: keyof typeof AVAILABLE_MODELS) => {
-								setConfig({
+								updateConfig({
 									provider: value,
 									name: AVAILABLE_MODELS[value][0],
+									parameters: ModelParametersSchema.parse({
+										temperature: 0.7,
+										max_tokens: 2000,
+										top_p: 1,
+										frequency_penalty: 0,
+										presence_penalty: 0,
+									}),
 								});
 							}}
 						>
@@ -81,7 +98,7 @@ export function ModelConfigDialog() {
 						<Label>Model</Label>
 						<Select
 							value={config.name}
-							onValueChange={(value) => setConfig({ name: value })}
+							onValueChange={(value) => updateConfig({ name: value })}
 						>
 							<SelectTrigger>
 								<SelectValue />
@@ -109,7 +126,11 @@ export function ModelConfigDialog() {
 							min={0}
 							max={2}
 							step={0.1}
-							onValueChange={([value]) => setParameters({ temperature: value })}
+							onValueChange={([value]) =>
+								updateConfig({
+									parameters: { ...config.parameters, temperature: value },
+								})
+							}
 						/>
 					</div>
 
@@ -120,7 +141,12 @@ export function ModelConfigDialog() {
 							type="number"
 							value={config.parameters.max_tokens}
 							onChange={(e) =>
-								setParameters({ max_tokens: Number.parseInt(e.target.value) })
+								updateConfig({
+									parameters: {
+										...config.parameters,
+										max_tokens: Number.parseInt(e.target.value),
+									},
+								})
 							}
 							min={1}
 							max={32000}
@@ -140,7 +166,11 @@ export function ModelConfigDialog() {
 							min={0}
 							max={1}
 							step={0.05}
-							onValueChange={([value]) => setParameters({ top_p: value })}
+							onValueChange={([value]) =>
+								updateConfig({
+									parameters: { ...config.parameters, top_p: value },
+								})
+							}
 						/>
 					</div>
 
@@ -158,7 +188,12 @@ export function ModelConfigDialog() {
 							max={2}
 							step={0.1}
 							onValueChange={([value]) =>
-								setParameters({ frequency_penalty: value })
+								updateConfig({
+									parameters: {
+										...config.parameters,
+										frequency_penalty: value,
+									},
+								})
 							}
 						/>
 					</div>
@@ -177,7 +212,9 @@ export function ModelConfigDialog() {
 							max={2}
 							step={0.1}
 							onValueChange={([value]) =>
-								setParameters({ presence_penalty: value })
+								updateConfig({
+									parameters: { ...config.parameters, presence_penalty: value },
+								})
 							}
 						/>
 					</div>
@@ -187,7 +224,11 @@ export function ModelConfigDialog() {
 						<Label>Stream Response</Label>
 						<Switch
 							checked={config.parameters.stream}
-							onCheckedChange={(checked) => setParameters({ stream: checked })}
+							onCheckedChange={(checked) =>
+								updateConfig({
+									parameters: { ...config.parameters, stream: checked },
+								})
+							}
 						/>
 					</div>
 				</div>
