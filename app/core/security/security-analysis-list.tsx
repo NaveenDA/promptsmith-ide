@@ -2,10 +2,18 @@
 
 import { useState } from "react";
 import { SecurityAnalysisDialog } from "./security-analysis-dialog";
-import { AlertTriangle, CheckCircle, Eye, XCircle } from "lucide-react";
+import {
+	AlertCircle,
+	AlertTriangle,
+	CheckCircle2,
+	Clock,
+	MoreVertical,
+	ThumbsDown,
+	ThumbsUp,
+	XCircle,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import {
 	Dialog,
 	DialogContent,
@@ -13,7 +21,41 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import TitleBar from "@/components/ui/title-bar";
+import {
+	Accordion,
+	AccordionContent,
+	AccordionItem,
+	AccordionTrigger,
+} from "@/components/ui/accordion";
+import { cn } from "@/lib/utils";
+import {
+	DropdownMenu,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+	DropdownMenuContent,
+	DropdownMenuSeparator,
+} from "@radix-ui/react-dropdown-menu";
+import { Tooltip } from "@radix-ui/react-tooltip";
+import { TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
+const getStatusIcon = (status: string) => {
+	switch (status) {
+		case "passed":
+			return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+		case "failed":
+			return <XCircle className="h-4 w-4 text-red-500" />;
+		case "running":
+			return (
+				<div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500" />
+			);
+		case "needs-review":
+			return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+		default:
+			return <Clock className="h-4 w-4 text-gray-400" />;
+	}
+};
 interface SecurityTest {
 	id: string;
 	type: string;
@@ -22,6 +64,8 @@ interface SecurityTest {
 	status: "pass" | "fail" | "warning";
 	severity: "low" | "medium" | "high" | "critical";
 	recommendation?: string;
+	cost: number;
+	latency: number;
 }
 
 interface SecurityCategory {
@@ -47,6 +91,8 @@ export function SecurityAnalysis() {
 						"I will continue to operate within my defined ethical boundaries.",
 					status: "pass",
 					severity: "high",
+					cost: 0.0012,
+					latency: 100,
 				},
 				{
 					id: "pi-2",
@@ -56,6 +102,8 @@ export function SecurityAnalysis() {
 					status: "warning",
 					severity: "medium",
 					recommendation: "Add base64 detection to input sanitization",
+					cost: 0.0012,
+					latency: 100,
 				},
 			],
 		},
@@ -71,6 +119,8 @@ export function SecurityAnalysis() {
 					response: "Cannot override core safety protocols",
 					status: "pass",
 					severity: "critical",
+					cost: 0.0012,
+					latency: 100,
 				},
 				{
 					id: "io-2",
@@ -80,6 +130,8 @@ export function SecurityAnalysis() {
 					status: "fail",
 					severity: "critical",
 					recommendation: "Block system command patterns",
+					cost: 0.0012,
+					latency: 100,
 				},
 			],
 		},
@@ -88,96 +140,150 @@ export function SecurityAnalysis() {
 	return (
 		<div className="flex flex-col h-full">
 			<TitleBar title="Security Analysis" extra={<SecurityAnalysisDialog />} />
-
-			<div className="flex-1 overflow-auto">
-				<div className="grid gap-4 p-4">
-					{categories.map((category) => (
-						<div
-							key={category.name}
-							className="border rounded-lg overflow-hidden"
-						>
-							<div className="p-4 bg-gray-50">
-								<div className="flex items-center justify-between mb-2">
-									<h3 className="font-medium">{category.name}</h3>
-									<Badge
-										variant={category.progress >= 90 ? "secondary" : "default"}
-									>
-										{category.progress}% Secure
-									</Badge>
-								</div>
-								<p className="text-sm text-gray-600 mb-3">
-									{category.description}
-								</p>
-								<Progress value={category.progress} className="h-1.5" />
+			<Accordion type="multiple" className="w-full">
+				{categories.map((category) => (
+					<AccordionItem value={category.name} key={category.name}>
+						<AccordionTrigger className="h-10 hover:border-none pl-3">
+							<div className="flex items-center gap-2">
+								{category.name}
+								<Badge variant="outline" className="text-xs">
+									{category.progress}
+								</Badge>
 							</div>
-
-							<div className="divide-y">
-								{category.tests.map((test) => (
-									<div
-										key={test.id}
-										className="p-4 hover:bg-gray-50 transition-colors"
-									>
-										<div className="flex items-start justify-between mb-2">
-											<div className="flex items-center gap-2">
-												{test.status === "pass" && (
-													<CheckCircle className="w-5 h-5 text-green-500" />
-												)}
-												{test.status === "fail" && (
-													<XCircle className="w-5 h-5 text-red-500" />
-												)}
-												{test.status === "warning" && (
-													<AlertTriangle className="w-5 h-5 text-yellow-500" />
-												)}
-												<div>
-													<h4 className="font-medium">{test.type}</h4>
-													<p className="text-sm text-gray-600 mt-1">
-														{test.prompt}
-													</p>
-												</div>
-											</div>
-											<Badge
-												variant={
-													test.severity === "critical"
-														? "destructive"
-														: test.severity === "high"
-															? "destructive"
-															: test.severity === "medium"
-																? "secondary"
-																: "default"
-												}
-											>
-												{test.severity}
-											</Badge>
-										</div>
-
-										<div className="text-sm text-gray-600 bg-gray-50 p-2 rounded-md">
-											{test.response}
-										</div>
-
-										{test.recommendation && (
-											<div className="mt-2 text-sm text-yellow-600 flex items-center gap-1">
-												<AlertTriangle className="w-4 h-4" />
-												{test.recommendation}
-											</div>
-										)}
-
-										<Button
-											variant="ghost"
-											size="sm"
-											className="mt-2"
-											onClick={() => setSelectedTest(test)}
-										>
-											<Eye className="w-4 h-4 mr-1" />
-											View Details
-										</Button>
+						</AccordionTrigger>
+						<AccordionContent className="">
+							{category.tests.map((test) => (
+								<div
+									key={test.id}
+									className={cn(
+										"border-b group relative cursor-pointer transition bg-white p-2",
+										category.tests.indexOf(test) === category.tests.length - 1
+											? "border-b-0"
+											: "border-b",
+									)}
+									onClick={() => {
+										setSelectedTest(test);
+									}}
+									onKeyDown={(e) => {
+										if (e.key === "Enter") {
+											setSelectedTest(test);
+										}
+									}}
+								>
+									{/* Status Icon */}
+									<p className="flex items-center">
+										{getStatusIcon(test.status)} &nbsp;{" "}
+										<span className="text-sm ">{test.type}</span>
+									</p>
+									{test.response && (
+										<p className="text-xs text-gray-500 w-2/3 break-words whitespace-pre-wrap truncate">
+											Output: {test.response}
+										</p>
+									)}
+									<div className="flex gap-2 opacity-50">
+										<p className="text-[8px] text-gray-500">
+											Cost: ${test.cost}
+										</p>
+										<p className="text-[8px] text-gray-500">
+											Latency: {test.latency}ms
+										</p>
 									</div>
-								))}
-							</div>
-						</div>
-					))}
-				</div>
-			</div>
-
+									{/* Dropdown menu for actions */}
+									<div className="absolute right-10 top-1/2 -translate-y-1/2 z-10">
+										<DropdownMenu>
+											<DropdownMenuTrigger asChild>
+												<Button
+													size="icon"
+													variant="ghost"
+													onClick={(e) => e.stopPropagation()}
+													title="Actions"
+												>
+													<MoreVertical className="w-4 h-4" />
+												</Button>
+											</DropdownMenuTrigger>
+											<DropdownMenuContent align="end">
+												<DropdownMenuItem
+													onClick={(e) => {
+														e.stopPropagation();
+														// handleRunTest(test);
+													}}
+												>
+													Re-run
+												</DropdownMenuItem>
+												<DropdownMenuItem
+													onClick={(e) => {
+														e.stopPropagation();
+													}}
+												>
+													Edit
+												</DropdownMenuItem>
+												<DropdownMenuItem
+													onClick={(e) => {
+														e.stopPropagation();
+													}}
+												>
+													Duplicate
+												</DropdownMenuItem>
+												<DropdownMenuSeparator />
+												<DropdownMenuItem
+													onClick={(e) => {
+														e.stopPropagation();
+														// handleDeleteTest(test.id, group.name);
+													}}
+													variant="destructive"
+												>
+													Delete
+												</DropdownMenuItem>
+											</DropdownMenuContent>
+										</DropdownMenu>
+									</div>
+									{/* Approve/Disapprove always visible at bottom right, small */}
+									<div className=" flex gap-1">
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<Button
+													size="xs"
+													variant="ghost"
+													onClick={(e) => {
+														e.stopPropagation();
+														// handleApprov(test);
+													}}
+													title="Approve"
+													className="scale-75"
+												>
+													<ThumbsUp className="w-3 h-3 text-green-500" />
+												</Button>
+											</TooltipTrigger>
+											<TooltipContent>
+												<p>Approve</p>
+											</TooltipContent>
+										</Tooltip>
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<Button
+													size="xs"
+													variant="ghost"
+													onClick={(e) => {
+														e.stopPropagation();
+														// handleDisapprove(test);
+													}}
+													title="Disapprove"
+													className="scale-75"
+												>
+													<ThumbsDown className="w-3 h-3 text-red-500" />
+												</Button>
+											</TooltipTrigger>
+											<TooltipContent>
+												<p>Disapprove</p>
+											</TooltipContent>
+										</Tooltip>
+									</div>
+								</div>
+							))}
+						</AccordionContent>
+					</AccordionItem>
+				))}
+			</Accordion>
 			<Dialog open={!!selectedTest} onOpenChange={() => setSelectedTest(null)}>
 				<DialogContent>
 					<DialogHeader>

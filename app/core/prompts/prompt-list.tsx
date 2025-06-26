@@ -287,7 +287,10 @@ export const PromptList = forwardRef(function PromptList(_props, ref) {
 								</Tooltip>
 							)}
 						</div>
-						<div className="text-[10px] text-gray-400 mt-0.5 pl-5">
+						<div
+							className="text-[10px] text-gray-400 mt-0.5 pl-5"
+							suppressHydrationWarning
+						>
 							Updated{" "}
 							{formatDistanceToNow(prompt.lastModified, {
 								addSuffix: true,
