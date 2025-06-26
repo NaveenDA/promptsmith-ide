@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, File, MoreVertical, CheckCircle2, AlertCircle, Clock } from "lucide-react";
+import { Plus, MoreVertical, CheckCircle2, AlertCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -110,16 +110,6 @@ export function PromptList() {
     setPrompts([...prompts, newPrompt]);
   };
 
-  const getStatusColor = (status: Prompt["status"]) => {
-    switch (status) {
-      case "ready":
-        return "text-green-500";
-      case "needs-review":
-        return "text-yellow-500";
-      default:
-        return "text-gray-400";
-    }
-  };
 
   const getStatusIcon = (status: Prompt["status"]) => {
     switch (status) {
@@ -150,7 +140,7 @@ export function PromptList() {
           <div
             key={prompt.id}
             className={cn(
-              "group flex flex-col px-2 py-1.5 hover:bg-gray-100 cursor-pointer border-l-2 transition-colors",
+              "group flex flex-col px-2 py-1.5 hover:bg-gray-100 cursor-pointer border-l-2 transition-colors border-b",
               selectedPrompt === prompt.id ? "bg-gray-100 border-l-blue-500" : "border-l-transparent"
             )}
             onClick={() => setSelectedPrompt(prompt.id)}
