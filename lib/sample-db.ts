@@ -54,7 +54,7 @@ export const sample_databases = [
 // prompts
 export const sample_prompts = [
     {
-        id: "1",
+        id: "customer-support-1",
         name: "Customer Support Assistant",
         lastModified: new Date(Date.now() - 1000 * 60 * 30), // 30 mins ago
         status: "ready",
@@ -68,7 +68,7 @@ export const sample_prompts = [
         `,
     },
     {
-        id: "2",
+        id: "code-review-2",
         name: "Code Review Helper",
         lastModified: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
         status: "needs-review",
@@ -82,7 +82,7 @@ export const sample_prompts = [
         `,
     },
     {
-        id: "3",
+        id: "course-recommendation-3",
         name: "Course Recommendation",
         lastModified: new Date(),
         status: "draft",

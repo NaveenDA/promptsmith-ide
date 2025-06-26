@@ -1,5 +1,6 @@
 import { atom } from "jotai";
 import { z } from "zod";
+import { sample_prompts } from "./sample-db";
 
 // Define model parameters schema
 export const ModelParametersSchema = z.object({
@@ -75,3 +76,10 @@ export const modelParametersAtom = atom(
 );
 
 export const selectedActivityBarTabAtom = atom<"prompts" | "database" | "tools">("prompts");
+
+export const selectedPromptIdAtom = atom<string | null>(null);
+
+export const currentPromptAtom = atom((get) => {
+	const selectedId = get(selectedPromptIdAtom);
+	return sample_prompts.find((p) => p.id === selectedId) || null;
+});

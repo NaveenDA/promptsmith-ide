@@ -30,6 +30,7 @@ import { formatDistanceToNow } from "date-fns";
 import TitleBar from "@/components/ui/title-bar";
 import Fuse from "fuse.js";
 import { sample_prompts } from "@/lib/sample-db";
+import { useRouter } from "next/navigation";
 
 interface Prompt {
 	id: string;
@@ -45,11 +46,11 @@ interface Prompt {
 
 export function PromptList() {
 	const [prompts, setPrompts] = useState<Prompt[]>(sample_prompts as Prompt[]);
-	const [selectedPrompt, setSelectedPrompt] = useState<string | null>(null);
 	const [isRenaming, setIsRenaming] = useState<string | null>(null);
 	const [newName, setNewName] = useState("");
 	const [showSearch, setShowSearch] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
+	const router = useRouter();
 
 	const handleNewPrompt = () => {
 		const newPrompt: Prompt = {
@@ -61,7 +62,6 @@ export function PromptList() {
 			securityIssues: 0,
 		};
 		setPrompts([...prompts, newPrompt]);
-		setSelectedPrompt(newPrompt.id);
 		setIsRenaming(newPrompt.id);
 	};
 
@@ -90,9 +90,6 @@ export function PromptList() {
 
 	const handleDelete = (promptId: string) => {
 		setPrompts(prompts.filter((p) => p.id !== promptId));
-		if (selectedPrompt === promptId) {
-			setSelectedPrompt(null);
-		}
 	};
 
 	const handleDuplicate = (prompt: Prompt) => {
@@ -124,6 +121,10 @@ export function PromptList() {
 	const filteredPrompts = searchQuery.trim()
 		? fuse.search(searchQuery).map((result) => result.item)
 		: prompts;
+
+	const handlePromptClick = (promptId: string) => {
+		router.push(`/prompts/${promptId}`);
+	};
 
 	return (
 		<div className="h-full flex flex-col">
@@ -185,17 +186,15 @@ export function PromptList() {
 					<div
 						onKeyUp={(e) => {
 							if (e.key === "Enter") {
-								setSelectedPrompt(prompt.id);
+								handlePromptClick(prompt.id);
 							}
 						}}
 						key={prompt.id}
 						className={cn(
 							"group flex flex-col px-2 py-1.5 hover:bg-gray-100 cursor-pointer border-l-2 transition-colors border-b",
-							selectedPrompt === prompt.id
-								? "bg-gray-100 border-l-blue-500"
-								: "border-l-transparent",
+							"border-l-transparent",
 						)}
-						onClick={() => setSelectedPrompt(prompt.id)}
+						onClick={() => handlePromptClick(prompt.id)}
 					>
 						<div className="flex items-center justify-between min-w-0">
 							<div className="flex items-center gap-2 min-w-0 flex-1">
