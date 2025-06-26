@@ -40,6 +40,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import TitleBar from "@/components/ui/title-bar";
 
 interface TestCase {
 	id: string;
@@ -392,12 +393,10 @@ Keep the explanation under 100 characters.
 
 	return (
 		<div className="h-full flex flex-col">
-			<div className="flex items-center justify-between px-4 py-2 border-b">
-				<div className="flex items-center gap-2">
-					<h2 className="text-sm font-semibold">Test Cases</h2>
-				</div>
-				<div className="flex items-center gap-2">
-					<Button
+				<TitleBar title="Test Cases"
+				extra={
+					<div className="flex items-center gap-2">
+						<Button
 						size="xs"
 						variant="outline"
 						className="text-xs"
@@ -425,8 +424,11 @@ Keep the explanation under 100 characters.
 						<Play className="w-4 h-4" />
 						Run All
 					</Button>
-				</div>
-			</div>
+					</div>
+				}
+				/>
+
+		
 
 			<div className="flex-1 overflow-auto">
 				{groups.map((group) => (

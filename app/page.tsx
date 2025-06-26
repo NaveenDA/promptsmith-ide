@@ -9,8 +9,8 @@ import {
 	ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import PromptEditor from "./core/prompts/prompt-editor";
-import { TestCases } from "./core/testcases/testcases";
-import { SecurityAnalysis } from "@/app/core/security/security-analysis";
+import { TestCases } from "./core/testcases/testcases-list";
+import { SecurityAnalysis } from "@/app/core/security/security-analysis-list";
 import { History } from "@/app/core/history/history";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAtom } from "jotai";
@@ -19,6 +19,7 @@ import { PromptList } from "@/app/core/prompts/prompt-list";
 import DatabaseList from "@/app/core/databases/database-list";
 import ToolsList from "@/app/core/tools/tools-list";
 import { ActivityBar } from "@/components/activity-bar";
+import SwitchCase, { Case } from "@/components/ui/switch-case";
 
 export default function Home() {
 	const [selectedTab] = useAtom(selectedActivityBarTabAtom);
@@ -29,7 +30,10 @@ export default function Home() {
 				<Header />
 				<div className="flex-1 flex">
 					<ActivityBar />
-					<ResizablePanelGroup direction="horizontal" className="flex-1">
+					<ResizablePanelGroup
+						direction="horizontal"
+						className="flex-1"
+					>
 						<ResizablePanel
 							defaultSize={20}
 							minSize={20}
@@ -37,9 +41,18 @@ export default function Home() {
 							className="bg-gray-50"
 						>
 							{/* Left sidebar with prompt list or database config */}
-							{selectedTab === "prompts" && <PromptList />}
-							{selectedTab === "database" && <DatabaseList />}
-							{selectedTab === "tools" && <ToolsList />}
+
+							<SwitchCase value={selectedTab}>
+								<Case value="prompts">
+									<PromptList />
+								</Case>
+								<Case value="database">
+									<DatabaseList />
+								</Case>
+								<Case value="tools">
+									<ToolsList />
+								</Case>
+							</SwitchCase>
 						</ResizablePanel>
 						<ResizableHandle withHandle />
 						<ResizablePanel defaultSize={60} className="bg-white">
@@ -54,7 +67,10 @@ export default function Home() {
 							className="bg-gray-50"
 						>
 							{/* Right sidebar with test cases, security analysis, and history */}
-							<Tabs defaultValue="tests" className="h-full flex flex-col">
+							<Tabs
+								defaultValue="tests"
+								className="h-full flex flex-col"
+							>
 								<div className=" border-b rounded-none w-full">
 									<TabsList className="p-0 bg-transparent border-0">
 										<TabsTrigger
@@ -77,13 +93,22 @@ export default function Home() {
 										</TabsTrigger>
 									</TabsList>
 								</div>
-								<TabsContent value="tests" className="flex-1 p-0 m-0">
+								<TabsContent
+									value="tests"
+									className="flex-1 p-0 m-0"
+								>
 									<TestCases />
 								</TabsContent>
-								<TabsContent value="security" className="flex-1 p-0 m-0">
+								<TabsContent
+									value="security"
+									className="flex-1 p-0 m-0"
+								>
 									<SecurityAnalysis />
 								</TabsContent>
-								<TabsContent value="history" className="flex-1 p-0 m-0">
+								<TabsContent
+									value="history"
+									className="flex-1 p-0 m-0"
+								>
 									<History />
 								</TabsContent>
 							</Tabs>

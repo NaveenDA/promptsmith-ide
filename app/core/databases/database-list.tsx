@@ -10,6 +10,9 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { DatabaseConfig } from "./database-config";
+import TitleBar from "@/components/ui/title-bar";
+import { motion, AnimatePresence } from "framer-motion";
+import Fuse from "fuse.js";
 
 const dbtype_images = {
 	chroma: "/logos/chroma.webp",
@@ -34,7 +37,8 @@ const sample_databases: VectorDatabase[] = [
 	{
 		name: "Website Index",
 		type: "chroma",
-		description: "Semantic search index for website content and documentation",
+		description:
+			"Semantic search index for website content and documentation",
 		documentCount: 15234,
 		lastUpdated: "2024-03-15",
 		status: "active",
@@ -77,12 +81,15 @@ const DatabaseList = () => {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedDb, setSelectedDb] = useState<string | null>(null);
 	const [addDialogOpen, setAddDialogOpen] = useState(false);
+	const [showSearch, setShowSearch] = useState(false);
 
-	const filteredDatabases = sample_databases.filter(
-		(db) =>
-			db.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			db.description.toLowerCase().includes(searchQuery.toLowerCase()),
-	);
+	const fuse = new Fuse(sample_databases, {
+		keys: ["name", "description"],
+		threshold: 0.4,
+	});
+	const filteredDatabases = searchQuery.trim()
+		? fuse.search(searchQuery).map((result) => result.item)
+		: sample_databases;
 
 	const getStatusColor = (status: VectorDatabase["status"]) => {
 		switch (status) {
@@ -101,30 +108,66 @@ const DatabaseList = () => {
 
 	return (
 		<div className="flex flex-col h-full">
-			<div className="p-2 border-b flex items-center justify-between bg-gray-50/50">
-				<h3 className="text-sm font-medium text-gray-700">Vector Databases</h3>
-				<Button
-					variant="ghost"
-					size="icon"
-					className="h-6 w-6 hover:bg-gray-100"
-					onClick={() => setAddDialogOpen(true)}
-				>
-					<Plus className="h-4 w-4" />
-				</Button>
-			</div>
-			<div className="p-4">
-				<div className="relative">
-					<Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-					<Input
-						placeholder="Search databases..."
-						className="pl-9"
-						value={searchQuery}
-						onChange={(e) => setSearchQuery(e.target.value)}
-					/>
-				</div>
-			</div>
+			<TitleBar
+				title="Vector Databases"
+				extra={
+					<div>
+						{/* Search Icon */}
+						<Button
+							variant="ghost"
+							size="icon"
+							className=" hover:bg-gray-100"
+							onClick={() => setShowSearch(!showSearch)}
+						>
+							<Search className="h-4 w-4" />
+						</Button>
+						<Button
+							variant="ghost"
+							size="icon"
+							className=" hover:bg-gray-100"
+							onClick={() => setAddDialogOpen(true)}
+						>
+							<Plus className="h-4 w-4" />
+						</Button>
+					</div>
+				}
+			/>
 
-			<DatabaseConfig open={addDialogOpen} onOpenChange={setAddDialogOpen} />
+			{showSearch && (
+				<AnimatePresence mode="sync">
+					<motion.div
+						className="overflow-hidden"
+						initial={{ height: 0 }}
+						animate={{ height: "auto" }}
+						exit={{ height: 0 }}
+						transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+					>
+						<motion.div
+							className="p-4"
+							initial={{ opacity: 0, y: -8 }}
+							animate={{ opacity: 1, y: 0 }}
+							exit={{ opacity: 0, y: -8 }}
+							transition={{ duration: 0.2, ease: "easeOut", delay: 0.1 }}
+						>
+							<div className="relative">
+								<Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+								<Input
+									placeholder="Search databases..."
+									className="pl-9 transition-shadow duration-200 focus:shadow-md"
+									value={searchQuery}
+									onChange={(e) => setSearchQuery(e.target.value)}
+									autoFocus
+								/>
+							</div>
+						</motion.div>
+					</motion.div>
+				</AnimatePresence>
+			)}
+
+			<DatabaseConfig
+				open={addDialogOpen}
+				onOpenChange={setAddDialogOpen}
+			/>
 
 			<div className="flex-1 overflow-auto">
 				{filteredDatabases.map((db) => (
@@ -133,10 +176,10 @@ const DatabaseList = () => {
 						className={`
                             group px-3 py-2 hover:bg-gray-50 cursor-pointer border-l-2 border-b
                             ${
-															selectedDb === db.name
-																? "border-l-blue-500 bg-blue-50/50"
-																: "border-l-transparent"
-														}
+							selectedDb === db.name
+								? "border-l-blue-500 bg-blue-50/50"
+								: "border-l-transparent"
+						}
                         `}
 						onClick={() => setSelectedDb(db.name)}
 						onKeyUp={(e) => {
@@ -158,39 +201,60 @@ const DatabaseList = () => {
 							<div className="min-w-0 flex-1">
 								<div className="flex items-center justify-between">
 									<div className="truncate">
-										<span className="font-medium text-sm">{db.name}</span>
-										<span className="mx-2 text-gray-400">·</span>
+										<span className="font-medium text-sm">
+											{db.name}
+										</span>
+										<span className="mx-2 text-gray-400">
+											·
+										</span>
 										<span className="text-xs text-gray-500">
-											{formatNumber(db.documentCount)} docs
+											{formatNumber(db.documentCount)}
+											{" "}
+											docs
 										</span>
 									</div>
 									<div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
 										<Tooltip>
 											<TooltipTrigger asChild>
-												<Button variant="ghost" size="icon" className="h-6 w-6">
+												<Button
+													variant="ghost"
+													size="icon"
+													className="h-6 w-6"
+												>
 													<Settings2 className="h-3.5 w-3.5" />
 												</Button>
 											</TooltipTrigger>
-											<TooltipContent>Configure database</TooltipContent>
+											<TooltipContent>
+												Configure database
+											</TooltipContent>
 										</Tooltip>
 										<Tooltip>
 											<TooltipTrigger asChild>
-												<Button variant="ghost" size="icon" className="h-6 w-6">
+												<Button
+													variant="ghost"
+													size="icon"
+													className="h-6 w-6"
+												>
 													<ExternalLink className="h-3.5 w-3.5" />
 												</Button>
 											</TooltipTrigger>
-											<TooltipContent>Open in dashboard</TooltipContent>
+											<TooltipContent>
+												Open in dashboard
+											</TooltipContent>
 										</Tooltip>
 									</div>
 								</div>
 								<div className="flex items-center gap-2 text-xs text-gray-500">
 									<Badge
 										variant="outline"
-										className={`${getStatusColor(
-											db.status,
-										)} px-1.5 py-0 h-4 text-[10px] font-normal`}
+										className={`${
+											getStatusColor(
+												db.status,
+											)
+										} px-1.5 py-0 h-4 text-[10px] font-normal`}
 									>
-										{db.status.charAt(0).toUpperCase() + db.status.slice(1)}
+										{db.status.charAt(0).toUpperCase() +
+											db.status.slice(1)}
 									</Badge>
 									<span className="truncate text-xs text-gray-500">
 										{db.description}

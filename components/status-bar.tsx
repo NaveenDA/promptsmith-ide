@@ -50,7 +50,7 @@ export function StatusBar({ className }: StatusBarProps) {
 	return (
 		<div
 			className={cn(
-				"h-6 bg-gray-50 border-t flex items-center text-xs px-2 text-gray-600",
+				"h-6 bg-gray-50 border-t flex items-center text-xs px-2 text-gray-600 sticky bottom-0",
 				className,
 			)}
 		>

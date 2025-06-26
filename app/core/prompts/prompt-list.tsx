@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import {
-	Plus,
-	MoreVertical,
-	CheckCircle2,
 	AlertCircle,
+	CheckCircle2,
 	Clock,
+	MoreVertical,
+	Plus,
+	Search,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -25,6 +27,8 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import TitleBar from "@/components/ui/title-bar";
+import Fuse from "fuse.js";
 
 interface Prompt {
 	id: string;
@@ -36,7 +40,6 @@ interface Prompt {
 		total: number;
 	};
 	securityIssues: number;
-	category?: string;
 }
 
 export function PromptList() {
@@ -48,7 +51,6 @@ export function PromptList() {
 			status: "ready",
 			testStats: { passed: 8, total: 10 },
 			securityIssues: 0,
-			category: "support",
 		},
 		{
 			id: "2",
@@ -57,7 +59,6 @@ export function PromptList() {
 			status: "needs-review",
 			testStats: { passed: 4, total: 6 },
 			securityIssues: 1,
-			category: "development",
 		},
 		{
 			id: "3",
@@ -66,12 +67,13 @@ export function PromptList() {
 			status: "draft",
 			testStats: { passed: 2, total: 5 },
 			securityIssues: 0,
-			category: "marketing",
 		},
 	]);
 	const [selectedPrompt, setSelectedPrompt] = useState<string | null>(null);
 	const [isRenaming, setIsRenaming] = useState<string | null>(null);
 	const [newName, setNewName] = useState("");
+	const [showSearch, setShowSearch] = useState(false);
+	const [searchQuery, setSearchQuery] = useState("");
 
 	const handleNewPrompt = () => {
 		const newPrompt: Prompt = {
@@ -97,8 +99,12 @@ export function PromptList() {
 			setPrompts(
 				prompts.map((p) =>
 					p.id === promptId
-						? { ...p, name: newName.trim(), lastModified: new Date() }
-						: p,
+						? {
+							...p,
+							name: newName.trim(),
+							lastModified: new Date(),
+						}
+						: p
 				),
 			);
 		}
@@ -135,21 +141,71 @@ export function PromptList() {
 		}
 	};
 
+	const fuse = new Fuse(prompts, {
+		keys: ["name", "category"],
+		threshold: 0.4,
+	});
+	const filteredPrompts = searchQuery.trim()
+		? fuse.search(searchQuery).map((result) => result.item)
+		: prompts;
+
 	return (
 		<div className="h-full flex flex-col">
-			<div className="p-2 border-b flex items-center justify-between bg-gray-50/50">
-				<h3 className="text-sm font-medium text-gray-700">Prompts</h3>
-				<Button
-					variant="ghost"
-					size="icon"
-					className="h-6 w-6 hover:bg-gray-100"
-					onClick={handleNewPrompt}
-				>
-					<Plus className="h-4 w-4" />
-				</Button>
-			</div>
+			<TitleBar
+				title="Prompts"
+				extra={
+					<div>
+					{/* Search Icon */}
+					<Button variant="ghost" size="icon" className=" hover:bg-gray-100" onClick={() => setShowSearch(!showSearch)}>
+						<Search className="h-4 w-4" />
+					</Button>
+					<Button
+						variant="ghost"
+						size="icon"
+						className=" hover:bg-gray-100"
+						onClick={handleNewPrompt}
+					>
+						<Plus className="h-4 w-4" />
+					</Button>
+					</div>
+				}
+			/>
+			{showSearch && (
+				<AnimatePresence mode="sync">
+					<motion.div 
+						className="overflow-hidden"
+						initial={{ height: 0 }}
+						animate={{ height: "auto" }}
+						exit={{ height: 0 }}
+						transition={{ 
+							duration: 0.3,
+							ease: [0.4, 0, 0.2, 1]
+						}}
+					>
+						<motion.div
+							className="p-2"
+							initial={{ opacity: 0, y: -8 }}
+							animate={{ opacity: 1, y: 0 }}
+							exit={{ opacity: 0, y: -8 }}
+							transition={{ 
+								duration: 0.2,
+								ease: "easeOut",
+								delay: 0.1
+							}}
+						>
+							<Input 
+								placeholder="Search prompts..." 
+								autoFocus
+								className="transition-shadow duration-200 focus:shadow-md"
+								value={searchQuery}
+								onChange={(e) => setSearchQuery(e.target.value)}
+							/>
+						</motion.div>
+					</motion.div>
+				</AnimatePresence>
+			)}
 			<div className="flex-1 overflow-auto">
-				{prompts.map((prompt) => (
+				{filteredPrompts.map((prompt) => (
 					<div
 						onKeyUp={(e) => {
 							if (e.key === "Enter") {
@@ -171,26 +227,34 @@ export function PromptList() {
 									<TooltipTrigger>
 										{getStatusIcon(prompt.status)}
 									</TooltipTrigger>
-									<TooltipContent>{prompt.status}</TooltipContent>
+									<TooltipContent>
+										{prompt.status}
+									</TooltipContent>
 								</Tooltip>
-								{isRenaming === prompt.id ? (
-									<Input
-										value={newName}
-										onChange={(e) => setNewName(e.target.value)}
-										onBlur={() => handleRenameSubmit(prompt.id)}
-										onKeyDown={(e) => {
-											if (e.key === "Enter") {
-												handleRenameSubmit(prompt.id);
-											}
-										}}
-										className="h-6 text-xs"
-										autoFocus
-									/>
-								) : (
-									<span className="text-sm truncate font-medium">
-										{prompt.name}
-									</span>
-								)}
+								{isRenaming === prompt.id
+									? (
+										<Input
+											value={newName}
+											onChange={(e) =>
+												setNewName(e.target.value)}
+											onBlur={() =>
+												handleRenameSubmit(prompt.id)}
+											onKeyDown={(e) => {
+												if (e.key === "Enter") {
+													handleRenameSubmit(
+														prompt.id,
+													);
+												}
+											}}
+											className="h-6 text-xs"
+											autoFocus
+										/>
+									)
+									: (
+										<span className="text-sm truncate font-medium">
+											{prompt.name}
+										</span>
+									)}
 							</div>
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
@@ -202,11 +266,18 @@ export function PromptList() {
 										<MoreVertical className="h-4 w-4" />
 									</Button>
 								</DropdownMenuTrigger>
-								<DropdownMenuContent align="end" className="w-48">
-									<DropdownMenuItem onClick={() => handleRename(prompt.id)}>
+								<DropdownMenuContent
+									align="end"
+									className="w-48"
+								>
+									<DropdownMenuItem
+										onClick={() => handleRename(prompt.id)}
+									>
 										Rename
 									</DropdownMenuItem>
-									<DropdownMenuItem onClick={() => handleDuplicate(prompt)}>
+									<DropdownMenuItem
+										onClick={() => handleDuplicate(prompt)}
+									>
 										Duplicate
 									</DropdownMenuItem>
 									<DropdownMenuSeparator />
@@ -223,14 +294,14 @@ export function PromptList() {
 							<Tooltip>
 								<TooltipTrigger>
 									<Badge
-										variant={
-											prompt.testStats.passed === prompt.testStats.total
-												? "secondary"
-												: "outline"
-										}
+										variant={prompt.testStats.passed ===
+												prompt.testStats.total
+											? "secondary"
+											: "outline"}
 										className="h-4 text-[10px]"
 									>
-										{prompt.testStats.passed}/{prompt.testStats.total}
+										{prompt.testStats.passed}/{prompt
+											.testStats.total}
 									</Badge>
 								</TooltipTrigger>
 								<TooltipContent>Test Cases</TooltipContent>
@@ -238,23 +309,27 @@ export function PromptList() {
 							{prompt.securityIssues > 0 && (
 								<Tooltip>
 									<TooltipTrigger>
-										<Badge variant="destructive" className="h-4 text-[10px]">
+										<Badge
+											variant="destructive"
+											className="h-4 text-[10px]"
+										>
 											{prompt.securityIssues} issue
-											{prompt.securityIssues > 1 ? "s" : ""}
+											{prompt.securityIssues > 1
+												? "s"
+												: ""}
 										</Badge>
 									</TooltipTrigger>
-									<TooltipContent>Security Issues</TooltipContent>
+									<TooltipContent>
+										Security Issues
+									</TooltipContent>
 								</Tooltip>
-							)}
-							{prompt.category && (
-								<Badge variant="secondary" className="h-4 text-[10px]">
-									{prompt.category}
-								</Badge>
 							)}
 						</div>
 						<div className="text-[10px] text-gray-400 mt-0.5 pl-5">
 							Updated{" "}
-							{formatDistanceToNow(prompt.lastModified, { addSuffix: true })}
+							{formatDistanceToNow(prompt.lastModified, {
+								addSuffix: true,
+							})}
 						</div>
 					</div>
 				))}

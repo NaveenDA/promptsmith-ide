@@ -149,7 +149,7 @@ export function SecurityAnalysisDialog({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
-				<Button variant="default" size="xs" className="gap-2">
+				<Button variant="outline" size="xs" className="gap-2">
 					<Shield className="w-4 h-4" />
 					Run Analysis
 				</Button>
