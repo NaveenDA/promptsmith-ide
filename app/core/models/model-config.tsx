@@ -3,6 +3,7 @@ import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
+	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
@@ -18,14 +19,13 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
 import { Settings } from "lucide-react";
 import {
-	modelConfigAtom,
 	AVAILABLE_MODELS,
-	ModelParametersSchema,
 	type ModelConfig,
+	modelConfigAtom,
+	ModelParametersSchema,
 } from "@/lib/store";
 import { useAtom } from "jotai";
 
@@ -53,64 +53,66 @@ export function ModelConfigDialog() {
 					</DialogDescription>
 				</DialogHeader>
 				<div className="space-y-6 py-4">
-					{/* Provider Selection */}
-					<div className="space-y-2">
-						<Label>Provider</Label>
-						<Select
-							value={config.provider}
-							onValueChange={(value: keyof typeof AVAILABLE_MODELS) => {
-								updateConfig({
-									provider: value,
-									name: AVAILABLE_MODELS[value][0],
-									parameters: ModelParametersSchema.parse({
-										temperature: 0.7,
-										max_tokens: 2000,
-										top_p: 1,
-										frequency_penalty: 0,
-										presence_penalty: 0,
-									}),
-								});
-							}}
-						>
-							<SelectTrigger>
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-								{Object.keys(AVAILABLE_MODELS).map((provider) => (
-									<SelectItem key={provider} value={provider}>
-										<div className="flex items-center gap-2">
-											<Image
-												src={`/logos/${provider.toLowerCase()}.svg`}
-												alt={provider}
-												width={16}
-												height={16}
-											/>
-											{provider}
-										</div>
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					</div>
+					<div className="flex gap-4">
+						{/* Provider Selection */}
+						<div className="space-y-2 w-1/2">
+							<Label>Provider</Label>
+							<Select
+								value={config.provider}
+								onValueChange={(value: keyof typeof AVAILABLE_MODELS) => {
+									updateConfig({
+										provider: value,
+										name: AVAILABLE_MODELS[value][0],
+										parameters: ModelParametersSchema.parse({
+											temperature: 0.7,
+											max_tokens: 2000,
+											top_p: 1,
+											frequency_penalty: 0,
+											presence_penalty: 0,
+										}),
+									});
+								}}
+							>
+								<SelectTrigger>
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									{Object.keys(AVAILABLE_MODELS).map((provider) => (
+										<SelectItem key={provider} value={provider}>
+											<div className="flex items-center gap-2">
+												<Image
+													src={`/logos/${provider.toLowerCase()}.svg`}
+													alt={provider}
+													width={16}
+													height={16}
+												/>
+												{provider}
+											</div>
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
 
-					{/* Model Selection */}
-					<div className="space-y-2">
-						<Label>Model</Label>
-						<Select
-							value={config.name}
-							onValueChange={(value) => updateConfig({ name: value })}
-						>
-							<SelectTrigger>
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-								{AVAILABLE_MODELS[config.provider].map((model) => (
-									<SelectItem key={model} value={model}>
-										{model}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
+						{/* Model Selection */}
+						<div className="space-y-2 w-1/2">
+							<Label>Model</Label>
+							<Select
+								value={config.name}
+								onValueChange={(value) => updateConfig({ name: value })}
+							>
+								<SelectTrigger>
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									{AVAILABLE_MODELS[config.provider].map((model) => (
+										<SelectItem key={model} value={model}>
+											{model}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
 					</div>
 
 					{/* Temperature */}
@@ -128,7 +130,10 @@ export function ModelConfigDialog() {
 							step={0.1}
 							onValueChange={([value]) =>
 								updateConfig({
-									parameters: { ...config.parameters, temperature: value },
+									parameters: {
+										...config.parameters,
+										temperature: value,
+									},
 								})
 							}
 						/>
@@ -168,7 +173,10 @@ export function ModelConfigDialog() {
 							step={0.05}
 							onValueChange={([value]) =>
 								updateConfig({
-									parameters: { ...config.parameters, top_p: value },
+									parameters: {
+										...config.parameters,
+										top_p: value,
+									},
 								})
 							}
 						/>
@@ -213,25 +221,27 @@ export function ModelConfigDialog() {
 							step={0.1}
 							onValueChange={([value]) =>
 								updateConfig({
-									parameters: { ...config.parameters, presence_penalty: value },
-								})
-							}
-						/>
-					</div>
-
-					{/* Stream */}
-					<div className="flex items-center justify-between">
-						<Label>Stream Response</Label>
-						<Switch
-							checked={config.parameters.stream}
-							onCheckedChange={(checked) =>
-								updateConfig({
-									parameters: { ...config.parameters, stream: checked },
+									parameters: {
+										...config.parameters,
+										presence_penalty: value,
+									},
 								})
 							}
 						/>
 					</div>
 				</div>
+				<DialogFooter>
+					<Button
+						variant="default"
+						className="gap-2"
+						onClick={() => {
+							// close the dialog
+							setOpen(false);
+						}}
+					>
+						Save
+					</Button>
+				</DialogFooter>
 			</DialogContent>
 		</Dialog>
 	);

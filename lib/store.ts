@@ -72,10 +72,12 @@ export const modelParametersAtom = atom(
 			...currentConfig,
 			parameters: { ...currentConfig.parameters, ...newParameters },
 		});
-	}
+	},
 );
 
-export const selectedActivityBarTabAtom = atom<"prompts" | "database" | "tools">("prompts");
+export const selectedActivityBarTabAtom = atom<
+	"prompts" | "database" | "tools"
+>("prompts");
 
 export const selectedPromptIdAtom = atom<string | null>(null);
 

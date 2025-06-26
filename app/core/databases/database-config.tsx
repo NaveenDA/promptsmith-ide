@@ -19,25 +19,6 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-interface VectorDB {
-	id: string;
-	name: string;
-	type:
-		| "pinecone"
-		| "qdrant"
-		| "weaviate"
-		| "milvus"
-		| "cassandra"
-		| "clickhouse"
-		| "mongodb"
-		| "redis";
-	icon: string;
-	connectionString: string;
-	indexName: string;
-	status: "connected" | "disconnected" | "error";
-	documentCount?: number;
-}
-
 interface DatabaseType {
 	id: string;
 	name: string;
@@ -46,24 +27,6 @@ interface DatabaseType {
 	docsUrl: string;
 	connectionGuide: string;
 }
-
-const DATABASE_OPTIONS: Omit<
-	VectorDB,
-	"id" | "status" | "connectionString" | "indexName" | "documentCount"
->[] = [
-	{
-		name: "Apache Cassandra",
-		type: "cassandra",
-		icon: "/db-icons/cassandra.svg",
-	},
-	{ name: "ClickHouse", type: "clickhouse", icon: "/db-icons/clickhouse.svg" },
-	{ name: "MongoDB", type: "mongodb", icon: "/db-icons/mongodb.svg" },
-	{ name: "Redis", type: "redis", icon: "/db-icons/redis.svg" },
-	{ name: "Pinecone", type: "pinecone", icon: "/db-icons/pinecone.svg" },
-	{ name: "Qdrant", type: "qdrant", icon: "/db-icons/qdrant.svg" },
-	{ name: "Weaviate", type: "weaviate", icon: "/db-icons/weaviate.svg" },
-	{ name: "Milvus", type: "milvus", icon: "/db-icons/milvus.svg" },
-];
 
 const DATABASE_TYPES: DatabaseType[] = [
 	{
@@ -124,34 +87,12 @@ interface DatabaseConfigProps {
 }
 
 export function DatabaseConfig({ open, onOpenChange }: DatabaseConfigProps) {
-	const [databases, setDatabases] = useState<VectorDB[]>([]);
 	const [selectedType, setSelectedType] = useState<DatabaseType | null>(null);
 	const [formData, setFormData] = useState({
 		name: "",
 		connectionUrl: "",
 		apiKey: "",
 	});
-
-	const handleAddDatabase = (db: Omit<VectorDB, "id" | "status">) => {
-		setDatabases([
-			...databases,
-			{
-				...db,
-				id: Math.random().toString(36).substr(2, 9),
-				status: "disconnected",
-			},
-		]);
-		onOpenChange(false);
-	};
-
-	const handleTestConnection = async (db: VectorDB) => {
-		// TODO: Implement actual connection test
-		setDatabases(
-			databases.map((d) =>
-				d.id === db.id ? { ...d, status: "connected", documentCount: 1234 } : d,
-			),
-		);
-	};
 
 	const handleBack = () => {
 		setSelectedType(null);

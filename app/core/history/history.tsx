@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
-	Clock,
 	ChevronRight,
 	ChevronDown,
 	ArrowUpRight,
@@ -31,7 +30,7 @@ interface PromptVersion {
 }
 
 export function History() {
-	const [versions, setVersions] = useState<PromptVersion[]>([
+	const [versions] = useState<PromptVersion[]>([
 		{
 			id: "1",
 			title: "Initial Version",

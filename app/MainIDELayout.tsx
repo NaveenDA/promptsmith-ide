@@ -20,10 +20,65 @@ import DatabaseList from "@/app/core/databases/database-list";
 import ToolsList from "@/app/core/tools/tools-list";
 import { ActivityBar } from "@/components/activity-bar";
 import SwitchCase, { Case } from "@/components/ui/switch-case";
+import { useRef, useEffect } from "react";
+
+type PromptEditorHandle = { savePrompt: () => void };
+type PromptListHandle = { createNewPrompt: () => void };
+type DatabaseListHandle = { createNewDatabase: () => void };
 
 export default function MainIDELayout() {
 	const [selectedTab] = useAtom(selectedActivityBarTabAtom);
 	const [selectedPromptId] = useAtom(selectedPromptIdAtom);
+
+	const promptEditorRef = useRef<PromptEditorHandle>(null);
+	const promptListRef = useRef<PromptListHandle>(null);
+	const databaseListRef = useRef<DatabaseListHandle>(null);
+
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.userAgent);
+			const isSave =
+				(isMac && e.metaKey && e.key === "s") ||
+				(!isMac && e.ctrlKey && e.key === "s");
+			const isNew =
+				(isMac && e.metaKey && e.key === "n") ||
+				(!isMac && e.ctrlKey && e.key === "n");
+			if (selectedTab === "prompts") {
+				if (isSave) {
+					e.preventDefault();
+					if (
+						promptEditorRef.current &&
+						typeof promptEditorRef.current?.savePrompt === "function"
+					) {
+						promptEditorRef.current.savePrompt();
+					}
+				}
+				if (isNew) {
+					e.preventDefault();
+					if (
+						promptListRef.current &&
+						typeof promptListRef.current.createNewPrompt === "function"
+					) {
+						promptListRef.current.createNewPrompt();
+					}
+				}
+			}
+			if (selectedTab === "database") {
+				if (isNew) {
+					e.preventDefault();
+					if (
+						databaseListRef.current &&
+						typeof databaseListRef.current.createNewDatabase === "function"
+					) {
+						databaseListRef.current.createNewDatabase();
+					}
+				}
+			}
+		};
+		document.addEventListener("keydown", handleKeyDown);
+		return () => document.removeEventListener("keydown", handleKeyDown);
+	}, [selectedTab]);
+
 	return (
 		<>
 			<CommandPalette />
@@ -31,10 +86,7 @@ export default function MainIDELayout() {
 				<Header />
 				<div className="flex-1 flex">
 					<ActivityBar />
-					<ResizablePanelGroup
-						direction="horizontal"
-						className="flex-1"
-					>
+					<ResizablePanelGroup direction="horizontal" className="flex-1">
 						<ResizablePanel
 							defaultSize={20}
 							minSize={20}
@@ -44,22 +96,25 @@ export default function MainIDELayout() {
 							{/* Left sidebar with prompt list or database config */}
 							<SwitchCase value={selectedTab}>
 								<Case value="prompts">
-									<PromptList />
+									<PromptList ref={promptListRef} />
 								</Case>
 								<Case value="database">
-									<DatabaseList />
+									<DatabaseList ref={databaseListRef} />
 								</Case>
 								<Case value="tools">
 									<ToolsList />
 								</Case>
 							</SwitchCase>
 						</ResizablePanel>
-						<ResizableHandle withHandle />
+						<ResizableHandle />
 						<ResizablePanel defaultSize={50} className="bg-white">
 							{/* Main editor area */}
-							<PromptEditor selectedPromptId={selectedPromptId} />
+							<PromptEditor
+								ref={promptEditorRef}
+								selectedPromptId={selectedPromptId}
+							/>
 						</ResizablePanel>
-						<ResizableHandle withHandle />
+						<ResizableHandle />
 						<ResizablePanel
 							defaultSize={30}
 							minSize={25}
@@ -67,10 +122,7 @@ export default function MainIDELayout() {
 							className="bg-gray-50"
 						>
 							{/* Right sidebar with test cases, security analysis, and history */}
-							<Tabs
-								defaultValue="tests"
-								className="h-full flex flex-col"
-							>
+							<Tabs defaultValue="tests" className="h-full flex flex-col">
 								<div className=" border-b rounded-none w-full">
 									<TabsList className="p-0 bg-transparent border-0">
 										<TabsTrigger
@@ -93,22 +145,13 @@ export default function MainIDELayout() {
 										</TabsTrigger>
 									</TabsList>
 								</div>
-								<TabsContent
-									value="tests"
-									className="flex-1 p-0 m-0"
-								>
+								<TabsContent value="tests" className="flex-1 p-0 m-0">
 									<TestCases />
 								</TabsContent>
-								<TabsContent
-									value="security"
-									className="flex-1 p-0 m-0"
-								>
+								<TabsContent value="security" className="flex-1 p-0 m-0">
 									<SecurityAnalysis />
 								</TabsContent>
-								<TabsContent
-									value="history"
-									className="flex-1 p-0 m-0"
-								>
+								<TabsContent value="history" className="flex-1 p-0 m-0">
 									<History />
 								</TabsContent>
 							</Tabs>
@@ -119,4 +162,4 @@ export default function MainIDELayout() {
 			</div>
 		</>
 	);
-} 
+}

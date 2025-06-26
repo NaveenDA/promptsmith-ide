@@ -130,6 +130,7 @@ export function SecurityAnalysisDialog({
 			totalTests: tests,
 			totalCost: cost * (useAIJudge ? 1 : 25),
 		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [depth, selectedTypes, useAIJudge]);
 
 	const handleStartAnalysis = () => {

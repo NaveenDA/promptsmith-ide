@@ -7,15 +7,15 @@ import { selectedPromptIdAtom } from "@/lib/store";
 import MainIDELayout from "@/app/MainIDELayout";
 
 export default function PromptDetailPage() {
-  const params = useParams();
-  const setSelectedPromptId = useSetAtom(selectedPromptIdAtom);
+	const params = useParams();
+	const setSelectedPromptId = useSetAtom(selectedPromptIdAtom);
 
-  useEffect(() => {
-    if (params?.id) {
-      setSelectedPromptId(params.id as string);
-    }
-    return () => setSelectedPromptId(null);
-  }, [params?.id, setSelectedPromptId]);
+	useEffect(() => {
+		if (params?.id) {
+			setSelectedPromptId(params.id as string);
+		}
+		return () => setSelectedPromptId(null);
+	}, [params?.id, setSelectedPromptId]);
 
-  return <MainIDELayout />;
-} 
+	return <MainIDELayout />;
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, forwardRef, useImperativeHandle } from "react";
 import {
 	AlertCircle,
 	CheckCircle2,
@@ -44,7 +44,7 @@ interface Prompt {
 	securityIssues: number;
 }
 
-export function PromptList() {
+export const PromptList = forwardRef(function PromptList(_props, ref) {
 	const [prompts, setPrompts] = useState<Prompt[]>(sample_prompts as Prompt[]);
 	const [isRenaming, setIsRenaming] = useState<string | null>(null);
 	const [newName, setNewName] = useState("");
@@ -65,6 +65,10 @@ export function PromptList() {
 		setIsRenaming(newPrompt.id);
 	};
 
+	useImperativeHandle(ref, () => ({
+		createNewPrompt: handleNewPrompt,
+	}));
+
 	const handleRename = (promptId: string) => {
 		setIsRenaming(promptId);
 		setNewName(prompts.find((p) => p.id === promptId)?.name || "");
@@ -76,11 +80,11 @@ export function PromptList() {
 				prompts.map((p) =>
 					p.id === promptId
 						? {
-							...p,
-							name: newName.trim(),
-							lastModified: new Date(),
-						}
-						: p
+								...p,
+								name: newName.trim(),
+								lastModified: new Date(),
+							}
+						: p,
 				),
 			);
 		}
@@ -132,31 +136,36 @@ export function PromptList() {
 				title="Prompts"
 				extra={
 					<div>
-					{/* Search Icon */}
-					<Button variant="ghost" size="icon" className=" hover:bg-gray-100" onClick={() => setShowSearch(!showSearch)}>
-						<Search className="h-4 w-4" />
-					</Button>
-					<Button
-						variant="ghost"
-						size="icon"
-						className=" hover:bg-gray-100"
-						onClick={handleNewPrompt}
-					>
-						<Plus className="h-4 w-4" />
-					</Button>
+						{/* Search Icon */}
+						<Button
+							variant="ghost"
+							size="icon"
+							className=" hover:bg-gray-100"
+							onClick={() => setShowSearch(!showSearch)}
+						>
+							<Search className="h-4 w-4" />
+						</Button>
+						<Button
+							variant="ghost"
+							size="icon"
+							className=" hover:bg-gray-100"
+							onClick={handleNewPrompt}
+						>
+							<Plus className="h-4 w-4" />
+						</Button>
 					</div>
 				}
 			/>
 			{showSearch && (
 				<AnimatePresence mode="sync">
-					<motion.div 
+					<motion.div
 						className="overflow-hidden"
 						initial={{ height: 0 }}
 						animate={{ height: "auto" }}
 						exit={{ height: 0 }}
-						transition={{ 
+						transition={{
 							duration: 0.3,
-							ease: [0.4, 0, 0.2, 1]
+							ease: [0.4, 0, 0.2, 1],
 						}}
 					>
 						<motion.div
@@ -164,14 +173,14 @@ export function PromptList() {
 							initial={{ opacity: 0, y: -8 }}
 							animate={{ opacity: 1, y: 0 }}
 							exit={{ opacity: 0, y: -8 }}
-							transition={{ 
+							transition={{
 								duration: 0.2,
 								ease: "easeOut",
-								delay: 0.1
+								delay: 0.1,
 							}}
 						>
-							<Input 
-								placeholder="Search prompts..." 
+							<Input
+								placeholder="Search prompts..."
 								autoFocus
 								className="transition-shadow duration-200 focus:shadow-md"
 								value={searchQuery}
@@ -202,34 +211,26 @@ export function PromptList() {
 									<TooltipTrigger>
 										{getStatusIcon(prompt.status)}
 									</TooltipTrigger>
-									<TooltipContent>
-										{prompt.status}
-									</TooltipContent>
+									<TooltipContent>{prompt.status}</TooltipContent>
 								</Tooltip>
-								{isRenaming === prompt.id
-									? (
-										<Input
-											value={newName}
-											onChange={(e) =>
-												setNewName(e.target.value)}
-											onBlur={() =>
-												handleRenameSubmit(prompt.id)}
-											onKeyDown={(e) => {
-												if (e.key === "Enter") {
-													handleRenameSubmit(
-														prompt.id,
-													);
-												}
-											}}
-											className="h-6 text-xs"
-											autoFocus
-										/>
-									)
-									: (
-										<span className="text-sm truncate font-medium">
-											{prompt.name}
-										</span>
-									)}
+								{isRenaming === prompt.id ? (
+									<Input
+										value={newName}
+										onChange={(e) => setNewName(e.target.value)}
+										onBlur={() => handleRenameSubmit(prompt.id)}
+										onKeyDown={(e) => {
+											if (e.key === "Enter") {
+												handleRenameSubmit(prompt.id);
+											}
+										}}
+										className="h-6 text-xs"
+										autoFocus
+									/>
+								) : (
+									<span className="text-sm truncate font-medium">
+										{prompt.name}
+									</span>
+								)}
 							</div>
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
@@ -241,18 +242,11 @@ export function PromptList() {
 										<MoreVertical className="h-4 w-4" />
 									</Button>
 								</DropdownMenuTrigger>
-								<DropdownMenuContent
-									align="end"
-									className="w-48"
-								>
-									<DropdownMenuItem
-										onClick={() => handleRename(prompt.id)}
-									>
+								<DropdownMenuContent align="end" className="w-48">
+									<DropdownMenuItem onClick={() => handleRename(prompt.id)}>
 										Rename
 									</DropdownMenuItem>
-									<DropdownMenuItem
-										onClick={() => handleDuplicate(prompt)}
-									>
+									<DropdownMenuItem onClick={() => handleDuplicate(prompt)}>
 										Duplicate
 									</DropdownMenuItem>
 									<DropdownMenuSeparator />
@@ -269,14 +263,14 @@ export function PromptList() {
 							<Tooltip>
 								<TooltipTrigger>
 									<Badge
-										variant={prompt.testStats.passed ===
-												prompt.testStats.total
-											? "secondary"
-											: "outline"}
+										variant={
+											prompt.testStats.passed === prompt.testStats.total
+												? "secondary"
+												: "outline"
+										}
 										className="h-4 text-[10px]"
 									>
-										{prompt.testStats.passed}/{prompt
-											.testStats.total}
+										{prompt.testStats.passed}/{prompt.testStats.total}
 									</Badge>
 								</TooltipTrigger>
 								<TooltipContent>Test Cases</TooltipContent>
@@ -284,19 +278,12 @@ export function PromptList() {
 							{prompt.securityIssues > 0 && (
 								<Tooltip>
 									<TooltipTrigger>
-										<Badge
-											variant="destructive"
-											className="h-4 text-[10px]"
-										>
+										<Badge variant="destructive" className="h-4 text-[10px]">
 											{prompt.securityIssues} issue
-											{prompt.securityIssues > 1
-												? "s"
-												: ""}
+											{prompt.securityIssues > 1 ? "s" : ""}
 										</Badge>
 									</TooltipTrigger>
-									<TooltipContent>
-										Security Issues
-									</TooltipContent>
+									<TooltipContent>Security Issues</TooltipContent>
 								</Tooltip>
 							)}
 						</div>
@@ -311,4 +298,4 @@ export function PromptList() {
 			</div>
 		</div>
 	);
-}
+});

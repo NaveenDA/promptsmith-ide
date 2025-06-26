@@ -3,7 +3,7 @@ import { ExternalLink, Plus, Search, Settings2 } from "lucide-react";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { useState, forwardRef, useImperativeHandle } from "react";
 import {
 	Tooltip,
 	TooltipContent,
@@ -37,8 +37,7 @@ const sample_databases: VectorDatabase[] = [
 	{
 		name: "Website Index",
 		type: "chroma",
-		description:
-			"Semantic search index for website content and documentation",
+		description: "Semantic search index for website content and documentation",
 		documentCount: 15234,
 		lastUpdated: "2024-03-15",
 		status: "active",
@@ -77,11 +76,15 @@ const sample_databases: VectorDatabase[] = [
 	},
 ];
 
-const DatabaseList = () => {
+const DatabaseList = forwardRef(function DatabaseList(_props, ref) {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedDb, setSelectedDb] = useState<string | null>(null);
 	const [addDialogOpen, setAddDialogOpen] = useState(false);
 	const [showSearch, setShowSearch] = useState(false);
+
+	useImperativeHandle(ref, () => ({
+		createNewDatabase: () => setAddDialogOpen(true),
+	}));
 
 	const fuse = new Fuse(sample_databases, {
 		keys: ["name", "description"],
@@ -164,10 +167,7 @@ const DatabaseList = () => {
 				</AnimatePresence>
 			)}
 
-			<DatabaseConfig
-				open={addDialogOpen}
-				onOpenChange={setAddDialogOpen}
-			/>
+			<DatabaseConfig open={addDialogOpen} onOpenChange={setAddDialogOpen} />
 
 			<div className="flex-1 overflow-auto">
 				{filteredDatabases.map((db) => (
@@ -176,10 +176,10 @@ const DatabaseList = () => {
 						className={`
                             group px-3 py-2 hover:bg-gray-50 cursor-pointer border-l-2 border-b
                             ${
-							selectedDb === db.name
-								? "border-l-blue-500 bg-blue-50/50"
-								: "border-l-transparent"
-						}
+															selectedDb === db.name
+																? "border-l-blue-500 bg-blue-50/50"
+																: "border-l-transparent"
+														}
                         `}
 						onClick={() => setSelectedDb(db.name)}
 						onKeyUp={(e) => {
@@ -201,60 +201,39 @@ const DatabaseList = () => {
 							<div className="min-w-0 flex-1">
 								<div className="flex items-center justify-between">
 									<div className="truncate">
-										<span className="font-medium text-sm">
-											{db.name}
-										</span>
-										<span className="mx-2 text-gray-400">
-											·
-										</span>
+										<span className="font-medium text-sm">{db.name}</span>
+										<span className="mx-2 text-gray-400">·</span>
 										<span className="text-xs text-gray-500">
-											{formatNumber(db.documentCount)}
-											{" "}
-											docs
+											{formatNumber(db.documentCount)} docs
 										</span>
 									</div>
 									<div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
 										<Tooltip>
 											<TooltipTrigger asChild>
-												<Button
-													variant="ghost"
-													size="icon"
-													className="h-6 w-6"
-												>
+												<Button variant="ghost" size="icon" className="h-6 w-6">
 													<Settings2 className="h-3.5 w-3.5" />
 												</Button>
 											</TooltipTrigger>
-											<TooltipContent>
-												Configure database
-											</TooltipContent>
+											<TooltipContent>Configure database</TooltipContent>
 										</Tooltip>
 										<Tooltip>
 											<TooltipTrigger asChild>
-												<Button
-													variant="ghost"
-													size="icon"
-													className="h-6 w-6"
-												>
+												<Button variant="ghost" size="icon" className="h-6 w-6">
 													<ExternalLink className="h-3.5 w-3.5" />
 												</Button>
 											</TooltipTrigger>
-											<TooltipContent>
-												Open in dashboard
-											</TooltipContent>
+											<TooltipContent>Open in dashboard</TooltipContent>
 										</Tooltip>
 									</div>
 								</div>
 								<div className="flex items-center gap-2 text-xs text-gray-500">
 									<Badge
 										variant="outline"
-										className={`${
-											getStatusColor(
-												db.status,
-											)
-										} px-1.5 py-0 h-4 text-[10px] font-normal`}
+										className={`${getStatusColor(
+											db.status,
+										)} px-1.5 py-0 h-4 text-[10px] font-normal`}
 									>
-										{db.status.charAt(0).toUpperCase() +
-											db.status.slice(1)}
+										{db.status.charAt(0).toUpperCase() + db.status.slice(1)}
 									</Badge>
 									<span className="truncate text-xs text-gray-500">
 										{db.description}
@@ -267,6 +246,6 @@ const DatabaseList = () => {
 			</div>
 		</div>
 	);
-};
+});
 
 export default DatabaseList;

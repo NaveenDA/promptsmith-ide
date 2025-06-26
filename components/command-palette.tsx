@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import { Command } from "cmdk";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
 import {
 	FileText,
 	Database,
@@ -75,7 +73,6 @@ const commands: CommandItem[] = [
 
 export function CommandPalette() {
 	const [open, setOpen] = useState(false);
-	const router = useRouter();
 
 	// Toggle the menu when ⌘K is pressed
 	useEffect(() => {

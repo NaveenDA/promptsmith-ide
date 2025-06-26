@@ -6,11 +6,8 @@ import {
 	AlertCircle,
 	CheckCircle2,
 	ChevronDown,
-	ChevronRight,
 	ChevronUp,
 	Clock,
-	DollarSign,
-	Hash,
 	Info,
 	MoreVertical,
 	Play,
@@ -177,28 +174,16 @@ export function TestCases() {
 	);
 	const [selectedTest, setSelectedTest] = useState<string | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
-	const [editingTest, setEditingTest] = useState<
-		{
-			test: TestCase;
-			groupName: string;
-		} | null
-	>(null);
+	const [editingTest, setEditingTest] = useState<{
+		test: TestCase;
+		groupName: string;
+	} | null>(null);
 	const [runDialogOpen, setRunDialogOpen] = useState(false);
 	const [selectedTests, setSelectedTests] = useState<TestCase[]>([]);
 	const [useAiJudge, setUseAiJudge] = useState(false);
 	const [isExpanded, setIsExpanded] = useState(false);
 	const [qaDialogOpen, setQaDialogOpen] = useState(false);
 	const [qaTest, setQaTest] = useState<TestCase | null>(null);
-
-	const toggleGroup = (groupName: string) => {
-		const newExpanded = new Set(expandedGroups);
-		if (newExpanded.has(groupName)) {
-			newExpanded.delete(groupName);
-		} else {
-			newExpanded.add(groupName);
-		}
-		setExpandedGroups(newExpanded);
-	};
 
 	const getStatusIcon = (status: TestCase["status"]) => {
 		switch (status) {
@@ -247,7 +232,7 @@ export function TestCases() {
 						return {
 							...group,
 							tests: group.tests.map((t) =>
-								t.id === editingTest.test.id ? newTest : t
+								t.id === editingTest.test.id ? newTest : t,
 							),
 						};
 					}
@@ -277,7 +262,7 @@ export function TestCases() {
 					};
 				}
 				return group;
-			})
+			}),
 		);
 		if (selectedTest === testId) {
 			setSelectedTest(null);
@@ -301,7 +286,7 @@ export function TestCases() {
 					};
 				}
 				return group;
-			})
+			}),
 		);
 	};
 
@@ -318,13 +303,13 @@ export function TestCases() {
 
 			// AI validation cost if applicable
 			if (test.validationMethod !== "exact" && useAiJudge) {
-				const validationTokens = ((test.validationRules?.length || 0) +
-					(test.aiValidationPrompt?.length || 0) +
-					test.input.length +
-					200) / // Buffer for validation response
+				const validationTokens =
+					((test.validationRules?.length || 0) +
+						(test.aiValidationPrompt?.length || 0) +
+						test.input.length +
+						200) / // Buffer for validation response
 					4;
-				costs.totalAiValidationCost += (validationTokens / 1000) *
-					0.0015;
+				costs.totalAiValidationCost += (validationTokens / 1000) * 0.0015;
 			}
 		}
 
@@ -351,9 +336,9 @@ export function TestCases() {
 			currentGroups.map((group) => ({
 				...group,
 				tests: group.tests.map((t) =>
-					t.id === test.id ? { ...t, status: "running" } : t
+					t.id === test.id ? { ...t, status: "running" } : t,
 				),
-			}))
+			})),
 		);
 
 		// TODO: Actual test execution logic here
@@ -370,9 +355,7 @@ export function TestCases() {
 		let additionalCost = 0;
 
 		if (test.validationMethod === "exact") {
-			status = test.expectedOutput === result.output
-				? "passed"
-				: "failed";
+			status = test.expectedOutput === result.output ? "passed" : "failed";
 		} else if (useAiJudge) {
 			// TODO: Implement AI validation
 			const aiValidationPrompt = `
@@ -394,9 +377,10 @@ Keep the explanation under 100 characters.
 
 			// Simulate AI validation for now
 			status = Math.random() > 0.5 ? "passed" : "failed";
-			reviewNotes = status === "passed"
-				? "✓ AI Judge: Output correctly identifies the sentiment"
-				: "✗ AI Judge: Output missing key sentiment aspects";
+			reviewNotes =
+				status === "passed"
+					? "✓ AI Judge: Output correctly identifies the sentiment"
+					: "✗ AI Judge: Output missing key sentiment aspects";
 
 			// Calculate AI validation cost
 			const promptTokens = aiValidationPrompt.length / 4;
@@ -410,17 +394,17 @@ Keep the explanation under 100 characters.
 				tests: group.tests.map((t) =>
 					t.id === test.id
 						? {
-							...t,
-							actualOutput: result.output,
-							latency: result.latency,
-							tokens: result.tokens,
-							cost: (result.cost || 0) + additionalCost,
-							status,
-							reviewNotes,
-						}
-						: t
+								...t,
+								actualOutput: result.output,
+								latency: result.latency,
+								tokens: result.tokens,
+								cost: (result.cost || 0) + additionalCost,
+								status,
+								reviewNotes,
+							}
+						: t,
 				),
-			}))
+			})),
 		);
 	};
 
@@ -435,13 +419,13 @@ Keep the explanation under 100 characters.
 				tests: group.tests.map((t) =>
 					t.id === test.id
 						? {
-							...t,
-							status: isValid ? "passed" : "failed",
-							reviewNotes: notes || t.reviewNotes,
-						}
-						: t
+								...t,
+								status: isValid ? "passed" : "failed",
+								reviewNotes: notes || t.reviewNotes,
+							}
+						: t,
 				),
-			}))
+			})),
 		);
 	};
 
@@ -462,73 +446,71 @@ Keep the explanation under 100 characters.
 					<div className="flex items-center gap-2">
 						<Tooltip>
 							<TooltipTrigger asChild>
-						<Button
-							size="icon"
-							variant="ghost"
-							className="text-xs hover:bg-gray-100"
-							onClick={() => {
-								setEditingTest(null);
-								setDialogOpen(true);
-							}}
-						>
-							<Plus className="w-4 h-4" />
-						</Button>
-						</TooltipTrigger>
-						<TooltipContent>
-							<p>Add Test</p>
-						</TooltipContent>
+								<Button
+									size="icon"
+									variant="ghost"
+									className="text-xs hover:bg-gray-100"
+									onClick={() => {
+										setEditingTest(null);
+										setDialogOpen(true);
+									}}
+								>
+									<Plus className="w-4 h-4" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>
+								<p>Add Test</p>
+							</TooltipContent>
 						</Tooltip>
 						<Tooltip>
 							<TooltipTrigger asChild>
-						<Button
-							size="icon"
-							variant="ghost"
-							className="text-xs hover:bg-gray-100"
-							onClick={() => {
-								setSelectedTests(
-									groups.flatMap((g) =>
-										g.tests.filter((t) =>
-											t.status !== "running"
-										)
-									),
-								);
-								setRunDialogOpen(true);
-							}}
-						>
-							<Play className="w-4 h-4" />
-						</Button>
-						</TooltipTrigger>
-						<TooltipContent>
-							<p>Run All Tests</p>
-						</TooltipContent>
+								<Button
+									size="icon"
+									variant="ghost"
+									className="text-xs hover:bg-gray-100"
+									onClick={() => {
+										setSelectedTests(
+											groups.flatMap((g) =>
+												g.tests.filter((t) => t.status !== "running"),
+											),
+										);
+										setRunDialogOpen(true);
+									}}
+								>
+									<Play className="w-4 h-4" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>
+								<p>Run All Tests</p>
+							</TooltipContent>
 						</Tooltip>
 						{/* Expand / Collapse all */}
 						<Tooltip>
 							<TooltipTrigger asChild>
-						<Button
-							size="icon"
-							variant="ghost"
-							className="text-xs hover:bg-gray-100"
-							onClick={() => {
-								if (!isExpanded) {
-									setExpandedGroups(
-										new Set(groups.map((g) => g.name)),
-									);
-									setIsExpanded(true);
-								} else {
-									setExpandedGroups(new Set());
-									setIsExpanded(false);
-								}
-							}}
-						>
-							{isExpanded
-								? <ChevronDown className="w-4 h-4" />
-									: <ChevronUp className="w-4 h-4" />}
-							</Button>
-						</TooltipTrigger>
-						<TooltipContent>
-							{isExpanded ? "Collapse all" : "Expand all"}
-						</TooltipContent>
+								<Button
+									size="icon"
+									variant="ghost"
+									className="text-xs hover:bg-gray-100"
+									onClick={() => {
+										if (!isExpanded) {
+											setExpandedGroups(new Set(groups.map((g) => g.name)));
+											setIsExpanded(true);
+										} else {
+											setExpandedGroups(new Set());
+											setIsExpanded(false);
+										}
+									}}
+								>
+									{isExpanded ? (
+										<ChevronDown className="w-4 h-4" />
+									) : (
+										<ChevronUp className="w-4 h-4" />
+									)}
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>
+								{isExpanded ? "Collapse all" : "Expand all"}
+							</TooltipContent>
 						</Tooltip>
 					</div>
 				}
@@ -541,10 +523,7 @@ Keep the explanation under 100 characters.
 					onValueChange={(values) => setExpandedGroups(new Set(values))}
 				>
 					{groups.map((group) => (
-						<AccordionItem
-							value={group.name}
-							key={group.name}
-						>
+						<AccordionItem value={group.name} key={group.name}>
 							<AccordionTrigger className="h-10 hover:border-none pl-3">
 								{group.name}
 							</AccordionTrigger>
@@ -555,8 +534,7 @@ Keep the explanation under 100 characters.
 											key={test.id}
 											className={cn(
 												"border-b group relative cursor-pointer transition bg-white p-2",
-												group.tests.indexOf(test) ===
-														group.tests.length - 1
+												group.tests.indexOf(test) === group.tests.length - 1
 													? "border-b-0"
 													: "border-b",
 											)}
@@ -564,40 +542,39 @@ Keep the explanation under 100 characters.
 												setQaTest(test);
 												setQaDialogOpen(true);
 											}}
+											onKeyDown={(e) => {
+												if (e.key === "Enter") {
+													setQaTest(test);
+													setQaDialogOpen(true);
+												}
+											}}
 										>
 											{/* Status Icon */}
 											<p className="flex items-center">
-												{getStatusIcon(test.status)}
-												{" "}
-												&nbsp;{" "}
-												<span className="text-sm ">
-													{test.name}
-												</span>
+												{getStatusIcon(test.status)} &nbsp;{" "}
+												<span className="text-sm ">{test.name}</span>
 											</p>
 											{test.actualOutput && (
 												<p className="text-xs text-gray-500 w-2/3 break-words whitespace-pre-wrap truncate">
 													Output: {test.actualOutput}
 												</p>
 											)}
-											<div className="flex gap-2">
-												<p className="text-xs text-gray-500">
+											<div className="flex gap-2 opacity-50">
+												<p className="text-[8px] text-gray-500">
 													Cost: ${test.cost}
 												</p>
-												<p className="text-xs text-gray-500">
+												<p className="text-[8px] text-gray-500">
 													Latency: {test.latency}ms
 												</p>
 											</div>
 											{/* Dropdown menu for actions */}
 											<div className="absolute right-10 top-1/2 -translate-y-1/2 z-10">
 												<DropdownMenu>
-													<DropdownMenuTrigger
-														asChild
-													>
+													<DropdownMenuTrigger asChild>
 														<Button
 															size="icon"
 															variant="ghost"
-															onClick={(e) =>
-																e.stopPropagation()}
+															onClick={(e) => e.stopPropagation()}
 															title="Actions"
 														>
 															<MoreVertical className="w-4 h-4" />
@@ -607,9 +584,7 @@ Keep the explanation under 100 characters.
 														<DropdownMenuItem
 															onClick={(e) => {
 																e.stopPropagation();
-																handleRunTest(
-																	test,
-																);
+																handleRunTest(test);
 															}}
 														>
 															Re-run
@@ -619,13 +594,9 @@ Keep the explanation under 100 characters.
 																e.stopPropagation();
 																setEditingTest({
 																	test,
-																	groupName:
-																		group
-																			.name,
+																	groupName: group.name,
 																});
-																setDialogOpen(
-																	true,
-																);
+																setDialogOpen(true);
 															}}
 														>
 															Edit
@@ -633,10 +604,7 @@ Keep the explanation under 100 characters.
 														<DropdownMenuItem
 															onClick={(e) => {
 																e.stopPropagation();
-																handleDuplicateTest(
-																	test,
-																	group.name,
-																);
+																handleDuplicateTest(test, group.name);
 															}}
 														>
 															Duplicate
@@ -645,10 +613,7 @@ Keep the explanation under 100 characters.
 														<DropdownMenuItem
 															onClick={(e) => {
 																e.stopPropagation();
-																handleDeleteTest(
-																	test.id,
-																	group.name,
-																);
+																handleDeleteTest(test.id, group.name);
 															}}
 															variant="destructive"
 														>
@@ -666,9 +631,7 @@ Keep the explanation under 100 characters.
 															variant="ghost"
 															onClick={(e) => {
 																e.stopPropagation();
-																handleApprove(
-																	test,
-																);
+																handleApprove(test);
 															}}
 															title="Approve"
 															className="scale-75"
@@ -687,9 +650,7 @@ Keep the explanation under 100 characters.
 															variant="ghost"
 															onClick={(e) => {
 																e.stopPropagation();
-																handleDisapprove(
-																	test,
-																);
+																handleDisapprove(test);
 															}}
 															title="Disapprove"
 															className="scale-75"
@@ -719,18 +680,13 @@ Keep the explanation under 100 characters.
 					<div className="py-4">
 						<div className="flex items-center gap-4 mb-4">
 							<div className="flex-1">
-								<h3 className="text-sm font-medium mb-1">
-									Selected Tests
-								</h3>
+								<h3 className="text-sm font-medium mb-1">Selected Tests</h3>
 								<p className="text-sm text-gray-500">
 									{selectedTests.length} test
-									{selectedTests.length !== 1 ? "s" : ""}{" "}
-									selected
+									{selectedTests.length !== 1 ? "s" : ""} selected
 								</p>
 							</div>
-							{selectedTests.some((t) =>
-								t.validationMethod !== "exact"
-							) && (
+							{selectedTests.some((t) => t.validationMethod !== "exact") && (
 								<div className="flex items-center gap-2">
 									<Switch
 										id="aiJudge"
@@ -738,10 +694,7 @@ Keep the explanation under 100 characters.
 										onCheckedChange={setUseAiJudge}
 									/>
 									<div className="flex items-center gap-1">
-										<Label
-											htmlFor="aiJudge"
-											className="text-sm"
-										>
+										<Label htmlFor="aiJudge" className="text-sm">
 											Use AI Judge
 										</Label>
 										<TooltipProvider>
@@ -751,9 +704,8 @@ Keep the explanation under 100 characters.
 												</TooltipTrigger>
 												<TooltipContent>
 													<p>
-														AI will automatically
-														validate test outputs
-														using GPT-3.5-turbo
+														AI will automatically validate test outputs using
+														GPT-3.5-turbo
 													</p>
 												</TooltipContent>
 											</Tooltip>
@@ -766,17 +718,13 @@ Keep the explanation under 100 characters.
 						<div className="space-y-3 mb-4">
 							<div className="flex justify-between text-sm">
 								<span>Execution Cost</span>
-								<span>
-									${calculateCosts().totalExecutionCost
-										.toFixed(4)}
-								</span>
+								<span>${calculateCosts().totalExecutionCost.toFixed(4)}</span>
 							</div>
 							{useAiJudge && (
 								<div className="flex justify-between text-sm">
 									<span>AI Validation Cost</span>
 									<span>
-										${calculateCosts().totalAiValidationCost
-											.toFixed(4)}
+										${calculateCosts().totalAiValidationCost.toFixed(4)}
 									</span>
 								</div>
 							)}
@@ -793,10 +741,7 @@ Keep the explanation under 100 characters.
 						</div>
 					</div>
 					<DialogFooter>
-						<Button
-							variant="outline"
-							onClick={() => setRunDialogOpen(false)}
-						>
+						<Button variant="outline" onClick={() => setRunDialogOpen(false)}>
 							Cancel
 						</Button>
 						<Button onClick={handleRunSelectedTests}>
@@ -810,29 +755,33 @@ Keep the explanation under 100 characters.
 			<TestCaseDialog
 				open={dialogOpen}
 				onOpenChange={setDialogOpen}
-				onSave={handleSaveTest as (testCase: {
-					name: string;
-					type: "basic" | "edge" | "security";
-					input: string;
-					expectedOutput?: string;
-					groupName: string;
-					validationMethod: "manual" | "exact" | "ai";
-					validationRules?: string;
-					aiValidationPrompt?: string;
-				}) => void}
+				onSave={
+					handleSaveTest as (testCase: {
+						name: string;
+						type: "basic" | "edge" | "security";
+						input: string;
+						expectedOutput?: string;
+						groupName: string;
+						validationMethod: "manual" | "exact" | "ai";
+						validationRules?: string;
+						aiValidationPrompt?: string;
+					}) => void
+				}
 				groups={groups}
-				initialData={editingTest
-					? {
-						name: editingTest.test.name,
-						type: editingTest.test.type,
-						input: editingTest.test.input,
-						expectedOutput: editingTest.test.expectedOutput,
-						groupName: editingTest.groupName,
-						validationMethod: editingTest.test.validationMethod,
-						validationRules: editingTest.test.validationRules,
-						aiValidationPrompt: editingTest.test.aiValidationPrompt,
-					}
-					: undefined}
+				initialData={
+					editingTest
+						? {
+								name: editingTest.test.name,
+								type: editingTest.test.type,
+								input: editingTest.test.input,
+								expectedOutput: editingTest.test.expectedOutput,
+								groupName: editingTest.groupName,
+								validationMethod: editingTest.test.validationMethod,
+								validationRules: editingTest.test.validationRules,
+								aiValidationPrompt: editingTest.test.aiValidationPrompt,
+							}
+						: undefined
+				}
 			/>
 
 			{/* Q&A Dialog */}
@@ -844,38 +793,30 @@ Keep the explanation under 100 characters.
 					{qaTest && (
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
 							<div className="space-y-2">
-								<p className="font-semibold text-sm text-gray-700">
-									Input
-								</p>
-								<pre className="bg-gray-100 rounded p-2 text-xs whitespace-pre-wrap">{qaTest.input}</pre>
-								
+								<p className="font-semibold text-sm text-gray-700">Input</p>
+								<pre className="bg-gray-100 rounded p-2 text-xs whitespace-pre-wrap">
+									{qaTest.input}
+								</pre>
 							</div>
 							<div className="space-y-2">
-								<p className="font-semibold text-sm text-gray-700">
-									Response
-								</p>
-								<pre className="bg-gray-100 rounded p-2 text-xs whitespace-pre-wrap break-words max-h-40 overflow-auto">{qaTest.actualOutput || "-"}</pre>
+								<p className="font-semibold text-sm text-gray-700">Response</p>
+								<pre className="bg-gray-100 rounded p-2 text-xs whitespace-pre-wrap break-words max-h-40 overflow-auto">
+									{qaTest.actualOutput || "-"}
+								</pre>
 							</div>
 						</div>
 					)}
 					<DialogFooter className="mt-4 flex gap-2">
 						{qaTest && (
 							<>
-								<Button
-									variant="outline"
-									onClick={() => handleApprove(qaTest)}
-								>
-									<ThumbsUp className="w-4 h-4 mr-1 text-green-500" />
-									{" "}
-									Approve
+								<Button variant="outline" onClick={() => handleApprove(qaTest)}>
+									<ThumbsUp className="w-4 h-4 mr-1 text-green-500" /> Approve
 								</Button>
 								<Button
 									variant="destructive"
 									onClick={() => handleDisapprove(qaTest)}
 								>
-									<ThumbsDown className="w-4 h-4 mr-1 " />
-									{" "}
-									Disapprove
+									<ThumbsDown className="w-4 h-4 mr-1 " /> Disapprove
 								</Button>
 							</>
 						)}

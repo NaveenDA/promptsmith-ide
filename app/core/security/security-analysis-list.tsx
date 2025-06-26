@@ -2,14 +2,7 @@
 
 import { useState } from "react";
 import { SecurityAnalysisDialog } from "./security-analysis-dialog";
-import {
-	AlertTriangle,
-	CheckCircle,
-	Eye,
-	RefreshCw,
-	Shield,
-	XCircle,
-} from "lucide-react";
+import { AlertTriangle, CheckCircle, Eye, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -43,8 +36,7 @@ export function SecurityAnalysis() {
 	const [categories] = useState<SecurityCategory[]>([
 		{
 			name: "Prompt Injection",
-			description:
-				"Tests for malicious attempts to manipulate prompt behavior",
+			description: "Tests for malicious attempts to manipulate prompt behavior",
 			progress: 85,
 			tests: [
 				{
@@ -63,8 +55,7 @@ export function SecurityAnalysis() {
 					response: "Detected encoded instruction attempt.",
 					status: "warning",
 					severity: "medium",
-					recommendation:
-						"Add base64 detection to input sanitization",
+					recommendation: "Add base64 detection to input sanitization",
 				},
 			],
 		},
@@ -96,10 +87,7 @@ export function SecurityAnalysis() {
 
 	return (
 		<div className="flex flex-col h-full">
-			<TitleBar
-				title="Security Analysis"
-				extra={<SecurityAnalysisDialog />}
-			/>
+			<TitleBar title="Security Analysis" extra={<SecurityAnalysisDialog />} />
 
 			<div className="flex-1 overflow-auto">
 				<div className="grid gap-4 p-4">
@@ -110,13 +98,9 @@ export function SecurityAnalysis() {
 						>
 							<div className="p-4 bg-gray-50">
 								<div className="flex items-center justify-between mb-2">
-									<h3 className="font-medium">
-										{category.name}
-									</h3>
+									<h3 className="font-medium">{category.name}</h3>
 									<Badge
-										variant={category.progress >= 90
-											? "secondary"
-											: "default"}
+										variant={category.progress >= 90 ? "secondary" : "default"}
 									>
 										{category.progress}% Secure
 									</Badge>
@@ -124,10 +108,7 @@ export function SecurityAnalysis() {
 								<p className="text-sm text-gray-600 mb-3">
 									{category.description}
 								</p>
-								<Progress
-									value={category.progress}
-									className="h-1.5"
-								/>
+								<Progress value={category.progress} className="h-1.5" />
 							</div>
 
 							<div className="divide-y">
@@ -148,23 +129,22 @@ export function SecurityAnalysis() {
 													<AlertTriangle className="w-5 h-5 text-yellow-500" />
 												)}
 												<div>
-													<h4 className="font-medium">
-														{test.type}
-													</h4>
+													<h4 className="font-medium">{test.type}</h4>
 													<p className="text-sm text-gray-600 mt-1">
 														{test.prompt}
 													</p>
 												</div>
 											</div>
 											<Badge
-												variant={test.severity ===
-														"critical"
-													? "destructive"
-													: test.severity === "high"
-													? "destructive"
-													: test.severity === "medium"
-													? "secondary"
-													: "default"}
+												variant={
+													test.severity === "critical"
+														? "destructive"
+														: test.severity === "high"
+															? "destructive"
+															: test.severity === "medium"
+																? "secondary"
+																: "default"
+												}
 											>
 												{test.severity}
 											</Badge>
@@ -185,8 +165,7 @@ export function SecurityAnalysis() {
 											variant="ghost"
 											size="sm"
 											className="mt-2"
-											onClick={() =>
-												setSelectedTest(test)}
+											onClick={() => setSelectedTest(test)}
 										>
 											<Eye className="w-4 h-4 mr-1" />
 											View Details
@@ -199,39 +178,28 @@ export function SecurityAnalysis() {
 				</div>
 			</div>
 
-			<Dialog
-				open={!!selectedTest}
-				onOpenChange={() => setSelectedTest(null)}
-			>
+			<Dialog open={!!selectedTest} onOpenChange={() => setSelectedTest(null)}>
 				<DialogContent>
 					<DialogHeader>
-						<DialogTitle>
-							Test Details: {selectedTest?.type}
-						</DialogTitle>
+						<DialogTitle>Test Details: {selectedTest?.type}</DialogTitle>
 					</DialogHeader>
 					{selectedTest && (
 						<div className="space-y-4">
 							<div>
-								<h4 className="font-medium mb-2">
-									Test Prompt
-								</h4>
+								<h4 className="font-medium mb-2">Test Prompt</h4>
 								<div className="bg-gray-50 p-3 rounded-md">
 									{selectedTest.prompt}
 								</div>
 							</div>
 							<div>
-								<h4 className="font-medium mb-2">
-									Model Response
-								</h4>
+								<h4 className="font-medium mb-2">Model Response</h4>
 								<div className="bg-gray-50 p-3 rounded-md">
 									{selectedTest.response}
 								</div>
 							</div>
 							{selectedTest.recommendation && (
 								<div>
-									<h4 className="font-medium mb-2">
-										Recommendation
-									</h4>
+									<h4 className="font-medium mb-2">Recommendation</h4>
 									<div className="bg-yellow-50 text-yellow-800 p-3 rounded-md flex items-start gap-2">
 										<AlertTriangle className="w-5 h-5 mt-0.5" />
 										<div>{selectedTest.recommendation}</div>
@@ -240,23 +208,26 @@ export function SecurityAnalysis() {
 							)}
 							<div className="flex items-center justify-between">
 								<Badge
-									variant={selectedTest.status === "pass"
-										? "secondary"
-										: selectedTest.status === "fail"
-										? "destructive"
-										: "default"}
+									variant={
+										selectedTest.status === "pass"
+											? "secondary"
+											: selectedTest.status === "fail"
+												? "destructive"
+												: "default"
+									}
 								>
 									{selectedTest.status.toUpperCase()}
 								</Badge>
 								<Badge
-									variant={selectedTest.severity ===
-											"critical"
-										? "destructive"
-										: selectedTest.severity === "high"
-										? "destructive"
-										: selectedTest.severity === "medium"
-										? "secondary"
-										: "default"}
+									variant={
+										selectedTest.severity === "critical"
+											? "destructive"
+											: selectedTest.severity === "high"
+												? "destructive"
+												: selectedTest.severity === "medium"
+													? "secondary"
+													: "default"
+									}
 								>
 									{selectedTest.severity} severity
 								</Badge>

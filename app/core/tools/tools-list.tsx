@@ -1,10 +1,5 @@
 import { Button } from "@/components/ui/button";
-import {
-	Cloud,
-	CloudOff,
-	ExternalLink,
-	Info,
-} from "lucide-react";
+import { Cloud, CloudOff, ExternalLink, Info } from "lucide-react";
 import {
 	Tooltip,
 	TooltipContent,
@@ -18,7 +13,6 @@ interface Tool {
 	name: string;
 	description: string;
 	icon: string;
-	
 }
 
 const AVAILABLE_TOOLS: Tool[] = [
@@ -27,21 +21,18 @@ const AVAILABLE_TOOLS: Tool[] = [
 		name: "Weather Info",
 		description: "Get real-time weather information for any location",
 		icon: "🌤️",
-		
 	},
 	{
 		id: "get_news",
 		name: "News Feed",
 		description: "Stay updated with latest news from trusted sources",
 		icon: "📰",
-		
 	},
 	{
 		id: "get_stock_price",
 		name: "Stock Price",
 		description: "Track real-time stock market data and prices",
 		icon: "📈",
-		
 	},
 ];
 
@@ -49,45 +40,17 @@ const ToolsList = () => {
 	// In production this would come from env variables
 	const isToolsEnabled = false;
 
-	const getStatusColor = (
-		status: "pending" | "running" | "completed" | "failed",
-	) => {
-		switch (status) {
-			case "completed":
-				return "text-green-500";
-			case "running":
-				return "text-blue-500";
-			case "failed":
-				return "text-red-500";
-			default:
-				return "text-gray-400";
-		}
-	};
-
-	const getProgressColor = (
-		status: "pending" | "running" | "completed" | "failed",
-	) => {
-		switch (status) {
-			case "completed":
-				return "bg-green-500";
-			case "running":
-				return "bg-blue-500";
-			case "failed":
-				return "bg-red-500";
-			default:
-				return "bg-gray-200";
-		}
-	};
-
 	return (
 		<div className="h-full flex flex-col bg-white ">
-			<TitleBar title="Tools" extra={
-				<Button variant="ghost" size="xs" className=" hover:bg-gray-100">
-					Docs
-					<ExternalLink className="h-4 w-4" />
-				</Button>
-			} />
-			
+			<TitleBar
+				title="Tools"
+				extra={
+					<Button variant="ghost" size="xs" className=" hover:bg-gray-100">
+						Docs
+						<ExternalLink className="h-4 w-4" />
+					</Button>
+				}
+			/>
 
 			{!isToolsEnabled && (
 				<div className="px-4 py-3">
@@ -176,7 +139,6 @@ const ToolsList = () => {
 											{tool.description}
 										</p>
 									</div>
-							
 								</div>
 							</div>
 						</div>

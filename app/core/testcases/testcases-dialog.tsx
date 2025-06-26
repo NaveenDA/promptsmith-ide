@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Beaker, Bug, Info, Shield, X } from "lucide-react";
+import { Beaker, Bug, Info, Shield } from "lucide-react";
 import Image from "next/image";
 import { Slider } from "@/components/ui/slider";
 
@@ -53,8 +53,7 @@ const sample_databases = [
 	{
 		name: "Website Index",
 		type: "chroma",
-		description:
-			"Semantic search index for website content and documentation",
+		description: "Semantic search index for website content and documentation",
 		documentCount: 15234,
 		lastUpdated: "2024-03-15",
 		status: "active",
@@ -144,17 +143,13 @@ export function TestCaseDialog({
 	open,
 	onOpenChange,
 	onSave,
-	groups,
 	initialData,
 }: TestCaseDialogProps) {
 	const [name, setName] = useState("");
 	const [type, setType] = useState<"basic" | "edge" | "security">("basic");
 	const [input, setInput] = useState("");
 	const [useDB, setUseDB] = useState(false);
-	const [selectedDB, setSelectedDB] = useState(
-		sample_databases[0]?.name || "",
-	);
-	const [dbQuery, setDBQuery] = useState("");
+	const [selectedDB, setSelectedDB] = useState(sample_databases[0]?.name || "");
 	const [numResults, setNumResults] = useState(3);
 	const [embeddingModel, setEmbeddingModel] = useState(
 		"text-embedding-3-small",
@@ -181,9 +176,7 @@ export function TestCaseDialog({
 			<DialogContent className="sm:max-w-[500px] p-0 gap-0">
 				<div className="p-6 space-y-6">
 					<div className="flex items-center justify-between">
-						<DialogTitle className="text-xl">
-							Add Test Case
-						</DialogTitle>
+						<DialogTitle className="text-xl">Add Test Case</DialogTitle>
 					</div>
 
 					<div className="space-y-6">
@@ -204,9 +197,7 @@ export function TestCaseDialog({
 							<div className="flex gap-2">
 								<Button
 									type="button"
-									variant={type === "basic"
-										? "default"
-										: "outline"}
+									variant={type === "basic" ? "default" : "outline"}
 									className="flex-1 gap-2"
 									onClick={() => setType("basic")}
 								>
@@ -215,9 +206,7 @@ export function TestCaseDialog({
 								</Button>
 								<Button
 									type="button"
-									variant={type === "edge"
-										? "default"
-										: "outline"}
+									variant={type === "edge" ? "default" : "outline"}
 									className="flex-1 gap-2"
 									onClick={() => setType("edge")}
 								>
@@ -226,9 +215,7 @@ export function TestCaseDialog({
 								</Button>
 								<Button
 									type="button"
-									variant={type === "security"
-										? "default"
-										: "outline"}
+									variant={type === "security" ? "default" : "outline"}
 									className="flex-1 gap-2"
 									onClick={() => setType("security")}
 								>
@@ -259,10 +246,7 @@ export function TestCaseDialog({
 								>
 									Use Database
 								</Label>
-								<Switch
-									checked={useDB}
-									onCheckedChange={setUseDB}
-								/>
+								<Switch checked={useDB} onCheckedChange={setUseDB} />
 							</div>
 
 							{useDB && (
@@ -275,8 +259,8 @@ export function TestCaseDialog({
 											<code className="bg-muted px-1 py-0.5 rounded">
 												$db_results
 											</code>{" "}
-											in your prompt where you want to
-											include the database results
+											in your prompt where you want to include the database
+											results
 										</p>
 									</div>
 
@@ -297,36 +281,33 @@ export function TestCaseDialog({
 															<SelectValue placeholder="Select database" />
 														</SelectTrigger>
 														<SelectContent>
-															{sample_databases
-																.map((db) => (
-																	<SelectItem
-																		key={db
-																			.name}
-																		value={db
-																			.name}
-																		className="py-2.5 truncate w-48"
-																	>
-																		<div className="flex items-center gap-2">
-																			<Image
-																				src={dbtype_images[
+															{sample_databases.map((db) => (
+																<SelectItem
+																	key={db.name}
+																	value={db.name}
+																	className="py-2.5 truncate w-48"
+																>
+																	<div className="flex items-center gap-2">
+																		<Image
+																			src={
+																				dbtype_images[
 																					db.type as keyof typeof dbtype_images
-																				]}
-																				alt={db
-																					.name}
-																				width={16}
-																				height={16}
-																				className="object-contain"
-																			/>
-																			<span
-																				className="font-medium truncate overflow-hidden whitespace-nowrap max-w-[10rem]"
-																				title={db
-																					.name}
-																			>
-																				{db.name}
-																			</span>
-																		</div>
-																	</SelectItem>
-																))}
+																				]
+																			}
+																			alt={db.name}
+																			width={16}
+																			height={16}
+																			className="object-contain"
+																		/>
+																		<span
+																			className="font-medium truncate overflow-hidden whitespace-nowrap max-w-[10rem]"
+																			title={db.name}
+																		>
+																			{db.name}
+																		</span>
+																	</div>
+																</SelectItem>
+															))}
 														</SelectContent>
 													</Select>
 												</div>
@@ -344,17 +325,9 @@ export function TestCaseDialog({
 															<SelectValue>
 																<div className="flex items-center gap-2">
 																	<Image
-																		src={`/logos/${
-																			textEmbeddingModels
-																				.find(
-																					(
-																						m,
-																					) => m
-																						.name ===
-																						embeddingModel
-																				)?.provider
-																				.toLowerCase()
-																		}.svg`}
+																		src={`/logos/${textEmbeddingModels
+																			.find((m) => m.name === embeddingModel)
+																			?.provider.toLowerCase()}.svg`}
 																		alt={embeddingModel}
 																		width={14}
 																		height={14}
@@ -367,39 +340,31 @@ export function TestCaseDialog({
 															</SelectValue>
 														</SelectTrigger>
 														<SelectContent>
-															{textEmbeddingModels
-																.map((
-																	model,
-																) => (
-																	<SelectItem
-																		key={model
-																			.name}
-																		value={model
-																			.name}
-																		className="py-2.5"
-																	>
-																		<div className="flex items-center gap-2">
-																			<Image
-																				src={`/logos/${model.provider.toLowerCase()}.svg`}
-																				alt={model
-																					.provider}
-																				width={16}
-																				height={16}
-																				className="object-contain"
-																			/>
-																			<div>
-																				<div className="font-medium truncate ">
-																					{model
-																						.name}
-																				</div>
-																				<div className="text-xs text-gray-500">
-																					{model
-																						.description}
-																				</div>
+															{textEmbeddingModels.map((model) => (
+																<SelectItem
+																	key={model.name}
+																	value={model.name}
+																	className="py-2.5"
+																>
+																	<div className="flex items-center gap-2">
+																		<Image
+																			src={`/logos/${model.provider.toLowerCase()}.svg`}
+																			alt={model.provider}
+																			width={16}
+																			height={16}
+																			className="object-contain"
+																		/>
+																		<div>
+																			<div className="font-medium truncate ">
+																				{model.name}
+																			</div>
+																			<div className="text-xs text-gray-500">
+																				{model.description}
 																			</div>
 																		</div>
-																	</SelectItem>
-																))}
+																	</div>
+																</SelectItem>
+															))}
 														</SelectContent>
 													</Select>
 												</div>
@@ -407,29 +372,22 @@ export function TestCaseDialog({
 
 											<div className="grid grid-cols-2 gap-4">
 												<div className="space-y-2">
-													<Label className="text-sm font-medium">
-														Results
-													</Label>
+													<Label className="text-sm font-medium">Results</Label>
 													<Input
 														type="number"
 														min={1}
 														max={10}
 														value={numResults}
 														onChange={(e) =>
-															setNumResults(
-																Number(
-																	e.target
-																		.value,
-																),
-															)}
+															setNumResults(Number(e.target.value))
+														}
 														className="h-9"
 													/>
 												</div>
 												{/* Similarity threshold */}
 												<div className="space-y-2">
 													<Label className="text-sm font-medium">
-														Similarity Threshold
-														(0-1)
+														Similarity Threshold (0-1)
 													</Label>
 													<p className="h-1 text-xs text-muted-foreground">
 														{similarityThreshold}
@@ -438,14 +396,10 @@ export function TestCaseDialog({
 														min={0}
 														max={1}
 														step={0.01}
-														value={[
-															similarityThreshold,
-														]}
-														onValueChange={(
-															value,
-														) => setSimilarityThreshold(
-															value[0],
-														)}
+														value={[similarityThreshold]}
+														onValueChange={(value) =>
+															setSimilarityThreshold(value[0])
+														}
 														className="w-full mt-4"
 													/>
 												</div>
@@ -459,11 +413,7 @@ export function TestCaseDialog({
 				</div>
 
 				<DialogFooter className="p-6 pt-0">
-					<Button
-						className="w-full"
-						type="submit"
-						onClick={handleSubmit}
-					>
+					<Button className="w-full" type="submit" onClick={handleSubmit}>
 						Save Test Case
 					</Button>
 				</DialogFooter>

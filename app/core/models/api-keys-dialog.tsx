@@ -170,7 +170,9 @@ export function ApiKeysDialog() {
 									Using Local Storage (Browser Storage)
 								</p>
 								<ul className="list-disc list-inside space-y-1 text-muted-foreground">
-									<li>Keys are stored only in your browser's local storage</li>
+									<li>
+										Keys are stored only in your browser&apos;s local storage
+									</li>
 									<li>Keys never leave your device</li>
 									<li>
 										Need to re-enter keys when using different browsers or

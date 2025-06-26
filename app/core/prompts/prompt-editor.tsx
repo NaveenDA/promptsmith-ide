@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Save } from "lucide-react";
@@ -12,32 +12,18 @@ import { useAtom } from "jotai";
 import { sample_prompts } from "@/lib/sample-db";
 import MonacoEditor from "@monaco-editor/react";
 
-interface Variable {
-	name: string;
-	type: "string" | "number" | "boolean" | "array" | "object";
-	description: string;
-	required: boolean;
-}
-
-interface PromptVersion {
-	id: string;
-	content: string;
-	variables: Variable[];
-	createdAt: Date;
-	model: string;
-	temperature: number;
-}
-
 interface PromptEditorProps {
 	selectedPromptId?: string | null;
 }
 
-export default function PromptEditor({ selectedPromptId }: PromptEditorProps) {
+const PromptEditor = forwardRef(function PromptEditor(
+	{ selectedPromptId }: PromptEditorProps,
+	ref,
+) {
 	const [title, setTitle] = useState("Extract Model Names");
 	const [content, setContent] = useState(
-		`Your task is to extract model names from machine learning paper abstracts. Your response is an array of the model names in the format [\"model_name\"]. If you don't find model names in the abstract or you are not sure, return [\"NA\"]\n\nAbstract: Large Language Models (LLMs), such as ChatGPT and GPT-4, have revolutionized natural language processing research and demonstrated potential in Artificial General Intelligence (AGI). However, the expensive training and deployment of LLMs present challenges to transparent and open academic research. To address these issues, this project open-sources the Chinese LLaMA and Alpaca…`
+		`Your task is to extract model names from machine learning paper abstracts. Your response is an array of the model names in the format [\"model_name\"]. If you don't find model names in the abstract or you are not sure, return [\"NA\"]\n\nAbstract: Large Language Models (LLMs), such as ChatGPT and GPT-4, have revolutionized natural language processing research and demonstrated potential in Artificial General Intelligence (AGI). However, the expensive training and deployment of LLMs present challenges to transparent and open academic research. To address these issues, this project open-sources the Chinese LLaMA and Alpaca…`,
 	);
-	const [variables, setVariables] = useState<Variable[]>([]);
 	const [config] = useAtom(modelConfigAtom);
 
 	useEffect(() => {
@@ -49,9 +35,21 @@ export default function PromptEditor({ selectedPromptId }: PromptEditorProps) {
 			}
 		} else {
 			setTitle("Extract Model Names");
-			setContent(`Your task is to extract model names from machine learning paper abstracts. Your response is an array of the model names in the format [\"model_name\"]. If you don't find model names in the abstract or you are not sure, return [\"NA\"]\n\nAbstract: Large Language Models (LLMs), such as ChatGPT and GPT-4, have revolutionized natural language processing research and demonstrated potential in Artificial General Intelligence (AGI). However, the expensive training and deployment of LLMs present challenges to transparent and open academic research. To address these issues, this project open-sources the Chinese LLaMA and Alpaca…`);
+			setContent(
+				`Your task is to extract model names from machine learning paper abstracts. Your response is an array of the model names in the format [\"model_name\"]. If you don't find model names in the abstract or you are not sure, return [\"NA\"]\n\nAbstract: Large Language Models (LLMs), such as ChatGPT and GPT-4, have revolutionized natural language processing research and demonstrated potential in Artificial General Intelligence (AGI). However, the expensive training and deployment of LLMs present challenges to transparent and open academic research. To address these issues, this project open-sources the Chinese LLaMA and Alpaca…`,
+			);
 		}
 	}, [selectedPromptId]);
+
+	const savePrompt = () => {
+		// Implement your save logic here (e.g., API call, local storage, etc.)
+		console.log("Prompt saved:", { title, content });
+		// You can show a toast or notification here
+	};
+
+	useImperativeHandle(ref, () => ({
+		savePrompt,
+	}));
 
 	return (
 		<div className="h-full flex flex-col">
@@ -86,7 +84,12 @@ export default function PromptEditor({ selectedPromptId }: PromptEditorProps) {
 						<ModelConfigDialog />
 					</div>
 					<div className="flex items-center gap-2">
-						<Button variant="default" size="xs" className="gap-2">
+						<Button
+							variant="default"
+							size="xs"
+							className="gap-2"
+							onClick={savePrompt}
+						>
 							<Save className="w-4 h-4" />
 							Save
 						</Button>
@@ -95,7 +98,7 @@ export default function PromptEditor({ selectedPromptId }: PromptEditorProps) {
 			</div>
 
 			<div className="relative h-full">
-				<div className="absolute inset-0 p-4">
+				<div className="absolute inset-0">
 					<MonacoEditor
 						height="100%"
 						defaultLanguage="markdown"
@@ -113,4 +116,6 @@ export default function PromptEditor({ selectedPromptId }: PromptEditorProps) {
 			</div>
 		</div>
 	);
-}
+});
+
+export default PromptEditor;

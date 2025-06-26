@@ -1,11 +1,7 @@
 "use client";
 
 import { Button } from "./ui/button";
-import {
-	Database,
-	FileText,
-	Wrench,
-} from "lucide-react";
+import { Database, FileText, Wrench } from "lucide-react";
 import {
 	Tooltip,
 	TooltipContent,
@@ -14,8 +10,6 @@ import {
 } from "./ui/tooltip";
 import { useAtom } from "jotai";
 import { selectedActivityBarTabAtom } from "@/lib/store";
-
-
 
 export function ActivityBar() {
 	const [selectedTab, setSelectedTab] = useAtom(selectedActivityBarTabAtom);
