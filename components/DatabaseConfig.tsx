@@ -4,7 +4,7 @@ import { Label } from "./ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { useState } from "react";
 import { Badge } from "./ui/badge";
-import { Database, Plus, Trash2, RefreshCw, Search } from "lucide-react";
+import { Database, Plus, Trash2, RefreshCw, Search, ExternalLink, Info, Lock, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -16,6 +16,7 @@ import {
 } from "./ui/dialog";
 import { Textarea } from "./ui/textarea";
 import Image from "next/image";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface VectorDB {
   id: string;
@@ -26,6 +27,15 @@ interface VectorDB {
   indexName: string;
   status: "connected" | "disconnected" | "error";
   documentCount?: number;
+}
+
+interface DatabaseType {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  docsUrl: string;
+  connectionGuide: string;
 }
 
 const DATABASE_OPTIONS: Omit<VectorDB, "id" | "status" | "connectionString" | "indexName" | "documentCount">[] = [
@@ -39,14 +49,70 @@ const DATABASE_OPTIONS: Omit<VectorDB, "id" | "status" | "connectionString" | "i
   { name: "Milvus", type: "milvus", icon: "/db-icons/milvus.svg" },
 ];
 
-export function DatabaseConfig() {
+const DATABASE_TYPES: DatabaseType[] = [
+  {
+    id: "chroma",
+    name: "Chroma",
+    description: "Open-source embedding database",
+    image: "/logos/chroma.webp",
+    docsUrl: "https://docs.trychroma.com/getting-started",
+    connectionGuide: "https://docs.trychroma.com/usage-guide#using-chromadb-persistently",
+  },
+  {
+    id: "pinecone",
+    name: "Pinecone",
+    description: "Managed vector database",
+    image: "/logos/pinecone.png",
+    docsUrl: "https://docs.pinecone.io/docs/overview",
+    connectionGuide: "https://docs.pinecone.io/docs/authentication",
+  },
+  {
+    id: "pgvector",
+    name: "pgvector",
+    description: "PostgreSQL vector extension",
+    image: "/logos/pg-vector.png",
+    docsUrl: "https://github.com/pgvector/pgvector",
+    connectionGuide: "https://supabase.com/docs/guides/database/extensions/pgvector",
+  },
+  {
+    id: "qdrant",
+    name: "Qdrant",
+    description: "Vector database for AI apps",
+    image: "/logos/qdrant.png",
+    docsUrl: "https://qdrant.tech/documentation/",
+    connectionGuide: "https://qdrant.tech/documentation/quick-start/",
+  },
+  {
+    id: "weaviate",
+    name: "Weaviate",
+    description: "Open-source vector search engine",
+    image: "/logos/weaviate.png",
+    docsUrl: "https://weaviate.io/developers/weaviate",
+    connectionGuide: "https://weaviate.io/developers/weaviate/installation",
+  },
+  {
+    id: "milvus",
+    name: "Milvus",
+    description: "Vector database built for AI",
+    image: "/logos/milvus.png",
+    docsUrl: "https://milvus.io/docs",
+    connectionGuide: "https://milvus.io/docs/install_standalone-docker.md",
+  },
+];
+
+interface DatabaseConfigProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function DatabaseConfig({ open, onOpenChange }: DatabaseConfigProps) {
   const [databases, setDatabases] = useState<VectorDB[]>([]);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedDB, setSelectedDB] = useState<VectorDB | null>(null);
-  const [searchDialogOpen, setSearchDialogOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState<DatabaseType | null>(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    connectionUrl: "",
+    apiKey: "",
+  });
 
   const handleAddDatabase = (db: Omit<VectorDB, "id" | "status">) => {
     setDatabases([
@@ -57,7 +123,7 @@ export function DatabaseConfig() {
         status: "disconnected",
       },
     ]);
-    setDialogOpen(false);
+    onOpenChange(false);
   };
 
   const handleTestConnection = async (db: VectorDB) => {
@@ -71,262 +137,179 @@ export function DatabaseConfig() {
     );
   };
 
-  const handleSearch = async (query: string) => {
-    // TODO: Implement actual vector search
-    setSearchResults([
-      {
-        text: "Sample document matching the query",
-        similarity: 0.92,
-      },
-    ]);
+  const handleBack = () => {
+    setSelectedType(null);
+    setFormData({
+      name: "",
+      connectionUrl: "",
+      apiKey: "",
+    });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Handle form submission
+    console.log("Form submitted:", { type: selectedType, ...formData });
+    onOpenChange(false);
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between px-4 py-2 border-b">
-        <div className="flex items-center gap-2">
-          <h2 className="text-sm font-semibold">Vector Databases</h2>
-          <Badge variant="outline" className="text-xs">
-            {databases.length} connected
-          </Badge>
-        </div>
-        <Button
-          size="sm"
-          variant="outline"
-          className="text-xs"
-          onClick={() => setDialogOpen(true)}
-        >
-          Add Database
-        </Button>
-      </div>
-
-      <div className="flex-1 overflow-auto p-4">
-        {/* Connected Databases */}
-        {databases.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-sm font-medium mb-4">Connected Databases</h3>
-            <div className="space-y-4">
-              {databases.map((db) => (
-                <div
-                  key={db.id}
-                  className="group rounded-lg border p-4 hover:border-blue-200 transition-colors"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="h-8 w-8 relative">
-                        <Image
-                          src={db.icon}
-                          alt={db.name}
-                          fill
-                          className="object-contain"
-                        />
-                      </div>
-                      <span className="font-medium">{db.name}</span>
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "text-xs",
-                          db.status === "connected"
-                            ? "bg-green-50 text-green-700 border-green-200"
-                            : db.status === "error"
-                            ? "bg-red-50 text-red-700 border-red-200"
-                            : "bg-gray-50 text-gray-700 border-gray-200"
-                        )}
-                      >
-                        {db.status}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => handleTestConnection(db)}
-                      >
-                        <RefreshCw className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => {
-                          setSelectedDB(db);
-                          setSearchDialogOpen(true);
-                        }}
-                      >
-                        <Search className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-red-600 hover:text-red-700"
-                        onClick={() =>
-                          setDatabases(databases.filter((d) => d.id !== db.id))
-                        }
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="text-sm text-gray-500 space-y-1">
-                    <div>Type: {db.type}</div>
-                    <div>Index: {db.indexName}</div>
-                    {db.documentCount && (
-                      <div>Documents: {db.documentCount.toLocaleString()}</div>
-                    )}
-                  </div>
-                </div>
-              ))}
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <div className="flex items-center gap-2">
+            {selectedType && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 -ml-2"
+                onClick={handleBack}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            )}
+            <div>
+              <DialogTitle>
+                {selectedType ? `Configure ${selectedType.name}` : "Add Database"}
+              </DialogTitle>
+              <DialogDescription>
+                {selectedType
+                  ? "Configure your database connection"
+                  : "Select a vector database to connect"}
+              </DialogDescription>
             </div>
           </div>
-        )}
+        </DialogHeader>
 
-        {/* Available Databases Grid */}
-        <div>
-          <h3 className="text-sm font-medium mb-4">Available Databases</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {DATABASE_OPTIONS.map((option) => (
+        {!selectedType ? (
+          <div className="grid grid-cols-3 gap-3 py-4">
+            {DATABASE_TYPES.map((type) => (
               <button
-                key={option.type}
+                key={type.id}
                 className={cn(
-                  "flex flex-col items-center p-4 rounded-lg border hover:border-blue-200 transition-colors",
-                  selectedOption === option.type && "border-blue-500 bg-blue-50"
+                  "flex flex-col items-center gap-2 p-4 rounded-lg border",
+                  "hover:border-blue-200 hover:bg-blue-50/50",
+                  "transition-colors duration-150",
+                  "group relative"
                 )}
-                onClick={() => {
-                  setSelectedOption(option.type);
-                  setDialogOpen(true);
-                }}
+                onClick={() => setSelectedType(type)}
               >
-                <div className="h-12 w-12 relative mb-2">
-                  <Image
-                    src={option.icon}
-                    alt={option.name}
-                    fill
-                    className="object-contain"
-                  />
+                <Image
+                  src={type.image}
+                  alt={type.name}
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
+                <div className="text-center">
+                  <div className="font-medium text-sm">{type.name}</div>
+                  <div className="text-xs text-gray-500">{type.description}</div>
                 </div>
-                <span className="text-sm font-medium text-center">{option.name}</span>
+                <a
+                  href={type.docsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <ExternalLink className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                </a>
               </button>
             ))}
           </div>
-        </div>
-      </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="py-4 space-y-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Database Name</Label>
+                <Input
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  placeholder="Enter a name for this database"
+                />
+              </div>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Vector Database</DialogTitle>
-            <DialogDescription>
-              Connect to your vector database to enable semantic search in prompts.
-            </DialogDescription>
-          </DialogHeader>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              const selectedType = formData.get("type") as VectorDB["type"];
-              const option = DATABASE_OPTIONS.find(opt => opt.type === selectedType);
-              handleAddDatabase({
-                name: formData.get("name") as string,
-                type: selectedType,
-                icon: option?.icon || "/db-icons/database.svg",
-                connectionString: formData.get("connectionString") as string,
-                indexName: formData.get("indexName") as string,
-              });
-            }}
-          >
-            <div className="space-y-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Name
-                </Label>
-                <Input
-                  id="name"
-                  name="name"
-                  className="col-span-3"
-                  required
-                />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Connection URL</Label>
+                  <a
+                    href={selectedType.connectionGuide}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-500 hover:text-blue-700"
+                  >
+                    How to get connection URL?
+                  </a>
+                </div>
+                <div className="relative">
+                  <Input
+                    type="password"
+                    value={formData.connectionUrl}
+                    onChange={(e) =>
+                      setFormData({ ...formData, connectionUrl: e.target.value })
+                    }
+                    placeholder="Enter connection URL"
+                  />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Lock className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Connection details are encrypted at rest
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="type" className="text-right">
-                  Type
-                </Label>
-                <Select name="type" defaultValue={selectedOption || "pinecone"}>
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DATABASE_OPTIONS.map(option => (
-                      <SelectItem key={option.type} value={option.type}>
-                        {option.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="connectionString" className="text-right">
-                  Connection String
-                </Label>
-                <Input
-                  id="connectionString"
-                  name="connectionString"
-                  className="col-span-3"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="indexName" className="text-right">
-                  Index Name
-                </Label>
-                <Input
-                  id="indexName"
-                  name="indexName"
-                  className="col-span-3"
-                  required
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="submit">Add Database</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
 
-      <Dialog open={searchDialogOpen} onOpenChange={setSearchDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Semantic Search</DialogTitle>
-            <DialogDescription>
-              Search {selectedDB?.name} for relevant content to include in your prompt.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="flex gap-2">
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Enter your search query..."
-                className="flex-1"
-              />
-              <Button onClick={() => handleSearch(searchQuery)}>Search</Button>
-            </div>
-            {searchResults.length > 0 && (
-              <div className="space-y-4">
-                {searchResults.map((result, i) => (
-                  <div key={i} className="p-4 rounded-lg border">
-                    <div className="text-sm">{result.text}</div>
-                    <div className="text-xs text-gray-500 mt-2">
-                      Similarity: {(result.similarity * 100).toFixed(1)}%
-                    </div>
+              {selectedType.id === "pinecone" && (
+                <div className="space-y-2">
+                  <Label>API Key</Label>
+                  <div className="relative">
+                    <Input
+                      type="password"
+                      value={formData.apiKey}
+                      onChange={(e) =>
+                        setFormData({ ...formData, apiKey: e.target.value })
+                      }
+                      placeholder="Enter API key"
+                    />
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Lock className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        API keys are encrypted at rest
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
-                ))}
+                </div>
+              )}
+
+              <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg text-sm text-blue-700">
+                <Info className="h-4 w-4 mt-0.5" />
+                <div>
+                  Your connection details are encrypted using AES-256 before being stored.{" "}
+                  <a
+                    href="/docs/security"
+                    className="underline hover:text-blue-900"
+                  >
+                    Learn more about our security practices
+                  </a>
+                </div>
               </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Add Database</Button>
+            </div>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 } 

@@ -2,6 +2,8 @@
 
 **PromptSmith IDE** is a web-based IDE designed for professional-grade prompt engineering. It helps developers craft, debug, and **secure** prompts for LLMs by combining a powerful editor, real-time injection analysis, and best-practice linting.
 
+![PromptSmith IDE](./public/logo.svg)
+
 ---
 
 ## 🚀 Features
@@ -26,4 +28,12 @@
 | Auth (opt)   | Supabase Auth / Clerk / custom JWT |
 | Deployment   | Vercel (Frontend) + Render/Fly.io (Backend) |
 
----
+<!-- Contribution are welcome -->
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a pull request.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

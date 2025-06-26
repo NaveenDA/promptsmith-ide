@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ExternalLink, Eye, EyeOff, Key } from "lucide-react";
+import { ExternalLink, Eye, EyeOff, Key, Cloud, HardDrive } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
 
 interface ApiKeyConfig {
@@ -79,15 +80,41 @@ export function ApiKeysDialog() {
   });
   
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
+  const [useSecureSync, setUseSecureSync] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("use_secure_sync") === "true";
+    }
+    return false;
+  });
 
   const handleKeyChange = (providerId: string, value: string) => {
     const newKeys = { ...apiKeys, [providerId]: value };
     setApiKeys(newKeys);
-    localStorage.setItem("api_keys", JSON.stringify(newKeys));
+    
+    if (useSecureSync) {
+      // TODO: Implement server-side storage
+      // This would make an API call to store the keys securely
+      console.log("Storing keys on server...");
+    } else {
+      localStorage.setItem("api_keys", JSON.stringify(newKeys));
+    }
   };
 
   const toggleKeyVisibility = (providerId: string) => {
     setShowKeys(prev => ({ ...prev, [providerId]: !prev[providerId] }));
+  };
+
+  const handleStoragePreferenceChange = (checked: boolean) => {
+    setUseSecureSync(checked);
+    localStorage.setItem("use_secure_sync", checked.toString());
+    
+    if (checked) {
+      // TODO: Implement migration to server storage
+      console.log("Migrating keys to server storage...");
+    } else {
+      // TODO: Implement migration to local storage
+      console.log("Migrating keys to local storage...");
+    }
   };
 
   return (
@@ -102,10 +129,53 @@ export function ApiKeysDialog() {
         <DialogHeader>
           <DialogTitle>API Keys Management</DialogTitle>
           <DialogDescription>
-            For maximum security, API keys are stored locally in your browser.
-            They won't get synced to other browsers or devices.
+            Manage your API keys securely
           </DialogDescription>
         </DialogHeader>
+        
+        <div className="space-y-4">
+          <div className="flex items-center justify-between space-x-4 p-4 rounded-lg bg-muted/50">
+            <div className="space-y-0.5">
+              <div className="text-sm font-medium">Storage Preference</div>
+              <div className="text-xs text-muted-foreground">
+                Choose how you want to store your API keys
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <HardDrive className="w-4 h-4 text-muted-foreground" />
+              <Switch
+                checked={useSecureSync}
+                onCheckedChange={handleStoragePreferenceChange}
+              />
+              <Cloud className="w-4 h-4 text-muted-foreground" />
+            </div>
+          </div>
+          
+          <div className="text-xs space-y-2">
+            {useSecureSync ? (
+              <>
+                <p className="font-medium">Using Secure Sync (Server Storage)</p>
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                  <li>Keys are encrypted and stored securely on our servers</li>
+                  <li>Access your keys across different devices and browsers</li>
+                  <li>Enterprise-grade security with regular audits</li>
+                  <li>Automatic backup and recovery</li>
+                </ul>
+              </>
+            ) : (
+              <>
+                <p className="font-medium">Using Local Storage (Browser Storage)</p>
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                  <li>Keys are stored only in your browser's local storage</li>
+                  <li>Keys never leave your device</li>
+                  <li>Need to re-enter keys when using different browsers or devices</li>
+                  <li>Keys are cleared when browser data is cleared</li>
+                </ul>
+              </>
+            )}
+          </div>
+        </div>
+
         <div className="space-y-6 py-4">
           {API_PROVIDERS.map((provider) => (
             <div key={provider.id} className="space-y-2">

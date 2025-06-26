@@ -3,18 +3,25 @@
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import {
-  FileText,
   Database,
-  Settings,
-  Play,
-  History,
-  Shield,
-  type LucideIcon,
+  FileText,
   Globe,
+  History,
+  type LucideIcon,
+  Play,
+  Settings,
+  Shield,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
+import { useAtom } from "jotai";
+import { SELECTED_ACTIVITY_BAR_TAB } from "./atoms";
 
 interface ActivityBarItem {
   icon: LucideIcon;
@@ -50,22 +57,18 @@ const items: ActivityBarItem[] = [
   },
 ];
 
-interface ActivityBarProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
-}
-
-export function ActivityBar({ activeTab, onTabChange }: ActivityBarProps) {
+export function ActivityBar() {
+  const [selectedTab, setSelectedTab] = useAtom(SELECTED_ACTIVITY_BAR_TAB);
   return (
     <div className="w-12 border-r bg-gray-50/50 flex flex-col items-center py-2 gap-1">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              variant={activeTab === "prompts" ? "secondary" : "ghost"}
+              variant={selectedTab === "prompts" ? "default" : "ghost"}
               size="icon"
               className="h-10 w-10"
-              onClick={() => onTabChange("prompts")}
+              onClick={() => setSelectedTab("prompts")}
             >
               <FileText className="h-5 w-5" />
             </Button>
@@ -78,10 +81,10 @@ export function ActivityBar({ activeTab, onTabChange }: ActivityBarProps) {
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              variant={activeTab === "database" ? "secondary" : "ghost"}
+              variant={selectedTab === "database" ? "default" : "ghost"}
               size="icon"
               className="h-10 w-10"
-              onClick={() => onTabChange("database")}
+              onClick={() => setSelectedTab("database")}
             >
               <Database className="h-5 w-5" />
             </Button>
@@ -90,39 +93,7 @@ export function ActivityBar({ activeTab, onTabChange }: ActivityBarProps) {
             <p>Vector Databases</p>
           </TooltipContent>
         </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant={activeTab === "api" ? "secondary" : "ghost"}
-              size="icon"
-              className="h-10 w-10"
-              onClick={() => onTabChange("api")}
-            >
-              <Globe className="h-5 w-5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p>API Keys</p>
-          </TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant={activeTab === "settings" ? "secondary" : "ghost"}
-              size="icon"
-              className="h-10 w-10"
-              onClick={() => onTabChange("settings")}
-            >
-              <Settings className="h-5 w-5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p>Settings</p>
-          </TooltipContent>
-        </Tooltip>
       </TooltipProvider>
     </div>
   );
-} 
+}

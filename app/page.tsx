@@ -15,32 +15,33 @@ import { SecurityAnalysis } from "@/components/SecurityAnalysis";
 import { History } from "@/components/History";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { PromptList } from "@/components/PromptList";
 import { DatabaseConfig } from "@/components/DatabaseConfig";
-import { useState } from "react";
+import { useAtom } from "jotai";
+import { SELECTED_ACTIVITY_BAR_TAB } from "@/components/atoms";
+import { PromptList } from "./pages/prompt-list";
+import DatabaseList from "./pages/database-list";
 
 export default function Home() {
-	const [activeTab, setActiveTab] = useState("prompts");
-
+	const [selectedTab] = useAtom(SELECTED_ACTIVITY_BAR_TAB);
 	return (
 		<>
 			<CommandPalette />
 			<div className="flex flex-col h-screen bg-white">
 				<Header />
 				<div className="flex-1 flex">
-					<ActivityBar activeTab={activeTab} onTabChange={setActiveTab} />
+					<ActivityBar  />
 					<ResizablePanelGroup direction="horizontal" className="flex-1">
 						<ResizablePanel
-							defaultSize={15}
-							minSize={10}
-							maxSize={20}
+							defaultSize={20}
+							minSize={20}
+							maxSize={25}
 							className="bg-gray-50"
 						>
 							{/* Left sidebar with prompt list or database config */}
-							{activeTab === "prompts" ? (
+							{selectedTab === "prompts" ? (
 								<PromptList />
-							) : activeTab === "database" ? (
-								<DatabaseConfig />
+							) : selectedTab === "database" ? (
+								<DatabaseList />
 							) : null}
 						</ResizablePanel>
 						<ResizableHandle withHandle />
@@ -51,7 +52,7 @@ export default function Home() {
 						<ResizableHandle withHandle />
 						<ResizablePanel
 							defaultSize={25}
-							minSize={15}
+							minSize={30}
 							maxSize={30}
 							className="bg-gray-50"
 						>

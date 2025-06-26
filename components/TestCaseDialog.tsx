@@ -21,6 +21,7 @@ import {
 import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
 import { Beaker, Bug, Shield, X, Info } from "lucide-react";
+import Image from "next/image";
 
 interface TestCaseDialogProps {
   open: boolean;
@@ -48,6 +49,34 @@ interface TestCaseDialogProps {
   };
 }
 
+const textEmbeddingModels = [
+  {
+      provider: "OpenAI",
+      name: "text-embedding-3-small",
+      description: "Fast and efficient embeddings",
+  },
+  {
+      provider: "OpenAI",
+      name: "text-embedding-3-large",
+      description: "High-quality embeddings",
+  },
+  {
+      provider: "Cohere",
+      name: "embed-multilingual-v3.0",
+      description: "Multilingual support",
+  },
+  {
+      provider: "Mistral",
+      name: "bge-base-en-v1.5",
+      description: "Balanced performance",
+  },
+  {
+      provider: "Google",
+      name: "textembedding-gecko",
+      description: "Production-ready embeddings",
+  }
+];
+
 export function TestCaseDialog({
   open,
   onOpenChange,
@@ -62,6 +91,7 @@ export function TestCaseDialog({
   const [selectedDB, setSelectedDB] = useState(groups[0]?.name || "");
   const [dbQuery, setDBQuery] = useState("");
   const [numResults, setNumResults] = useState(3);
+  const [embeddingModel, setEmbeddingModel] = useState("text-embedding-3-small");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,40 +195,93 @@ export function TestCaseDialog({
                   {/* Database Configuration */}
                   <div className="space-y-4 border rounded-lg p-4">
                     <div className="space-y-4">
-                      {/* Database Selection */}
-                      <div className="space-y-2">
-                        <Label>Database</Label>
-                        <Select value={selectedDB} onValueChange={setSelectedDB}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select database" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {groups.map((group) => (
-                              <SelectItem key={group.name} value={group.name}>
-                                {group.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                      <div className="grid grid-cols-2 gap-6">
+                        {/* Database Selection */}
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">Database</Label>
+                          <Select value={selectedDB} onValueChange={setSelectedDB}>
+                            <SelectTrigger className="h-9">
+                              <SelectValue placeholder="Select database" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {groups.map((group) => (
+                                <SelectItem key={group.name} value={group.name} className="py-2.5">
+                                  <div className="flex items-center gap-2">
+                                    <Image 
+                                      src={`/db-icons/${group.name.toLowerCase()}.svg`} 
+                                      alt={group.name} 
+                                      width={16} 
+                                      height={16} 
+                                      className="object-contain"
+                                    />
+                                    <span className="font-medium">{group.name}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Embedding Model */}
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">Embedding Model</Label>
+                          <Select value={embeddingModel} onValueChange={setEmbeddingModel}>
+                            <SelectTrigger className="h-9">
+                              <SelectValue>
+                                <div className="flex items-center gap-2">
+                                  <Image 
+                                    src={`/logos/${textEmbeddingModels.find(m => m.name === embeddingModel)?.provider.toLowerCase()}.svg`} 
+                                    alt={embeddingModel} 
+                                    width={14} 
+                                    height={14} 
+                                    className="object-contain"
+                                  />
+                                  <span className="truncate">{embeddingModel}</span>
+                                </div>
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {textEmbeddingModels.map((model) => (
+                                <SelectItem key={model.name} value={model.name} className="py-2.5">
+                                  <div className="flex items-center gap-2">
+                                    <Image 
+                                      src={`/logos/${model.provider.toLowerCase()}.svg`} 
+                                      alt={model.provider} 
+                                      width={16} 
+                                      height={16} 
+                                      className="object-contain"
+                                    />
+                                    <div>
+                                      <div className="font-medium">{model.name}</div>
+                                      <div className="text-xs text-gray-500">{model.description}</div>
+                                    </div>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>Results</Label>
+                          <Label className="text-sm font-medium">Results</Label>
                           <Input
                             type="number"
                             min={1}
                             max={10}
                             value={numResults}
                             onChange={(e) => setNumResults(Number(e.target.value))}
+                            className="h-9"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label>Query</Label>
+                          <Label className="text-sm font-medium">Query</Label>
                           <Input
                             value={dbQuery}
                             onChange={(e) => setDBQuery(e.target.value)}
                             placeholder="Search terms"
+                            className="h-9"
                           />
                         </div>
                       </div>
