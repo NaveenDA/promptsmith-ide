@@ -3,6 +3,7 @@ import Header from "@/components/header";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function AppLayout({
 	children,
@@ -16,6 +17,7 @@ export default function AppLayout({
 				<Header />
 				{children}
 			</TooltipProvider>
+			<Toaster />
 		</QueryClientProvider>
 	);
 }

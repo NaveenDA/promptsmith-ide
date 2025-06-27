@@ -150,7 +150,7 @@ export default function MainIDELayout() {
 									<SecurityAnalysis />
 								</TabsContent>
 								<TabsContent value="history" className="flex-1 p-0 m-0">
-									<History />
+									{selectedPromptId && <History promptId={selectedPromptId} />}
 								</TabsContent>
 							</Tabs>
 						</ResizablePanel>

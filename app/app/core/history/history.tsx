@@ -5,23 +5,24 @@ import { Button } from "@/components/ui/button";
 import {
 	ChevronRight,
 	ChevronDown,
-	ArrowUpRight,
 	RotateCcw,
 	Copy,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 interface PromptVersion {
 	id: string;
-	title: string;
+	version: number;
 	content: string;
-	model: {
+	modelParams: {
 		provider: string;
 		name: string;
-		temperature: number;
+		parameters: Record<string, unknown>;
 	};
-	createdAt: Date;
+	createdAt: string;
 	performance?: {
 		tokens: number;
 		latency: number;
@@ -29,45 +30,24 @@ interface PromptVersion {
 	};
 }
 
-export function History() {
-	const [versions] = useState<PromptVersion[]>([
-		{
-			id: "1",
-			title: "Initial Version",
-			content: "This is the first version of the prompt...",
-			model: {
-				provider: "OpenAI",
-				name: "gpt-4",
-				temperature: 0.7,
-			},
-			createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-			performance: {
-				tokens: 150,
-				latency: 1200,
-				cost: 0.002,
-			},
-		},
-		{
-			id: "2",
-			title: "Added Variables",
-			content: "Updated version with {{variable}} support...",
-			model: {
-				provider: "OpenAI",
-				name: "gpt-4",
-				temperature: 0.5,
-			},
-			createdAt: new Date(Date.now() - 1000 * 60 * 30), // 30 mins ago
-			performance: {
-				tokens: 180,
-				latency: 1500,
-				cost: 0.0025,
-			},
-		},
-	]);
-
+export function History({ promptId }: { promptId: string }) {
 	const [expandedVersions, setExpandedVersions] = useState<
 		Record<string, boolean>
 	>({});
+
+	const {
+		data: versions = [],
+		isLoading,
+		isError,
+	} = useQuery({
+		queryKey: ["prompt-versions", promptId],
+		queryFn: async () => {
+			const res = await fetch(`/api/prompt-versions?promptId=${promptId}`);
+			if (!res.ok) throw new Error("Failed to fetch prompt versions");
+			return res.json();
+		},
+		enabled: !!promptId,
+	});
 
 	const toggleVersion = (versionId: string) => {
 		setExpandedVersions((prev) => ({
@@ -76,10 +56,14 @@ export function History() {
 		}));
 	};
 
+	if (isLoading) return <div className="p-4">Loading history...</div>;
+	if (isError)
+		return <div className="p-4 text-red-500">Failed to load history.</div>;
+
 	return (
 		<div className="h-full flex flex-col bg-white">
 			<div className="flex-1 overflow-auto">
-				{versions.map((version) => (
+				{versions.map((version: PromptVersion) => (
 					<div key={version.id} className="border-b">
 						<button
 							type="button"
@@ -94,20 +78,20 @@ export function History() {
 							<div className="flex-1 text-left">
 								<div className="flex items-center gap-2">
 									<span className="font-medium text-gray-700">
-										{version.title}
+										Version {version.version}
 									</span>
 									<span className="text-xs text-gray-500">
-										{formatDistanceToNow(version.createdAt, {
+										{formatDistanceToNow(new Date(version.createdAt), {
 											addSuffix: true,
 										})}
 									</span>
 								</div>
 								<div className="flex items-center gap-1 mt-1">
 									<Badge variant="outline" className="text-xs text-gray-600">
-										{version.model.provider}
+										{version.modelParams.provider}
 									</Badge>
 									<Badge variant="outline" className="text-xs text-gray-600">
-										{version.model.name}
+										{version.modelParams.name}
 									</Badge>
 								</div>
 							</div>
@@ -126,17 +110,21 @@ export function History() {
 									</div>
 								)}
 								<div className="flex items-center gap-2 mt-2">
-									<Button variant="outline" size="sm" className="gap-2">
+									<Button variant="outline" size="xs" className="gap-2">
 										<RotateCcw className="w-3 h-3" />
 										Restore
 									</Button>
-									<Button variant="outline" size="sm" className="gap-2">
+									<Button
+										variant="outline"
+										size="xs"
+										className="gap-2"
+										onClick={() => {
+											navigator.clipboard.writeText(version.content);
+											toast.success("Copied to clipboard");
+										}}
+									>
 										<Copy className="w-3 h-3" />
-										Duplicate
-									</Button>
-									<Button variant="outline" size="sm" className="gap-2">
-										<ArrowUpRight className="w-3 h-3" />
-										Compare
+										Copy
 									</Button>
 								</div>
 							</div>

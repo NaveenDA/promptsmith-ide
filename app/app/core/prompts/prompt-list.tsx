@@ -30,7 +30,7 @@ import { formatDistanceToNow } from "date-fns";
 import TitleBar from "@/components/ui/title-bar";
 import Fuse from "fuse.js";
 import { useRouter } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface Prompt {
 	id: string;
@@ -50,11 +50,15 @@ interface Prompt {
 
 export const PromptList = forwardRef(function PromptList(_props, ref) {
 	const queryClient = useQueryClient();
-	const { data: prompts = [], isLoading, isError } = useQuery({
-		queryKey: ['prompts'],
+	const {
+		data: prompts = [],
+		isLoading,
+		isError,
+	} = useQuery({
+		queryKey: ["prompts"],
 		queryFn: async () => {
-			const res = await fetch('/api/prompts');
-			if (!res.ok) throw new Error('Failed to fetch prompts');
+			const res = await fetch("/api/prompts");
+			if (!res.ok) throw new Error("Failed to fetch prompts");
 			return res.json();
 		},
 	});
@@ -65,58 +69,59 @@ export const PromptList = forwardRef(function PromptList(_props, ref) {
 	const router = useRouter();
 
 	const handleNewPrompt = async () => {
-		const res = await fetch('/api/prompts', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ title: 'New Prompt', content: '' }),
+		const res = await fetch("/api/prompts", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ title: "New Prompt", content: "" }),
 		});
 		if (res.ok) {
-			await queryClient.invalidateQueries({ queryKey: ['prompts'] });
+			await queryClient.invalidateQueries({ queryKey: ["prompts"] });
 		}
 	};
 
 	const addPromptMutation = useMutation({
 		mutationFn: async () => {
-		  const res = await fetch('/api/prompts', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ title: 'New Prompt', content: '' }),
-		  });
-		  if (!res.ok) throw new Error('Failed to add prompt');
-		  return res.json();
+			const res = await fetch("/api/prompts", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ title: "New Prompt", content: "" }),
+			});
+			if (!res.ok) throw new Error("Failed to add prompt");
+			return res.json();
 		},
 		onSuccess: () => {
-		  queryClient.invalidateQueries({ queryKey: ['prompts'] });
+			queryClient.invalidateQueries({ queryKey: ["prompts"] });
 		},
-	  });
+	});
 
 	const deletePromptMutation = useMutation({
 		mutationFn: async (promptId: string) => {
 			const res = await fetch(`/api/prompts/${promptId}`, {
-				method: 'DELETE',
+				method: "DELETE",
 			});
-			if (!res.ok) throw new Error('Failed to delete prompt');
+			if (!res.ok) throw new Error("Failed to delete prompt");
 			return res.json();
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['prompts'] });
+			queryClient.invalidateQueries({ queryKey: ["prompts"] });
 		},
 	});
 	const renamePromptMutation = useMutation({
-		mutationFn: async ({ promptId, newName }: { promptId: string; newName: string }) => {
+		mutationFn: async ({
+			promptId,
+			newName,
+		}: { promptId: string; newName: string }) => {
 			const res = await fetch(`/api/prompts/${promptId}`, {
-				method: 'PUT',
+				method: "PUT",
 				body: JSON.stringify({ title: newName }),
 			});
-			if (!res.ok) throw new Error('Failed to rename prompt');
+			if (!res.ok) throw new Error("Failed to rename prompt");
 			return res.json();
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['prompts'] });
+			queryClient.invalidateQueries({ queryKey: ["prompts"] });
 		},
 	});
-	
-	  
 
 	useImperativeHandle(ref, () => ({
 		createNewPrompt: addPromptMutation.mutate,
@@ -137,10 +142,6 @@ export const PromptList = forwardRef(function PromptList(_props, ref) {
 
 	const handleDelete = (promptId: string) => {
 		deletePromptMutation.mutate(promptId);
-	};
-
-	const handleDuplicate = (prompt: Prompt) => {
-		// This logic needs to be updated to work with the backend
 	};
 
 	const getStatusIcon = (status: Prompt["status"]) => {
@@ -167,7 +168,8 @@ export const PromptList = forwardRef(function PromptList(_props, ref) {
 	};
 
 	if (isLoading) return <div className="p-4">Loading prompts...</div>;
-	if (isError) return <div className="p-4 text-red-500">Failed to load prompts.</div>;
+	if (isError)
+		return <div className="p-4 text-red-500">Failed to load prompts.</div>;
 
 	return (
 		<div className="h-full flex flex-col">
@@ -284,9 +286,6 @@ export const PromptList = forwardRef(function PromptList(_props, ref) {
 								<DropdownMenuContent align="end" className="w-48">
 									<DropdownMenuItem onClick={() => handleRename(prompt.id)}>
 										Rename
-									</DropdownMenuItem>
-									<DropdownMenuItem onClick={() => handleDuplicate(prompt)}>
-										Duplicate
 									</DropdownMenuItem>
 									<DropdownMenuSeparator />
 									<DropdownMenuItem

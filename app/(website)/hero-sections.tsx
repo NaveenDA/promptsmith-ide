@@ -8,7 +8,10 @@ const Navbar = () => {
 			<div className="flex items-center gap-2">
 				<Image src="/logo.svg" alt="PromptSmith IDE" width={132} height={32} />
 			</div>
-			<Link href="/app" className="w-32 transform rounded-lg bg-black px-6 py-2 font-medium text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-gray-800 md:w-40 text-center dark:bg-white dark:text-black dark:hover:bg-gray-200">
+			<Link
+				href="/app"
+				className="w-32 transform rounded-lg bg-black px-6 py-2 font-medium text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-gray-800 md:w-40 text-center dark:bg-white dark:text-black dark:hover:bg-gray-200"
+			>
 				Launch IDE
 			</Link>
 		</nav>
@@ -34,6 +37,7 @@ const HeroSections = () => {
 						.split(" ")
 						.map((word, index) => (
 							<motion.span
+						// biome-ignore lint/suspicious/noArrayIndexKey: this is fine, since it is just a title
 								key={index}
 								initial={{
 									opacity: 0,
@@ -69,12 +73,24 @@ const HeroSections = () => {
 					}}
 					className="relative z-10 mx-auto max-w-2xl py-6 text-center text-lg font-normal text-neutral-600 dark:text-neutral-400"
 				>
-					Build production-ready prompts with <span className="font-semibold text-blue-600 dark:text-blue-400">security analysis</span>, 
-					<span className="font-semibold text-purple-600 dark:text-purple-400"> multi-model testing</span>, and 
-					<span className="font-semibold text-green-600 dark:text-green-400"> AI-powered linting</span>. 
-					Completely free, open source, and built for developers who demand precision.
+					Build production-ready prompts with{" "}
+					<span className="font-semibold text-blue-600 dark:text-blue-400">
+						security analysis
+					</span>
+					,
+					<span className="font-semibold text-purple-600 dark:text-purple-400">
+						{" "}
+						multi-model testing
+					</span>
+					, and
+					<span className="font-semibold text-green-600 dark:text-green-400">
+						{" "}
+						AI-powered linting
+					</span>
+					. Completely free, open source, and built for developers who demand
+					precision.
 				</motion.p>
-				
+
 				<motion.div
 					initial={{
 						opacity: 0,
@@ -88,11 +104,19 @@ const HeroSections = () => {
 					}}
 					className="relative z-10 mt-8 flex flex-wrap items-center justify-center gap-4"
 				>
-					<Link href="/app" className="group relative w-60 transform rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-3 font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl">
+					<Link
+						href="/app"
+						className="group relative w-60 transform rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-3 font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
+					>
 						<span className="relative z-10">Start Building - Free</span>
 						<div className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-700 to-purple-700 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 					</Link>
-					<a href="https://github.com/promptsmith-ide/promptsmith-ide" target="_blank" rel="noopener noreferrer" className="w-60 transform rounded-lg border border-gray-300 bg-white px-8 py-3 font-semibold text-black transition-all duration-300 hover:-translate-y-0.5 hover:bg-gray-50 dark:border-gray-700 dark:bg-black dark:text-white dark:hover:bg-gray-900 text-center">
+					<a
+						href="https://github.com/promptsmith-ide/promptsmith-ide"
+						target="_blank"
+						rel="noopener noreferrer"
+						className="w-60 transform rounded-lg border border-gray-300 bg-white px-8 py-3 font-semibold text-black transition-all duration-300 hover:-translate-y-0.5 hover:bg-gray-50 dark:border-gray-700 dark:bg-black dark:text-white dark:hover:bg-gray-900 text-center"
+					>
 						View on GitHub
 					</a>
 				</motion.div>
@@ -149,20 +173,34 @@ const HeroSections = () => {
 									<div className="size-3 rounded-full bg-red-500" />
 									<div className="size-3 rounded-full bg-yellow-500" />
 									<div className="size-3 rounded-full bg-green-500" />
-									<span className="text-gray-400 text-sm ml-4">PromptSmith IDE - Security Analysis</span>
+									<span className="text-gray-400 text-sm ml-4">
+										PromptSmith IDE - Security Analysis
+									</span>
 								</div>
 								<div className="grid grid-cols-3 gap-4 h-full">
 									<div className="bg-slate-700 rounded p-3">
-										<div className="text-green-400 text-xs mb-2">✓ Prompt Editor</div>
-										<div className="text-gray-300 text-xs">Live syntax highlighting</div>
+										<div className="text-green-400 text-xs mb-2">
+											✓ Prompt Editor
+										</div>
+										<div className="text-gray-300 text-xs">
+											Live syntax highlighting
+										</div>
 									</div>
 									<div className="bg-slate-700 rounded p-3">
-										<div className="text-yellow-400 text-xs mb-2">⚠ Security Check</div>
-										<div className="text-gray-300 text-xs">Injection detection</div>
+										<div className="text-yellow-400 text-xs mb-2">
+											⚠ Security Check
+										</div>
+										<div className="text-gray-300 text-xs">
+											Injection detection
+										</div>
 									</div>
 									<div className="bg-slate-700 rounded p-3">
-										<div className="text-blue-400 text-xs mb-2">🔄 Multi-Model</div>
-										<div className="text-gray-300 text-xs">OpenAI, Claude, Mistral</div>
+										<div className="text-blue-400 text-xs mb-2">
+											🔄 Multi-Model
+										</div>
+										<div className="text-gray-300 text-xs">
+											OpenAI, Claude, Mistral
+										</div>
 									</div>
 								</div>
 							</div>

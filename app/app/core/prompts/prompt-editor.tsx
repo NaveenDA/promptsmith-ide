@@ -9,8 +9,9 @@ import Image from "next/image";
 import { modelConfigAtom } from "@/lib/store";
 import { ModelConfigDialog } from "@/app/app/core/models/model-config";
 import { useAtom } from "jotai";
-import { sample_prompts } from "@/lib/sample-db";
 import MonacoEditor from "@monaco-editor/react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 interface PromptEditorProps {
 	selectedPromptId?: string | null;
@@ -24,29 +25,97 @@ const PromptEditor = forwardRef(function PromptEditor(
 	const [content, setContent] = useState("\n\n\n");
 	const [config] = useAtom(modelConfigAtom);
 	const [isFocused, setIsFocused] = useState(false);
+	const [unsaved, setUnsaved] = useState(false);
 
+	// Fetch prompt versions
+	const { data: versions = [], isLoading } = useQuery({
+		queryKey: ["prompt-versions", selectedPromptId],
+		queryFn: async () => {
+			if (!selectedPromptId) return [];
+			const res = await fetch(
+				`/api/prompt-versions?promptId=${selectedPromptId}`,
+			);
+			if (!res.ok) throw new Error("Failed to fetch prompt versions");
+			return res.json();
+		},
+		enabled: !!selectedPromptId,
+	});
+
+	// Set content from latest version
 	useEffect(() => {
-		if (selectedPromptId) {
-			const prompt = sample_prompts.find((p) => p.id === selectedPromptId);
-			if (prompt) {
-				setTitle(prompt.name);
-				setContent(prompt.fullPrompt.trim());
-			}
-		} else {
+		if (selectedPromptId && versions.length > 0) {
+			setTitle("New Prompt"); // Optionally use a title from the version if available
+			setContent(versions[0].content);
+		} else if (!selectedPromptId) {
 			setTitle("New Prompt");
 			setContent("\n\n\n");
 		}
-	}, [selectedPromptId]);
+	}, [selectedPromptId, versions]);
+
+	// Track unsaved changes
+	useEffect(() => {
+		if (!content || !config) {
+			setUnsaved(false);
+		} else {
+			setUnsaved(true);
+		}
+	}, [content, config]);
+
+	const versionMutation = useMutation({
+		mutationFn: async () => {
+			if (!selectedPromptId) throw new Error("No prompt selected");
+			const res = await fetch("/api/prompt-versions", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					promptId: selectedPromptId,
+					content,
+					modelParams: {
+						provider: config.provider,
+						name: config.name,
+						parameters: config.parameters,
+					},
+				}),
+			});
+			if (!res.ok) throw new Error("Failed to save version");
+			return res.json();
+		},
+		onSuccess: (data) => {
+			setUnsaved(false);
+			if (data?.message === "No changes detected. Version not incremented.") {
+				toast.info("No changes detected. Version not incremented.");
+			} else {
+				toast.success("Prompt version saved!");
+			}
+		},
+	});
+
+	const saveDraftMutation = useMutation({
+		mutationFn: async () => {
+			if (!selectedPromptId) throw new Error('No prompt selected');
+			const res = await fetch(`/api/prompts/${selectedPromptId}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ title, content }),
+			});
+			if (!res.ok) throw new Error('Failed to save draft');
+			return res.json();
+		},
+		onSuccess: () => {
+			setUnsaved(false);
+			toast.success('Draft saved!');
+		},
+	});
 
 	const savePrompt = () => {
-		// Implement your save logic here (e.g., API call, local storage, etc.)
-		console.log("Prompt saved:", { title, content });
-		// You can show a toast or notification here
+		versionMutation.mutate();
 	};
 
 	useImperativeHandle(ref, () => ({
 		savePrompt,
 	}));
+
+	if (isLoading) return <div>Loading prompt...</div>;
 
 	return (
 		<div className="h-full flex flex-col">
@@ -82,13 +151,22 @@ const PromptEditor = forwardRef(function PromptEditor(
 					</div>
 					<div className="flex items-center gap-2">
 						<Button
+							variant="outline"
+							size="xs"
+							className="gap-2"
+							onClick={() => saveDraftMutation.mutate()}
+							disabled={!unsaved || saveDraftMutation.isPending}
+						>
+							Save Draft
+						</Button>
+						<Button
 							variant="default"
 							size="xs"
 							className="gap-2"
 							onClick={savePrompt}
 						>
 							<Save className="w-4 h-4" />
-							Save
+							Save Version
 						</Button>
 					</div>
 				</div>

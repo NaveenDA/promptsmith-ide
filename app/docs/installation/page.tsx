@@ -135,7 +135,8 @@ PINECONE_ENVIRONMENT="..."`}
 					<strong>Create an account</strong> or sign in
 				</li>
 				<li className="leading-7">
-					<strong>Check the health endpoint</strong>: <code>GET /api/health</code>
+					<strong>Check the health endpoint</strong>:{" "}
+					<code>GET /api/health</code>
 				</li>
 				<li className="leading-7">
 					<strong>Test API key configuration</strong> in the settings
@@ -214,4 +215,4 @@ kill -9 <PID>`}
 			</div>
 		</div>
 	);
-} 
+}
