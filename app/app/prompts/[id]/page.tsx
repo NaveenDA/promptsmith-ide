@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { useEffect } from "react";
 import { useSetAtom } from "jotai";
 import { selectedPromptIdAtom } from "@/lib/store";
-import MainIDELayout from "@/app/MainIDELayout";
+import MainIDELayout from "@/app/app/MainIDELayout";
 
 export default function PromptDetailPage() {
 	const params = useParams();

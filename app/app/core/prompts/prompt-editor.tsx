@@ -7,7 +7,7 @@ import { Save } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { modelConfigAtom } from "@/lib/store";
-import { ModelConfigDialog } from "@/app/core/models/model-config";
+import { ModelConfigDialog } from "@/app/app/core/models/model-config";
 import { useAtom } from "jotai";
 import { sample_prompts } from "@/lib/sample-db";
 import MonacoEditor from "@monaco-editor/react";

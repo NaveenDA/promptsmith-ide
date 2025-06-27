@@ -13,9 +13,9 @@ import { Badge } from "./ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import Image from "next/image";
 import { modelConfigAtom } from "@/lib/store";
-import { ModelConfigDialog } from "../app/core/models/model-config";
 import { Button } from "./ui/button";
 import { useAtom } from "jotai";
+import { ModelConfigDialog } from "@/app/app/core/models/model-config";
 
 interface StatusBarProps {
 	className?: string;
