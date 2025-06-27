@@ -125,8 +125,8 @@ export function StatusBar({ className }: StatusBarProps) {
 				<Button variant="ghost" size="sm" className="h-5 px-1">
 					<div className="flex items-center gap-1">
 						<Image
-							src={`/logos/${config.provider.toLowerCase()}.svg`}
-							alt={config.provider}
+							src={`/logos/${config?.provider?.toLowerCase()}.svg`}
+							alt={config?.provider || "provider"}
 							width={12}
 							height={12}
 						/>
@@ -139,7 +139,7 @@ export function StatusBar({ className }: StatusBarProps) {
 					<TooltipTrigger>
 						<div className="flex items-center gap-1">
 							<Cpu className="w-3.5 h-3.5 text-gray-400" />
-							<span>{config.parameters.temperature}</span>
+							<span>{config?.parameters?.temperature}</span>
 						</div>
 					</TooltipTrigger>
 					<TooltipContent>Model Temperature</TooltipContent>

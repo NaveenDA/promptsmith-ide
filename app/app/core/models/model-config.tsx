@@ -26,16 +26,39 @@ import {
 	type ModelConfig,
 	modelConfigAtom,
 	ModelParametersSchema,
+	selectedPromptIdAtom,
 } from "@/lib/store";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom, useAtomValue } from "jotai";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 export function ModelConfigDialog() {
 	const [config, setConfig] = useAtom(modelConfigAtom);
 	const [open, setOpen] = useState(false);
 
+	const selectedPromptId = useAtomValue(selectedPromptIdAtom);
+
+	const setModelConfig = useSetAtom(modelConfigAtom);
+
 	const updateConfig = (partialConfig: Partial<ModelConfig>) => {
 		setConfig({ ...config, ...partialConfig });
 	};
+
+	const saveDraftMutation = useMutation({
+		mutationFn: async (modelParams: ModelConfig) => {
+			if (!selectedPromptId) throw new Error("No prompt selected");
+			const res = await fetch(`/api/prompts/${selectedPromptId}`, {
+				method: "PUT",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ modelParams }),
+			});
+			if (!res.ok) throw new Error("Failed to save model config");
+			return res.json();
+		},
+		onSuccess: () => {
+			toast.success("Model config saved!");
+		},
+	});
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
@@ -82,7 +105,7 @@ export function ModelConfigDialog() {
 											<div className="flex items-center gap-2">
 												<Image
 													src={`/logos/${provider.toLowerCase()}.svg`}
-													alt={provider}
+													alt={provider || "provider"}
 													width={16}
 													height={16}
 												/>
@@ -105,7 +128,7 @@ export function ModelConfigDialog() {
 									<SelectValue />
 								</SelectTrigger>
 								<SelectContent>
-									{AVAILABLE_MODELS[config.provider].map((model) => (
+									{config.provider && AVAILABLE_MODELS[config.provider]?.map((model) => (
 										<SelectItem key={model} value={model}>
 											{model}
 										</SelectItem>
@@ -120,11 +143,11 @@ export function ModelConfigDialog() {
 						<div className="flex justify-between">
 							<Label>Temperature</Label>
 							<span className="text-sm text-gray-500">
-								{config.parameters.temperature}
+								{config.parameters?.temperature}
 							</span>
 						</div>
 						<Slider
-							value={[config.parameters.temperature]}
+							value={[config?.parameters?.temperature]}
 							min={0}
 							max={2}
 							step={0.1}
@@ -144,7 +167,7 @@ export function ModelConfigDialog() {
 						<Label>Max Tokens</Label>
 						<Input
 							type="number"
-							value={config.parameters.max_tokens}
+							value={config?.parameters?.max_tokens}
 							onChange={(e) =>
 								updateConfig({
 									parameters: {
@@ -163,11 +186,11 @@ export function ModelConfigDialog() {
 						<div className="flex justify-between">
 							<Label>Top P</Label>
 							<span className="text-sm text-gray-500">
-								{config.parameters.top_p}
+								{config?.parameters?.top_p}
 							</span>
 						</div>
 						<Slider
-							value={[config.parameters.top_p]}
+							value={[config.parameters?.top_p]}
 							min={0}
 							max={1}
 							step={0.05}
@@ -187,11 +210,11 @@ export function ModelConfigDialog() {
 						<div className="flex justify-between">
 							<Label>Frequency Penalty</Label>
 							<span className="text-sm text-gray-500">
-								{config.parameters.frequency_penalty}
+								{config?.parameters?.frequency_penalty}
 							</span>
 						</div>
 						<Slider
-							value={[config.parameters.frequency_penalty]}
+							value={[config?.parameters?.frequency_penalty]}
 							min={-2}
 							max={2}
 							step={0.1}
@@ -211,11 +234,11 @@ export function ModelConfigDialog() {
 						<div className="flex justify-between">
 							<Label>Presence Penalty</Label>
 							<span className="text-sm text-gray-500">
-								{config.parameters.presence_penalty}
+								{config?.parameters?.presence_penalty}
 							</span>
 						</div>
 						<Slider
-							value={[config.parameters.presence_penalty]}
+							value={[config?.parameters?.presence_penalty]}
 							min={-2}
 							max={2}
 							step={0.1}
@@ -235,7 +258,8 @@ export function ModelConfigDialog() {
 						variant="default"
 						className="gap-2"
 						onClick={() => {
-							// close the dialog
+							setModelConfig(config);
+							saveDraftMutation.mutate(config);
 							setOpen(false);
 						}}
 					>

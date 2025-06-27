@@ -2,15 +2,22 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, ChevronDown, RotateCcw, Copy } from "lucide-react";
+import {
+	ChevronRight,
+	ChevronDown,
+	ArrowUpRight,
+	RotateCcw,
+	Copy,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from "sonner";
+import Image from "next/image";
 
 interface PromptVersion {
 	id: string;
-	version: number;
+	number: number;
 	content: string;
 	modelParams: {
 		provider: string;
@@ -26,22 +33,38 @@ interface PromptVersion {
 }
 
 export function History({ promptId }: { promptId: string }) {
-	const [expandedVersions, setExpandedVersions] = useState<
-		Record<string, boolean>
-	>({});
+	const [expandedVersions, setExpandedVersions] = useState<Record<string, boolean>>({});
+	const queryClient = useQueryClient();
 
-	const {
-		data: versions = [],
-		isLoading,
-		isError,
-	} = useQuery({
-		queryKey: ["prompt-versions", promptId],
+	const { data: versions = [], isLoading, isError } = useQuery({
+		queryKey: ['prompt-versions', promptId],
 		queryFn: async () => {
 			const res = await fetch(`/api/prompt-versions?promptId=${promptId}`);
-			if (!res.ok) throw new Error("Failed to fetch prompt versions");
+			if (!res.ok) throw new Error('Failed to fetch prompt versions');
 			return res.json();
 		},
 		enabled: !!promptId,
+	});
+
+	const restoreMutation = useMutation({
+		mutationFn: async (version: PromptVersion) => {
+			const res = await fetch(`/api/prompts/${promptId}`, {
+				method: "PUT",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					content: version.content,
+					modelParams: version.modelParams,
+				}),
+			});
+			if (!res.ok) throw new Error("Failed to restore version");
+			return res.json();
+		},
+		onSuccess: () => {
+			toast.success("Prompt restored to this version!");
+			queryClient.invalidateQueries({ queryKey: ["prompt", promptId] });
+			queryClient.invalidateQueries({ queryKey: ["prompt-versions", promptId] });
+			queryClient.invalidateQueries({ queryKey: ["prompts"] });
+		},
 	});
 
 	const toggleVersion = (versionId: string) => {
@@ -52,8 +75,7 @@ export function History({ promptId }: { promptId: string }) {
 	};
 
 	if (isLoading) return <div className="p-4">Loading history...</div>;
-	if (isError)
-		return <div className="p-4 text-red-500">Failed to load history.</div>;
+	if (isError) return <div className="p-4 text-red-500">Failed to load history.</div>;
 
 	return (
 		<div className="h-full flex flex-col bg-white">
@@ -73,7 +95,7 @@ export function History({ promptId }: { promptId: string }) {
 							<div className="flex-1 text-left">
 								<div className="flex items-center gap-2">
 									<span className="font-medium text-gray-700">
-										Version {version.version}
+										Version {version.number}
 									</span>
 									<span className="text-xs text-gray-500">
 										{formatDistanceToNow(new Date(version.createdAt), {
@@ -83,6 +105,12 @@ export function History({ promptId }: { promptId: string }) {
 								</div>
 								<div className="flex items-center gap-1 mt-1">
 									<Badge variant="outline" className="text-xs text-gray-600">
+										<Image
+											src={`/logos/${version.modelParams.provider.toLowerCase()}.svg`}
+											alt={version.modelParams.provider || "provider"}
+											width={10}
+											height={10}
+										/>&nbsp;
 										{version.modelParams.provider}
 									</Badge>
 									<Badge variant="outline" className="text-xs text-gray-600">
@@ -105,21 +133,23 @@ export function History({ promptId }: { promptId: string }) {
 									</div>
 								)}
 								<div className="flex items-center gap-2 mt-2">
-									<Button variant="outline" size="xs" className="gap-2">
-										<RotateCcw className="w-3 h-3" />
-										Restore
-									</Button>
 									<Button
 										variant="outline"
 										size="xs"
 										className="gap-2"
-										onClick={() => {
-											navigator.clipboard.writeText(version.content);
-											toast.success("Copied to clipboard");
-										}}
+										onClick={() => restoreMutation.mutate(version)}
+										disabled={restoreMutation.isPending}
 									>
+										<RotateCcw className="w-3 h-3" />
+										Restore
+									</Button>
+									<Button variant="outline" size="sm" className="gap-2">
 										<Copy className="w-3 h-3" />
-										Copy
+										Duplicate
+									</Button>
+									<Button variant="outline" size="sm" className="gap-2">
+										<ArrowUpRight className="w-3 h-3" />
+										Compare
 									</Button>
 								</div>
 							</div>

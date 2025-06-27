@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, forwardRef, useImperativeHandle } from "react";
+import { useState, forwardRef, useImperativeHandle, Fragment, useRef, useEffect } from "react";
 import {
 	AlertCircle,
 	CheckCircle2,
@@ -31,6 +31,16 @@ import TitleBar from "@/components/ui/title-bar";
 import Fuse from "fuse.js";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Prompt {
 	id: string;
@@ -74,6 +84,16 @@ export const PromptList = forwardRef(function PromptList(
 	const [showSearch, setShowSearch] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 	const router = useRouter();
+	const [dialogOpenId, setDialogOpenId] = useState<string | null>(null);
+	const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+	useEffect(() => {
+		if (isRenaming && inputRefs.current[isRenaming]) {
+			setTimeout(() => {
+				inputRefs.current[isRenaming]?.focus();
+			}, 300);
+		}
+	}, [isRenaming]);
 
 	const handleNewPrompt = async () => {
 		const res = await fetch("/api/prompts", {
@@ -127,6 +147,8 @@ export const PromptList = forwardRef(function PromptList(
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["prompts"] });
+			setIsRenaming(null);
+			setNewName("");
 		},
 	});
 
@@ -143,8 +165,6 @@ export const PromptList = forwardRef(function PromptList(
 		if (newName.trim()) {
 			renamePromptMutation.mutate({ promptId, newName });
 		}
-		setIsRenaming(null);
-		setNewName("");
 	};
 
 	const handleDelete = (promptId: string) => {
@@ -242,111 +262,135 @@ export const PromptList = forwardRef(function PromptList(
 			)}
 			<div className="flex-1 overflow-auto">
 				{filteredPrompts.map((prompt: Prompt) => (
-					<div
-						onKeyUp={(e) => {
-							if (e.key === "Enter") {
-								handlePromptClick(prompt.id);
-							}
-						}}
-						key={prompt.id}
-						className={cn(
-							"group flex flex-col px-2 py-1.5 cursor-pointer border-l-2 transition-colors border-b",
-							activePromptId === prompt.id
-								? "bg-blue-50 border-l-blue-500"
-								: "hover:bg-gray-100 border-l-transparent"
-						)}
-						onClick={() => handlePromptClick(prompt.id)}
-					>
-						<div className="flex items-center justify-between min-w-0">
-							<div className="flex items-center gap-2 min-w-0 flex-1">
+					<Fragment key={prompt.id}>
+						<div
+							onKeyUp={(e) => {
+								if (e.key === "Enter") {
+									handlePromptClick(prompt.id);
+								}
+							}}
+							key={prompt.id}
+							className={cn(
+								"group flex flex-col px-2 py-1.5 cursor-pointer border-l-2 transition-colors border-b",
+								activePromptId === prompt.id
+									? "bg-blue-50 border-l-blue-500"
+									: "hover:bg-gray-100 border-l-transparent"
+							)}
+							onClick={() => handlePromptClick(prompt.id)}
+						>
+							<div className="flex items-center justify-between min-w-0">
+								<div className="flex items-center gap-2 min-w-0 flex-1">
+									<Tooltip>
+										<TooltipTrigger>
+											{getStatusIcon(prompt.status)}
+										</TooltipTrigger>
+										<TooltipContent>{prompt.status}</TooltipContent>
+									</Tooltip>
+									{isRenaming === prompt.id ? (
+										<Input
+											value={newName}
+											onChange={(e) => setNewName(e.target.value)}
+											onBlur={() => handleRenameSubmit(prompt.id)}
+											onKeyDown={(e) => {
+												if (e.key === "Enter") {
+													handleRenameSubmit(prompt.id);
+												}
+											}}
+											className="h-6 text-xs"
+											autoFocus
+										/>
+									) : (
+										<span className="text-sm truncate font-medium">
+											{prompt.title}
+										</span>
+									)}
+								</div>
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<Button
+											variant="ghost"
+											size="icon"
+											className="h-6 w-6 opacity-0 group-hover:opacity-100"
+										>
+											<MoreVertical className="h-4 w-4" />
+										</Button>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent align="end" className="w-48">
+										<DropdownMenuItem onClick={() => handleRename(prompt.id)}>
+											Rename
+										</DropdownMenuItem>
+										<DropdownMenuSeparator />
+										<DropdownMenuItem
+											className="text-red-600"
+											onClick={() => setDialogOpenId(prompt.id)}
+											disabled={deletePromptMutation.isPending}
+										>
+											Delete
+										</DropdownMenuItem>
+									</DropdownMenuContent>
+								</DropdownMenu>
+							</div>
+							<div className="flex items-center gap-2 mt-1 pl-5">
 								<Tooltip>
 									<TooltipTrigger>
-										{getStatusIcon(prompt.status)}
-									</TooltipTrigger>
-									<TooltipContent>{prompt.status}</TooltipContent>
-								</Tooltip>
-								{isRenaming === prompt.id ? (
-									<Input
-										value={newName}
-										onChange={(e) => setNewName(e.target.value)}
-										onBlur={() => handleRenameSubmit(prompt.id)}
-										onKeyDown={(e) => {
-											if (e.key === "Enter") {
-												handleRenameSubmit(prompt.id);
+										<Badge
+											variant={
+												prompt?.testCasesPassed === prompt?.testCasesTotal
+													? "secondary"
+													: "outline"
 											}
-										}}
-										className="h-6 text-xs"
-										autoFocus
-									/>
-								) : (
-									<span className="text-sm truncate font-medium">
-										{prompt.title}
-									</span>
+											className="h-4 text-[10px]"
+										>
+											{prompt?.testCasesPassed}/{prompt?.testCasesTotal}
+										</Badge>
+									</TooltipTrigger>
+									<TooltipContent>Test Cases</TooltipContent>
+								</Tooltip>
+								{prompt.securityIssuesTotal > 0 && (
+									<Tooltip>
+										<TooltipTrigger>
+											<Badge variant="destructive" className="h-4 text-[10px]">
+												{prompt.securityIssuesTotal} issue
+												{prompt.securityIssuesTotal > 1 ? "s" : ""}
+											</Badge>
+										</TooltipTrigger>
+										<TooltipContent>Security Issues</TooltipContent>
+									</Tooltip>
 								)}
 							</div>
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Button
-										variant="ghost"
-										size="icon"
-										className="h-6 w-6 opacity-0 group-hover:opacity-100"
-									>
-										<MoreVertical className="h-4 w-4" />
-									</Button>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent align="end" className="w-48">
-									<DropdownMenuItem onClick={() => handleRename(prompt.id)}>
-										Rename
-									</DropdownMenuItem>
-									<DropdownMenuSeparator />
-									<DropdownMenuItem
-										className="text-red-600"
-										onClick={() => handleDelete(prompt.id)}
+							<div
+								className="text-[10px] text-gray-400 mt-0.5 pl-5"
+								suppressHydrationWarning
+							>
+								Updated{" "}
+								{formatDistanceToNow(prompt.lastModified || new Date(), {
+									addSuffix: true,
+								})}
+							</div>
+						</div>
+						<AlertDialog open={dialogOpenId === prompt.id} onOpenChange={(open) => !open && setDialogOpenId(null)}>
+							<AlertDialogContent>
+								<AlertDialogHeader>
+									<AlertDialogTitle>Delete Prompt</AlertDialogTitle>
+									<AlertDialogDescription>
+										Are you sure you want to delete this prompt? This will also delete all its versions. This action cannot be undone.
+									</AlertDialogDescription>
+								</AlertDialogHeader>
+								<AlertDialogFooter>
+									<AlertDialogCancel>Cancel</AlertDialogCancel>
+									<AlertDialogAction
+										onClick={() => {
+											handleDelete(prompt.id);
+											setDialogOpenId(null);
+										}}
 										disabled={deletePromptMutation.isPending}
 									>
 										Delete
-									</DropdownMenuItem>
-								</DropdownMenuContent>
-							</DropdownMenu>
-						</div>
-						<div className="flex items-center gap-2 mt-1 pl-5">
-							<Tooltip>
-								<TooltipTrigger>
-									<Badge
-										variant={
-											prompt?.testCasesPassed === prompt?.testCasesTotal
-												? "secondary"
-												: "outline"
-										}
-										className="h-4 text-[10px]"
-									>
-										{prompt?.testCasesPassed}/{prompt?.testCasesTotal}
-									</Badge>
-								</TooltipTrigger>
-								<TooltipContent>Test Cases</TooltipContent>
-							</Tooltip>
-							{prompt.securityIssuesTotal > 0 && (
-								<Tooltip>
-									<TooltipTrigger>
-										<Badge variant="destructive" className="h-4 text-[10px]">
-											{prompt.securityIssuesTotal} issue
-											{prompt.securityIssuesTotal > 1 ? "s" : ""}
-										</Badge>
-									</TooltipTrigger>
-									<TooltipContent>Security Issues</TooltipContent>
-								</Tooltip>
-							)}
-						</div>
-						<div
-							className="text-[10px] text-gray-400 mt-0.5 pl-5"
-							suppressHydrationWarning
-						>
-							Updated{" "}
-							{formatDistanceToNow(prompt.lastModified || new Date(), {
-								addSuffix: true,
-							})}
-						</div>
-					</div>
+									</AlertDialogAction>
+								</AlertDialogFooter>
+							</AlertDialogContent>
+						</AlertDialog>
+					</Fragment>
 				))}
 			</div>
 			{deletePromptMutation.isError && (

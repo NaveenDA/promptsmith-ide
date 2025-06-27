@@ -47,7 +47,7 @@ export const ModelConfigSchema = z.object({
 export type ModelConfig = z.infer<typeof ModelConfigSchema>;
 
 // Define default config
-const defaultConfig: ModelConfig = {
+export const defaultConfig: ModelConfig = {
 	provider: "OpenAI",
 	name: "gpt-4",
 	parameters: {

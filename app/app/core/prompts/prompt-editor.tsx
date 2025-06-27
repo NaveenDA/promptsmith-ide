@@ -23,7 +23,7 @@ const PromptEditor = forwardRef(function PromptEditor(
 ) {
 	const [title, setTitle] = useState("New Prompt");
 	const [content, setContent] = useState("\n\n\n");
-	const [config] = useAtom(modelConfigAtom);
+	const [config, setConfig] = useAtom(modelConfigAtom);
 	const [isFocused, setIsFocused] = useState(false);
 	const [unsaved, setUnsaved] = useState(false);
 
@@ -41,24 +41,36 @@ const PromptEditor = forwardRef(function PromptEditor(
 		enabled: !!selectedPromptId,
 	});
 
-	// Set content from latest version
+	// Fetch prompt draft (main prompt)
+	const { data: promptDraft } = useQuery({
+		queryKey: ["prompt", selectedPromptId],
+		queryFn: async () => {
+			if (!selectedPromptId) return null;
+			const res = await fetch(`/api/prompts/${selectedPromptId}`);
+			if (!res.ok) throw new Error("Failed to fetch prompt");
+			return res.json();
+		},
+		enabled: !!selectedPromptId,
+	});
+
+	// Set content and model config from draft or latest version
 	useEffect(() => {
-		if (selectedPromptId && versions.length > 0) {
-			setTitle("New Prompt"); // Optionally use a title from the version if available
+		if (selectedPromptId && promptDraft) {
+			setTitle(promptDraft.title || "New Prompt");
+			setContent(promptDraft.content || "\n\n\n");
+			if (promptDraft.modelParams) setConfig(promptDraft.modelParams);
+		} else if (selectedPromptId && versions.length > 0) {
+			setTitle("New Prompt");
 			setContent(versions[0].content);
 		} else if (!selectedPromptId) {
 			setTitle("New Prompt");
 			setContent("\n\n\n");
 		}
-	}, [selectedPromptId, versions]);
+	}, [selectedPromptId, promptDraft, versions, setConfig]);
 
 	// Track unsaved changes
 	useEffect(() => {
-		if (!content || !config) {
-			setUnsaved(false);
-		} else {
-			setUnsaved(true);
-		}
+		setUnsaved(true);
 	}, [content, config]);
 
 	const versionMutation = useMutation({
@@ -70,11 +82,7 @@ const PromptEditor = forwardRef(function PromptEditor(
 				body: JSON.stringify({
 					promptId: selectedPromptId,
 					content,
-					modelParams: {
-						provider: config.provider,
-						name: config.name,
-						parameters: config.parameters,
-					},
+					modelParams: config,
 				}),
 			});
 			if (!res.ok) throw new Error("Failed to save version");
@@ -96,7 +104,7 @@ const PromptEditor = forwardRef(function PromptEditor(
 			const res = await fetch(`/api/prompts/${selectedPromptId}`, {
 				method: "PUT",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ title, content }),
+				body: JSON.stringify({ title, content, modelParams: config }),
 			});
 			if (!res.ok) throw new Error("Failed to save draft");
 			return res.json();
@@ -133,8 +141,8 @@ const PromptEditor = forwardRef(function PromptEditor(
 					<div className="flex items-center gap-2">
 						<Badge variant="outline" className="text-gray-600">
 							<Image
-								src={`/logos/${config.provider.toLowerCase()}.svg`}
-								alt={config.provider}
+								src={`/logos/${config?.provider?.toLowerCase()}.svg`}
+								alt={config.provider || "provider"}
 								width={12}
 								height={12}
 							/>{" "}
@@ -145,7 +153,7 @@ const PromptEditor = forwardRef(function PromptEditor(
 							{config.name}
 						</Badge>
 						<Badge variant="outline" className="text-gray-600">
-							temp: {config.parameters.temperature}
+							temp: {config?.parameters?.temperature}
 						</Badge>
 						<ModelConfigDialog />
 					</div>
