@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ChevronDown, } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import Image from "next/image";
 import { UserButton } from "@clerk/nextjs";
 import { ApiKeysDialog } from "@/app/app/core/models/api-keys-dialog";

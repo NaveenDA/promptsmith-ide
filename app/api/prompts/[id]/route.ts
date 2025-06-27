@@ -10,10 +10,7 @@ export async function PUT(
 ) {
 	const { userId } = await auth();
 	if (!userId) {
-		return NextResponse.json(
-			{ error: "Unauthorized" },
-			{ status: 401 },
-		);
+		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
 	const { title } = await req.json();
 	const [updated] = await db
@@ -35,10 +32,7 @@ export async function DELETE(
 ) {
 	const { userId } = await auth();
 	if (!userId) {
-		return NextResponse.json(
-			{ error: "Unauthorized" },
-			{ status: 401 },
-		);
+		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
 	const [deleted] = await db
 		.delete(prompts)

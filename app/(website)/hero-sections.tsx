@@ -37,7 +37,7 @@ const HeroSections = () => {
 						.split(" ")
 						.map((word, index) => (
 							<motion.span
-						// biome-ignore lint/suspicious/noArrayIndexKey: this is fine, since it is just a title
+								// biome-ignore lint/suspicious/noArrayIndexKey: this is fine, since it is just a title
 								key={index}
 								initial={{
 									opacity: 0,

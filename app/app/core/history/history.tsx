@@ -2,12 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-	ChevronRight,
-	ChevronDown,
-	RotateCcw,
-	Copy,
-} from "lucide-react";
+import { ChevronRight, ChevronDown, RotateCcw, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { useQuery } from "@tanstack/react-query";

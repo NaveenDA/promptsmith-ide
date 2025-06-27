@@ -83,7 +83,7 @@ const FooterSections = () => {
 								<h3 className="text-sm font-semibold leading-6 text-gray-900 dark:text-white">
 									Product
 								</h3>
-								<ul  className="mt-6 space-y-4">
+								<ul className="mt-6 space-y-4">
 									<li>
 										<a
 											href="/app"
@@ -122,7 +122,7 @@ const FooterSections = () => {
 								<h3 className="text-sm font-semibold leading-6 text-gray-900 dark:text-white">
 									Resources
 								</h3>
-								<ul  className="mt-6 space-y-4">
+								<ul className="mt-6 space-y-4">
 									<li>
 										<a
 											href="/docs"
@@ -163,7 +163,7 @@ const FooterSections = () => {
 								<h3 className="text-sm font-semibold leading-6 text-gray-900 dark:text-white">
 									Community
 								</h3>
-								<ul  className="mt-6 space-y-4">
+								<ul className="mt-6 space-y-4">
 									<li>
 										<a
 											href="https://github.com/promptsmith-ide/promptsmith-ide"
@@ -208,7 +208,7 @@ const FooterSections = () => {
 								<h3 className="text-sm font-semibold leading-6 text-gray-900 dark:text-white">
 									Legal
 								</h3>
-								<ul  className="mt-6 space-y-4">
+								<ul className="mt-6 space-y-4">
 									<li>
 										<a
 											href="/privacy"

@@ -92,18 +92,18 @@ const PromptEditor = forwardRef(function PromptEditor(
 
 	const saveDraftMutation = useMutation({
 		mutationFn: async () => {
-			if (!selectedPromptId) throw new Error('No prompt selected');
+			if (!selectedPromptId) throw new Error("No prompt selected");
 			const res = await fetch(`/api/prompts/${selectedPromptId}`, {
-				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
+				method: "PUT",
+				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ title, content }),
 			});
-			if (!res.ok) throw new Error('Failed to save draft');
+			if (!res.ok) throw new Error("Failed to save draft");
 			return res.json();
 		},
 		onSuccess: () => {
 			setUnsaved(false);
-			toast.success('Draft saved!');
+			toast.success("Draft saved!");
 		},
 	});
 
