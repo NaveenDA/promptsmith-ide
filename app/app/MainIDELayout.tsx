@@ -94,7 +94,7 @@ export default function MainIDELayout() {
 							{/* Left sidebar with prompt list or database config */}
 							<SwitchCase value={selectedTab}>
 								<Case value="prompts">
-									<PromptList ref={promptListRef} />
+									<PromptList ref={promptListRef} activePromptId={selectedPromptId} />
 								</Case>
 								<Case value="database">
 									<DatabaseList ref={databaseListRef} />

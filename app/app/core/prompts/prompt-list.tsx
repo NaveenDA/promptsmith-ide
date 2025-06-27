@@ -48,7 +48,14 @@ interface Prompt {
 	securityIssues: number;
 }
 
-export const PromptList = forwardRef(function PromptList(_props, ref) {
+interface PromptListProps {
+	activePromptId?: string | null;
+}
+
+export const PromptList = forwardRef(function PromptList(
+	{ activePromptId }: PromptListProps,
+	ref
+) {
 	const queryClient = useQueryClient();
 	const {
 		data: prompts = [],
@@ -145,6 +152,8 @@ export const PromptList = forwardRef(function PromptList(_props, ref) {
 	};
 
 	const getStatusIcon = (status: Prompt["status"]) => {
+		return <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />;
+
 		switch (status) {
 			case "ready":
 				return <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />;
@@ -241,8 +250,10 @@ export const PromptList = forwardRef(function PromptList(_props, ref) {
 						}}
 						key={prompt.id}
 						className={cn(
-							"group flex flex-col px-2 py-1.5 hover:bg-gray-100 cursor-pointer border-l-2 transition-colors border-b",
-							"border-l-transparent",
+							"group flex flex-col px-2 py-1.5 cursor-pointer border-l-2 transition-colors border-b",
+							activePromptId === prompt.id
+								? "bg-blue-50 border-l-blue-500"
+								: "hover:bg-gray-100 border-l-transparent"
 						)}
 						onClick={() => handlePromptClick(prompt.id)}
 					>
