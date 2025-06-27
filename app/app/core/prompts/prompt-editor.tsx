@@ -20,11 +20,10 @@ const PromptEditor = forwardRef(function PromptEditor(
 	{ selectedPromptId }: PromptEditorProps,
 	ref,
 ) {
-	const [title, setTitle] = useState("Extract Model Names");
-	const [content, setContent] = useState(
-		`Your task is to extract model names from machine learning paper abstracts. Your response is an array of the model names in the format [\"model_name\"]. If you don't find model names in the abstract or you are not sure, return [\"NA\"]\n\nAbstract: Large Language Models (LLMs), such as ChatGPT and GPT-4, have revolutionized natural language processing research and demonstrated potential in Artificial General Intelligence (AGI). However, the expensive training and deployment of LLMs present challenges to transparent and open academic research. To address these issues, this project open-sources the Chinese LLaMA and Alpaca…`,
-	);
+	const [title, setTitle] = useState("New Prompt");
+	const [content, setContent] = useState("\n\n\n");
 	const [config] = useAtom(modelConfigAtom);
+	const [isFocused, setIsFocused] = useState(false);
 
 	useEffect(() => {
 		if (selectedPromptId) {
@@ -34,10 +33,8 @@ const PromptEditor = forwardRef(function PromptEditor(
 				setContent(prompt.fullPrompt.trim());
 			}
 		} else {
-			setTitle("Extract Model Names");
-			setContent(
-				`Your task is to extract model names from machine learning paper abstracts. Your response is an array of the model names in the format [\"model_name\"]. If you don't find model names in the abstract or you are not sure, return [\"NA\"]\n\nAbstract: Large Language Models (LLMs), such as ChatGPT and GPT-4, have revolutionized natural language processing research and demonstrated potential in Artificial General Intelligence (AGI). However, the expensive training and deployment of LLMs present challenges to transparent and open academic research. To address these issues, this project open-sources the Chinese LLaMA and Alpaca…`,
-			);
+			setTitle("New Prompt");
+			setContent("\n\n\n");
 		}
 	}, [selectedPromptId]);
 
@@ -105,6 +102,10 @@ const PromptEditor = forwardRef(function PromptEditor(
 						theme="light"
 						value={content}
 						onChange={(value) => setContent(value || "")}
+						onMount={(editor) => {
+							editor.onDidFocusEditorWidget(() => setIsFocused(true));
+							editor.onDidBlurEditorWidget(() => setIsFocused(false));
+						}}
 						options={{
 							minimap: { enabled: false },
 							wordWrap: "on",
@@ -112,6 +113,15 @@ const PromptEditor = forwardRef(function PromptEditor(
 							lineNumbers: "on",
 						}}
 					/>
+					{/* Placeholder overlay */}
+					{content === "\n\n\n" && !isFocused && (
+						<div
+							className="absolute top-0 left-18 text-gray-400 pointer-events-none select-none"
+							style={{ zIndex: 1 }}
+						>
+							Enter your prompt here...
+						</div>
+					)}
 				</div>
 			</div>
 		</div>

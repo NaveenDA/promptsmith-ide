@@ -29,13 +29,17 @@ import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import TitleBar from "@/components/ui/title-bar";
 import Fuse from "fuse.js";
-import { sample_prompts } from "@/lib/sample-db";
 import { useRouter } from "next/navigation";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface Prompt {
 	id: string;
-	name: string;
+	title: string;
 	lastModified: Date;
+	testCasesTotal: number;
+	testCasesPassed: number;
+	securityIssuesTotal: number;
+	securityIssuesPassed: number;
 	status: "draft" | "ready" | "needs-review";
 	testStats: {
 		passed: number;
@@ -45,66 +49,98 @@ interface Prompt {
 }
 
 export const PromptList = forwardRef(function PromptList(_props, ref) {
-	const [prompts, setPrompts] = useState<Prompt[]>(sample_prompts as Prompt[]);
+	const queryClient = useQueryClient();
+	const { data: prompts = [], isLoading, isError } = useQuery({
+		queryKey: ['prompts'],
+		queryFn: async () => {
+			const res = await fetch('/api/prompts');
+			if (!res.ok) throw new Error('Failed to fetch prompts');
+			return res.json();
+		},
+	});
 	const [isRenaming, setIsRenaming] = useState<string | null>(null);
 	const [newName, setNewName] = useState("");
 	const [showSearch, setShowSearch] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 	const router = useRouter();
 
-	const handleNewPrompt = () => {
-		const newPrompt: Prompt = {
-			id: Math.random().toString(36).substring(7),
-			name: "New Prompt",
-			lastModified: new Date(),
-			status: "draft",
-			testStats: { passed: 0, total: 0 },
-			securityIssues: 0,
-		};
-		setPrompts([...prompts, newPrompt]);
-		setIsRenaming(newPrompt.id);
+	const handleNewPrompt = async () => {
+		const res = await fetch('/api/prompts', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ title: 'New Prompt', content: '' }),
+		});
+		if (res.ok) {
+			await queryClient.invalidateQueries({ queryKey: ['prompts'] });
+		}
 	};
 
+	const addPromptMutation = useMutation({
+		mutationFn: async () => {
+		  const res = await fetch('/api/prompts', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ title: 'New Prompt', content: '' }),
+		  });
+		  if (!res.ok) throw new Error('Failed to add prompt');
+		  return res.json();
+		},
+		onSuccess: () => {
+		  queryClient.invalidateQueries({ queryKey: ['prompts'] });
+		},
+	  });
+
+	const deletePromptMutation = useMutation({
+		mutationFn: async (promptId: string) => {
+			const res = await fetch(`/api/prompts/${promptId}`, {
+				method: 'DELETE',
+			});
+			if (!res.ok) throw new Error('Failed to delete prompt');
+			return res.json();
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['prompts'] });
+		},
+	});
+	const renamePromptMutation = useMutation({
+		mutationFn: async ({ promptId, newName }: { promptId: string; newName: string }) => {
+			const res = await fetch(`/api/prompts/${promptId}`, {
+				method: 'PUT',
+				body: JSON.stringify({ title: newName }),
+			});
+			if (!res.ok) throw new Error('Failed to rename prompt');
+			return res.json();
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['prompts'] });
+		},
+	});
+	
+	  
+
 	useImperativeHandle(ref, () => ({
-		createNewPrompt: handleNewPrompt,
+		createNewPrompt: addPromptMutation.mutate,
 	}));
 
 	const handleRename = (promptId: string) => {
 		setIsRenaming(promptId);
-		setNewName(prompts.find((p) => p.id === promptId)?.name || "");
+		setNewName(prompts.find((p: Prompt) => p.id === promptId)?.name || "");
 	};
 
 	const handleRenameSubmit = (promptId: string) => {
 		if (newName.trim()) {
-			setPrompts(
-				prompts.map((p) =>
-					p.id === promptId
-						? {
-								...p,
-								name: newName.trim(),
-								lastModified: new Date(),
-							}
-						: p,
-				),
-			);
+			renamePromptMutation.mutate({ promptId, newName });
 		}
 		setIsRenaming(null);
 		setNewName("");
 	};
 
 	const handleDelete = (promptId: string) => {
-		setPrompts(prompts.filter((p) => p.id !== promptId));
+		deletePromptMutation.mutate(promptId);
 	};
 
 	const handleDuplicate = (prompt: Prompt) => {
-		const newPrompt: Prompt = {
-			...prompt,
-			id: Math.random().toString(36).substring(7),
-			name: `${prompt.name} (Copy)`,
-			lastModified: new Date(),
-			status: "draft",
-		};
-		setPrompts([...prompts, newPrompt]);
+		// This logic needs to be updated to work with the backend
 	};
 
 	const getStatusIcon = (status: Prompt["status"]) => {
@@ -129,6 +165,9 @@ export const PromptList = forwardRef(function PromptList(_props, ref) {
 	const handlePromptClick = (promptId: string) => {
 		router.push(`/app/prompts/${promptId}`);
 	};
+
+	if (isLoading) return <div className="p-4">Loading prompts...</div>;
+	if (isError) return <div className="p-4 text-red-500">Failed to load prompts.</div>;
 
 	return (
 		<div className="h-full flex flex-col">
@@ -191,7 +230,7 @@ export const PromptList = forwardRef(function PromptList(_props, ref) {
 				</AnimatePresence>
 			)}
 			<div className="flex-1 overflow-auto">
-				{filteredPrompts.map((prompt) => (
+				{filteredPrompts.map((prompt: Prompt) => (
 					<div
 						onKeyUp={(e) => {
 							if (e.key === "Enter") {
@@ -228,7 +267,7 @@ export const PromptList = forwardRef(function PromptList(_props, ref) {
 									/>
 								) : (
 									<span className="text-sm truncate font-medium">
-										{prompt.name}
+										{prompt.title}
 									</span>
 								)}
 							</div>
@@ -253,6 +292,7 @@ export const PromptList = forwardRef(function PromptList(_props, ref) {
 									<DropdownMenuItem
 										className="text-red-600"
 										onClick={() => handleDelete(prompt.id)}
+										disabled={deletePromptMutation.isPending}
 									>
 										Delete
 									</DropdownMenuItem>
@@ -264,23 +304,23 @@ export const PromptList = forwardRef(function PromptList(_props, ref) {
 								<TooltipTrigger>
 									<Badge
 										variant={
-											prompt.testStats.passed === prompt.testStats.total
+											prompt?.testCasesPassed === prompt?.testCasesTotal
 												? "secondary"
 												: "outline"
 										}
 										className="h-4 text-[10px]"
 									>
-										{prompt.testStats.passed}/{prompt.testStats.total}
+										{prompt?.testCasesPassed}/{prompt?.testCasesTotal}
 									</Badge>
 								</TooltipTrigger>
 								<TooltipContent>Test Cases</TooltipContent>
 							</Tooltip>
-							{prompt.securityIssues > 0 && (
+							{prompt.securityIssuesTotal > 0 && (
 								<Tooltip>
 									<TooltipTrigger>
 										<Badge variant="destructive" className="h-4 text-[10px]">
-											{prompt.securityIssues} issue
-											{prompt.securityIssues > 1 ? "s" : ""}
+											{prompt.securityIssuesTotal} issue
+											{prompt.securityIssuesTotal > 1 ? "s" : ""}
 										</Badge>
 									</TooltipTrigger>
 									<TooltipContent>Security Issues</TooltipContent>
@@ -292,13 +332,16 @@ export const PromptList = forwardRef(function PromptList(_props, ref) {
 							suppressHydrationWarning
 						>
 							Updated{" "}
-							{formatDistanceToNow(prompt.lastModified, {
+							{formatDistanceToNow(prompt.lastModified || new Date(), {
 								addSuffix: true,
 							})}
 						</div>
 					</div>
 				))}
 			</div>
+			{deletePromptMutation.isError && (
+				<div className="p-2 text-red-500 text-xs">Failed to delete prompt.</div>
+			)}
 		</div>
 	);
 });
