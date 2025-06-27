@@ -127,7 +127,7 @@ export const PromptList = forwardRef(function PromptList(_props, ref) {
 		: prompts;
 
 	const handlePromptClick = (promptId: string) => {
-		router.push(`/prompts/${promptId}`);
+		router.push(`/app/prompts/${promptId}`);
 	};
 
 	return (
