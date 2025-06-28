@@ -15,6 +15,27 @@
 			"when": 1751032094286,
 			"tag": "0001_yummy_doorman",
 			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1751105624709,
+			"tag": "0002_amused_karma",
+			"breakpoints": true
+		},
+		{
+			"idx": 3,
+			"version": "7",
+			"when": 1751117265358,
+			"tag": "0003_solid_banshee",
+			"breakpoints": true
+		},
+		{
+			"idx": 4,
+			"version": "7",
+			"when": 1751133153772,
+			"tag": "0004_next_slapstick",
+			"breakpoints": true
 		}
 	]
 }

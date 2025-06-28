@@ -2,14 +2,14 @@ import { type NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { prompts } from "@/lib/schema";
-import { auth } from "@clerk/nextjs/server"; // Uncomment when Clerk is set up
 import { defaultConfig } from "@/lib/store";
+import { withAuth } from "@/lib/auth-wrapper";
 
-export async function GET(_req: NextRequest) {
-	const { userId } = await auth();
-	if (!userId) {
-		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-	}
+async function GETHandler(
+	_req: NextRequest,
+	_context: unknown,
+	userId: string,
+) {
 	const result = await db
 		.select()
 		.from(prompts)
@@ -17,11 +17,11 @@ export async function GET(_req: NextRequest) {
 	return NextResponse.json(result);
 }
 
-export async function POST(req: NextRequest) {
-	const { userId } = await auth();
-	if (!userId) {
-		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-	}
+async function POSTHandler(
+	req: NextRequest,
+	_context: unknown,
+	userId: string,
+) {
 	const body = await req.json();
 	const { title, content, modelParams } = body;
 	const [newPrompt] = await db
@@ -38,3 +38,7 @@ export async function POST(req: NextRequest) {
 		.returning();
 	return NextResponse.json(newPrompt);
 }
+
+// use withAuth
+export const GET = withAuth(GETHandler);
+export const POST = withAuth(POSTHandler);

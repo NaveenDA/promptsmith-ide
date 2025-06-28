@@ -88,6 +88,7 @@ const PromptEditor = forwardRef(function PromptEditor(
 			}, 500); // 500ms debounce
 			return () => clearTimeout(timeout);
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [title, selectedPromptId]);
 
 	const versionMutation = useMutation({
@@ -157,17 +158,19 @@ const PromptEditor = forwardRef(function PromptEditor(
 	if (!selectedPromptId && isPromptListLoaded) {
 		return (
 			<div className="h-[80vh] flex flex-col items-center justify-center text-center p-8 animate-fade-in">
-				<img
+				<Image
 					src="/logo.svg"
 					alt="PromptSmith Logo"
 					className="w-32 h-32 mb-6 opacity-80"
+					width={128}
+					height={128}
 				/>
 				<h2 className="text-2xl font-bold mb-2 text-gray-800">
-					Let's craft your next prompt!
+					Let&apos;s craft your next prompt!
 				</h2>
 				<p className="text-gray-500 mb-6 max-w-md mx-auto">
-					Pick a prompt from the list, or hit "Create New Prompt" to start a
-					fresh idea.
+					Pick a prompt from the list, or hit &quot;Create New Prompt&quot; to
+					start a fresh idea.
 					<br />
 					PromptSmith helps you version, test, and perfect your prompts with
 					ease.

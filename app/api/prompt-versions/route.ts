@@ -2,12 +2,15 @@ import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { promptVersions } from "@/lib/schema";
 import { eq, desc } from "drizzle-orm";
-import { auth } from "@clerk/nextjs/server";
+import { withAuth } from "@/lib/auth-wrapper";
 
-export async function POST(req: NextRequest) {
-	const { userId } = await auth();
-	if (!userId)
-		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+async function POSTHandler(
+	req: NextRequest,
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	_context: unknown,
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	_userId: string,
+) {
 	const { promptId, content, modelParams } = await req.json();
 	// Find the latest version for this prompt
 	const lastVersion = await db
@@ -49,14 +52,23 @@ export async function POST(req: NextRequest) {
 	return NextResponse.json(newVersion);
 }
 
-export async function GET(req: NextRequest) {
+async function GETHandler(
+	req: NextRequest,
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	_context: unknown,
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	_userId: string,
+) {
 	const { searchParams } = new URL(req.url);
 	const promptId = searchParams.get("promptId");
 	if (!promptId) return NextResponse.json([], { status: 200 });
 	const versions = await db
 		.select()
 		.from(promptVersions)
-		.where(eq(promptVersions.promptId, promptId))
 		.orderBy(desc(promptVersions.version));
 	return NextResponse.json(versions);
 }
+
+// use withAuth
+export const GET = withAuth(GETHandler);
+export const POST = withAuth(POSTHandler);

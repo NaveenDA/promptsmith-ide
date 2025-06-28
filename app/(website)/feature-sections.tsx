@@ -9,8 +9,9 @@ export default function FeatureSections() {
 						Why PromptSmith IDE?
 					</h2>
 					<p className="mt-4 text-lg text-gray-600 dark:text-gray-300">
-						Because "just writing prompts" isn't enough anymore. You need
-						analysis, simulation, security, and speed — all in one place.
+						Because &quot;just writing prompts&quot; isn&apos;t enough anymore.
+						You need analysis, simulation, security, and speed — all in one
+						place.
 					</p>
 				</div>
 

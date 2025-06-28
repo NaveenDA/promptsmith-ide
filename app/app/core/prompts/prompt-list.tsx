@@ -47,8 +47,10 @@ import {
 	AlertDialogFooter,
 	AlertDialogHeader,
 	AlertDialogTitle,
+	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState, EmptyStateIcons } from "@/components/ui/empty-state";
 import { useSetAtom } from "jotai";
 import { selectedPromptIdAtom, promptListLoadedAtom } from "@/lib/store";
 
@@ -97,7 +99,6 @@ export const PromptList = forwardRef(function PromptList(
 	const [showSearch, setShowSearch] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 	const router = useRouter();
-	const [dialogOpenId, setDialogOpenId] = useState<string | null>(null);
 	const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
 	useEffect(() => {
@@ -189,8 +190,6 @@ export const PromptList = forwardRef(function PromptList(
 	};
 
 	const getStatusIcon = (status: Prompt["status"]) => {
-		return <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />;
-
 		switch (status) {
 			case "ready":
 				return <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />;
@@ -287,157 +286,180 @@ export const PromptList = forwardRef(function PromptList(
 				</AnimatePresence>
 			)}
 			<div className="flex-1 overflow-auto">
-				{filteredPrompts.map((prompt: Prompt) => (
-					<Fragment key={prompt.id}>
-						<div
-							onKeyUp={(e) => {
-								if (e.key === "Enter") {
-									handlePromptClick(prompt.id);
-								}
+				{filteredPrompts.length === 0 ? (
+					searchQuery ? (
+						<EmptyState
+							icon={<EmptyStateIcons.Search />}
+							title="No prompts found"
+							description={`No prompts match "${searchQuery}". Try adjusting your search terms or check your spelling.`}
+							className="min-h-[300px]"
+						/>
+					) : (
+						<EmptyState
+							icon={<EmptyStateIcons.Prompt />}
+							title="No prompts yet"
+							description="Create your first prompt to get started with AI-powered content generation and testing."
+							action={{
+								label: "Create Prompt",
+								onClick: handleNewPrompt,
 							}}
-							key={prompt.id}
-							className={cn(
-								"group flex flex-col px-2 py-1.5 cursor-pointer border-l-2 transition-colors border-b",
-								activePromptId === prompt.id
-									? "bg-blue-50 border-l-blue-500"
-									: "hover:bg-gray-100 border-l-transparent",
-							)}
-							onClick={() => handlePromptClick(prompt.id)}
-						>
-							<div className="flex items-center justify-between min-w-0">
-								<div className="flex items-center gap-2 min-w-0 flex-1">
-									<Tooltip>
-										<TooltipTrigger>
-											{getStatusIcon(prompt.status)}
-										</TooltipTrigger>
-										<TooltipContent>{prompt.status}</TooltipContent>
-									</Tooltip>
-									{isRenaming === prompt.id ? (
-										<Input
-											value={newName}
-											onChange={(e) => setNewName(e.target.value)}
-											onBlur={() => handleRenameSubmit(prompt.id)}
-											onKeyDown={(e) => {
-												if (e.key === "Enter") {
-													handleRenameSubmit(prompt.id);
-												}
-											}}
-											className="h-6 text-xs"
-											autoFocus
-											ref={(el) => {
-												if (el) {
-													inputRefs.current[prompt.id] = el;
-												}
-											}}
-										/>
-									) : (
-										<span className="text-sm truncate font-medium">
-											{prompt.title}
-										</span>
-									)}
-								</div>
-								<DropdownMenu>
-									<DropdownMenuTrigger asChild>
-										<Button
-											variant="ghost"
-											size="icon"
-											className="h-6 w-6 opacity-0 group-hover:opacity-100"
-										>
-											<MoreVertical className="h-4 w-4" />
-										</Button>
-									</DropdownMenuTrigger>
-									<DropdownMenuContent align="end" className="w-48">
-										<DropdownMenuItem
-											onClick={(e) => {
-												e.stopPropagation();
-												// set the selected prompt id
-												setSelectedPromptId(prompt.id);
+							className="min-h-[300px]"
+						/>
+					)
+				) : (
+					filteredPrompts.map((prompt: Prompt) => (
+						<Fragment key={prompt.id}>
+							<div
+								onKeyUp={(e) => {
+									if (e.key === "Enter") {
+										handlePromptClick(prompt.id);
+									}
+								}}
+								key={prompt.id}
+								className={cn(
+									"group flex flex-col px-2 py-1.5 cursor-pointer border-l-2 transition-colors border-b",
+									activePromptId === prompt.id
+										? "bg-blue-50 border-l-blue-500"
+										: "hover:bg-gray-100 border-l-transparent",
+								)}
+								onClick={() => handlePromptClick(prompt.id)}
+							>
+								<div className="flex items-center justify-between min-w-0">
+									<div className="flex items-center gap-2 min-w-0 flex-1">
+										<Tooltip>
+											<TooltipTrigger>
+												{getStatusIcon(prompt.status)}
+											</TooltipTrigger>
+											<TooltipContent>{prompt.status}</TooltipContent>
+										</Tooltip>
+										{isRenaming === prompt.id ? (
+											<Input
+												value={newName}
+												onChange={(e) => setNewName(e.target.value)}
+												onBlur={() => handleRenameSubmit(prompt.id)}
+												onKeyDown={(e) => {
+													if (e.key === "Enter") {
+														handleRenameSubmit(prompt.id);
+													}
+												}}
+												className="h-6 text-xs"
+												autoFocus
+												ref={(el) => {
+													if (el) {
+														inputRefs.current[prompt.id] = el;
+													}
+												}}
+											/>
+										) : (
+											<span className="text-sm truncate font-medium">
+												{prompt.title}
+											</span>
+										)}
+									</div>
+									<DropdownMenu>
+										<DropdownMenuTrigger asChild>
+											<Button
+												variant="ghost"
+												size="icon"
+												className="h-6 w-6 opacity-0 group-hover:opacity-100"
+											>
+												<MoreVertical className="h-4 w-4" />
+											</Button>
+										</DropdownMenuTrigger>
+										<DropdownMenuContent align="end" className="w-48">
+											<DropdownMenuItem
+												onClick={(e) => {
+													e.stopPropagation();
+													// set the selected prompt id
+													setSelectedPromptId(prompt.id);
 
-												handleRename(prompt.id);
-											}}
-										>
-											Rename
-										</DropdownMenuItem>
-										<DropdownMenuSeparator />
-										<DropdownMenuItem
-											className="text-red-600"
-											onClick={(e) => {
-												e.stopPropagation();
-												setDialogOpenId(prompt.id);
-											}}
-											disabled={deletePromptMutation.isPending}
-										>
-											Delete
-										</DropdownMenuItem>
-									</DropdownMenuContent>
-								</DropdownMenu>
-							</div>
-							<div className="flex items-center gap-2 mt-1 pl-5">
-								<Tooltip>
-									<TooltipTrigger>
-										<Badge
-											variant={
-												prompt?.testCasesPassed === prompt?.testCasesTotal
-													? "secondary"
-													: "outline"
-											}
-											className="h-4 text-[10px]"
-										>
-											{prompt?.testCasesPassed}/{prompt?.testCasesTotal}
-										</Badge>
-									</TooltipTrigger>
-									<TooltipContent>Test Cases</TooltipContent>
-								</Tooltip>
-								{prompt.securityIssuesTotal > 0 && (
+													handleRename(prompt.id);
+												}}
+											>
+												Rename
+											</DropdownMenuItem>
+											<DropdownMenuSeparator />
+											<AlertDialog>
+												<AlertDialogTrigger asChild>
+													<DropdownMenuItem
+														className="text-red-600"
+														onSelect={(e) => {
+															e.preventDefault();
+														}}
+														disabled={deletePromptMutation.isPending}
+													>
+														Delete
+													</DropdownMenuItem>
+												</AlertDialogTrigger>
+												<AlertDialogContent>
+													<AlertDialogHeader>
+														<AlertDialogTitle>Delete Prompt</AlertDialogTitle>
+														<AlertDialogDescription>
+															Are you sure you want to delete this prompt? This
+															will also delete all its versions. This action
+															cannot be undone.
+														</AlertDialogDescription>
+													</AlertDialogHeader>
+													<AlertDialogFooter>
+														<AlertDialogCancel>Cancel</AlertDialogCancel>
+														<AlertDialogAction
+															onClick={() => {
+																handleDelete(prompt.id);
+															}}
+															disabled={deletePromptMutation.isPending}
+														>
+															Delete
+														</AlertDialogAction>
+													</AlertDialogFooter>
+												</AlertDialogContent>
+											</AlertDialog>
+										</DropdownMenuContent>
+									</DropdownMenu>
+								</div>
+								<div className="flex items-center gap-2 mt-1 pl-5">
 									<Tooltip>
 										<TooltipTrigger>
-											<Badge variant="destructive" className="h-4 text-[10px]">
-												{prompt.securityIssuesTotal} issue
-												{prompt.securityIssuesTotal > 1 ? "s" : ""}
+											<Badge
+												variant={
+													prompt?.testCasesPassed === prompt?.testCasesTotal
+														? "secondary"
+														: "outline"
+												}
+												className="h-4 text-[10px]"
+											>
+												{prompt?.testCasesPassed}/{prompt?.testCasesTotal}
 											</Badge>
 										</TooltipTrigger>
-										<TooltipContent>Security Issues</TooltipContent>
+										<TooltipContent>Test Cases</TooltipContent>
 									</Tooltip>
-								)}
+									{prompt.securityIssuesTotal > 0 && (
+										<Tooltip>
+											<TooltipTrigger>
+												<Badge
+													variant="destructive"
+													className="h-4 text-[10px]"
+												>
+													{prompt.securityIssuesTotal} issue
+													{prompt.securityIssuesTotal > 1 ? "s" : ""}
+												</Badge>
+											</TooltipTrigger>
+											<TooltipContent>Security Issues</TooltipContent>
+										</Tooltip>
+									)}
+								</div>
+								<div
+									className="text-[10px] text-gray-400 mt-0.5 pl-5"
+									suppressHydrationWarning
+								>
+									Updated{" "}
+									{formatDistanceToNow(prompt.lastModified || new Date(), {
+										addSuffix: true,
+									})}
+								</div>
 							</div>
-							<div
-								className="text-[10px] text-gray-400 mt-0.5 pl-5"
-								suppressHydrationWarning
-							>
-								Updated{" "}
-								{formatDistanceToNow(prompt.lastModified || new Date(), {
-									addSuffix: true,
-								})}
-							</div>
-						</div>
-						<AlertDialog
-							open={dialogOpenId === prompt.id}
-							onOpenChange={(open) => !open && setDialogOpenId(null)}
-						>
-							<AlertDialogContent>
-								<AlertDialogHeader>
-									<AlertDialogTitle>Delete Prompt</AlertDialogTitle>
-									<AlertDialogDescription>
-										Are you sure you want to delete this prompt? This will also
-										delete all its versions. This action cannot be undone.
-									</AlertDialogDescription>
-								</AlertDialogHeader>
-								<AlertDialogFooter>
-									<AlertDialogCancel>Cancel</AlertDialogCancel>
-									<AlertDialogAction
-										onClick={() => {
-											handleDelete(prompt.id);
-											setDialogOpenId(null);
-										}}
-										disabled={deletePromptMutation.isPending}
-									>
-										Delete
-									</AlertDialogAction>
-								</AlertDialogFooter>
-							</AlertDialogContent>
-						</AlertDialog>
-					</Fragment>
-				))}
+						</Fragment>
+					))
+				)}
 			</div>
 			{deletePromptMutation.isError && (
 				<div className="p-2 text-red-500 text-xs">Failed to delete prompt.</div>

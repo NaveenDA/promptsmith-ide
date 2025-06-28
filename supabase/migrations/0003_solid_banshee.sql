@@ -1,0 +1,1 @@
+ALTER TABLE "vector_databases" DROP COLUMN "name";

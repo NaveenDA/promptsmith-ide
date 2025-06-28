@@ -34,9 +34,10 @@ export function PointerHighlight({
 			resizeObserver.observe(containerRef.current);
 		}
 
+		const currentRef = containerRef.current;
 		return () => {
-			if (containerRef.current) {
-				resizeObserver.unobserve(containerRef.current);
+			if (currentRef) {
+				resizeObserver.unobserve(currentRef);
 			}
 		};
 	}, []);

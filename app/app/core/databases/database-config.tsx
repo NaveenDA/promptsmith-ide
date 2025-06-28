@@ -1,9 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
-import { useState } from "react";
-import { ExternalLink, Info, Lock, ChevronLeft } from "lucide-react";
+import { useRef, useState } from "react";
+import { ExternalLink, Info, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
 	Dialog,
@@ -13,11 +12,20 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import Image from "next/image";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+	Form,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormControl,
+	FormMessage,
+} from "@/components/ui/form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 interface DatabaseType {
 	id: string;
@@ -81,6 +89,140 @@ const DATABASE_TYPES: DatabaseType[] = [
 	},
 ];
 
+// Add a config object for required fields per database type
+const DATABASE_FIELDS: Record<
+	string,
+	Array<{
+		key: string;
+		label: string;
+		placeholder?: string;
+		type?: string;
+		optional?: boolean;
+	}>
+> = {
+	pinecone: [
+		{
+			key: "apiKey",
+			label: "Pinecone API Key",
+			placeholder: "Enter Pinecone API key",
+			type: "password",
+		},
+		{
+			key: "collectionName",
+			label: "Collection Name",
+			placeholder: "Enter collection name",
+		},
+	],
+	chroma: [
+		{ key: "url", label: "Chroma URL", placeholder: "Enter Chroma URL" },
+		{
+			key: "collectionName",
+			label: "Collection Name",
+			placeholder: "Enter collection name",
+		},
+	],
+	pgvector: [
+		{ key: "user", label: "User", placeholder: "Enter database user" },
+		{ key: "host", label: "Host", placeholder: "Enter host" },
+		{
+			key: "database",
+			label: "Database Name",
+			placeholder: "Enter database name",
+		},
+		{
+			key: "password",
+			label: "Password",
+			placeholder: "Enter password",
+			type: "password",
+		},
+		{ key: "port", label: "Port", placeholder: "5432", type: "number" },
+	],
+	qdrant: [
+		{ key: "url", label: "Qdrant URL", placeholder: "Enter Qdrant URL" },
+		{
+			key: "apiKey",
+			label: "Qdrant API Key",
+			placeholder: "Enter Qdrant API key",
+			type: "password",
+			optional: true,
+		},
+		{
+			key: "collectionName",
+			label: "Collection Name",
+			placeholder: "Enter collection name",
+		},
+	],
+	weaviate: [
+		{
+			key: "url",
+			label: "Weaviate URL",
+			placeholder: "Enter Weaviate instance URL",
+		},
+		{
+			key: "apiKey",
+			label: "Weaviate API Key",
+			placeholder: "Enter Weaviate API key",
+			type: "password",
+		},
+		{
+			key: "collectionName",
+			label: "Collection Name",
+			placeholder: "Enter collection name",
+		},
+	],
+	milvus: [
+		{ key: "url", label: "Milvus URL", placeholder: "Enter Milvus URL" },
+		{
+			key: "collectionName",
+			label: "Collection Name",
+			placeholder: "Enter collection name",
+		},
+	],
+};
+
+// Zod schemas for each database type
+const DATABASE_SCHEMAS: Record<string, z.AnyZodObject> = {
+	pinecone: z.object({
+		apiKey: z.string().min(1, { message: "API Key is required" }),
+		collectionName: z
+			.string()
+			.min(1, { message: "Collection name is required" }),
+	}),
+	chroma: z.object({
+		url: z.string().url({ message: "Valid URL required" }),
+		collectionName: z
+			.string()
+			.min(1, { message: "Collection name is required" }),
+	}),
+	pgvector: z.object({
+		user: z.string().min(1, { message: "User is required" }),
+		host: z.string().min(1, { message: "Host is required" }),
+		database: z.string().min(1, { message: "Database name is required" }),
+		password: z.string().min(1, { message: "Password is required" }),
+		port: z.coerce.number().min(1, { message: "Port is required" }),
+	}),
+	qdrant: z.object({
+		url: z.string().url({ message: "Valid URL required" }),
+		apiKey: z.string().optional(),
+		collectionName: z
+			.string()
+			.min(1, { message: "Collection name is required" }),
+	}),
+	weaviate: z.object({
+		url: z.string().url({ message: "Valid URL required" }),
+		apiKey: z.string().min(1, { message: "API Key is required" }),
+		collectionName: z
+			.string()
+			.min(1, { message: "Collection name is required" }),
+	}),
+	milvus: z.object({
+		url: z.string().url({ message: "Valid URL required" }),
+		collectionName: z
+			.string()
+			.min(1, { message: "Collection name is required" }),
+	}),
+};
+
 interface DatabaseConfigProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
@@ -88,26 +230,59 @@ interface DatabaseConfigProps {
 
 export function DatabaseConfig({ open, onOpenChange }: DatabaseConfigProps) {
 	const [selectedType, setSelectedType] = useState<DatabaseType | null>(null);
-	const [formData, setFormData] = useState({
-		name: "",
-		connectionUrl: "",
-		apiKey: "",
+	const addDatabaseButtonRef = useRef<HTMLButtonElement>(null);
+	const queryClient = useQueryClient();
+	const schema = selectedType ? DATABASE_SCHEMAS[selectedType.id] : null;
+	const form = useForm({
+		resolver: schema ? zodResolver(schema) : undefined,
+		defaultValues: { name: "" },
+	});
+
+	type FormValues = typeof schema extends z.ZodTypeAny
+		? z.infer<typeof schema>
+		: Record<string, unknown>;
+
+	const saveDatabaseMutation = useMutation({
+		mutationFn: async (
+			data: FormValues & { type: string; description?: string },
+		) => {
+			const response = await fetch("/api/databases", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(data),
+			});
+
+			if (!response.ok) {
+				throw new Error("Failed to save database config");
+			}
+
+			return response.json();
+		},
+		onSuccess: () => {
+			toast.success("Database configuration saved successfully!");
+			queryClient.invalidateQueries({ queryKey: ["databases"] });
+			onOpenChange(false);
+			setSelectedType(null);
+			form.reset({ name: "" });
+		},
+		onError: (error) => {
+			console.error("Error saving database config:", error);
+			toast.error("Failed to save database configuration");
+		},
 	});
 
 	const handleBack = () => {
 		setSelectedType(null);
-		setFormData({
-			name: "",
-			connectionUrl: "",
-			apiKey: "",
-		});
+		form.reset({ name: "" });
 	};
 
-	const handleSubmit = (e: React.FormEvent) => {
-		e.preventDefault();
-		// TODO: Handle form submission
-		console.log("Form submitted:", { type: selectedType, ...formData });
-		onOpenChange(false);
+	const handleSubmit = async (values: FormValues) => {
+		console.log("values", values);
+		saveDatabaseMutation.mutate({
+			...values,
+			type: selectedType?.id || "",
+			description: selectedType?.description,
+		});
 	};
 
 	return (
@@ -180,101 +355,77 @@ export function DatabaseConfig({ open, onOpenChange }: DatabaseConfigProps) {
 						))}
 					</div>
 				) : (
-					<form onSubmit={handleSubmit} className="py-4 space-y-4">
-						<div className="space-y-4">
-							<div className="space-y-2">
-								<Label>Database Name</Label>
-								<Input
-									value={formData.name}
-									onChange={(e) =>
-										setFormData({ ...formData, name: e.target.value })
-									}
-									placeholder="Enter a name for this database"
-								/>
-							</div>
-
-							<div className="space-y-2">
-								<div className="flex items-center justify-between">
-									<Label>Connection URL</Label>
-									<a
-										href={selectedType.connectionGuide}
-										target="_blank"
-										rel="noopener noreferrer"
-										className="text-xs text-blue-500 hover:text-blue-700"
-									>
-										How to get connection URL?
-									</a>
-								</div>
-								<div className="relative">
-									<Input
-										type="password"
-										value={formData.connectionUrl}
-										onChange={(e) =>
-											setFormData({
-												...formData,
-												connectionUrl: e.target.value,
-											})
-										}
-										placeholder="Enter connection URL"
+					<Form {...form}>
+						<pre>{JSON.stringify(form.formState.errors, null, 2)}</pre>
+						<form
+							onSubmit={form.handleSubmit(handleSubmit)}
+							className="py-4 space-y-4"
+							onError={(e) => {
+								console.error("Error submitting form:", e);
+							}}
+						>
+							<div className="space-y-4">
+								{DATABASE_FIELDS[selectedType.id]?.map((field) => (
+									<FormField
+										key={field.key}
+										control={form.control}
+										name={field.key}
+										render={({ field: rhfField }) => (
+											<FormItem>
+												<FormLabel>
+													{field.label}
+													{field.optional ? " (optional)" : ""}
+												</FormLabel>
+												<FormControl>
+													<Input
+														type={field.type || "text"}
+														placeholder={field.placeholder}
+														{...rhfField}
+													/>
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
 									/>
-									<Tooltip>
-										<TooltipTrigger asChild>
-											<Lock className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
-										</TooltipTrigger>
-										<TooltipContent>
-											Connection details are encrypted at rest
-										</TooltipContent>
-									</Tooltip>
-								</div>
-							</div>
+								))}
 
-							{selectedType.id === "pinecone" && (
-								<div className="space-y-2">
-									<Label>API Key</Label>
-									<div className="relative">
-										<Input
-											type="password"
-											value={formData.apiKey}
-											onChange={(e) =>
-												setFormData({ ...formData, apiKey: e.target.value })
-											}
-											placeholder="Enter API key"
-										/>
-										<Tooltip>
-											<TooltipTrigger asChild>
-												<Lock className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
-											</TooltipTrigger>
-											<TooltipContent>
-												API keys are encrypted at rest
-											</TooltipContent>
-										</Tooltip>
+								<div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg text-sm text-blue-700">
+									<Info className="h-4 w-4 mt-0.5" />
+									<div>
+										Your connection details are encrypted using AES-256 before
+										being stored.{" "}
+										<a
+											href="/docs/security"
+											className="underline hover:text-blue-900"
+										>
+											Learn more about our security practices
+										</a>
 									</div>
 								</div>
-							)}
-
-							<div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg text-sm text-blue-700">
-								<Info className="h-4 w-4 mt-0.5" />
-								<div>
-									Your connection details are encrypted using AES-256 before
-									being stored.{" "}
-									<a
-										href="/docs/security"
-										className="underline hover:text-blue-900"
-									>
-										Learn more about our security practices
-									</a>
-								</div>
 							</div>
-						</div>
-
-						<div className="flex justify-end gap-2 pt-4">
-							<Button variant="outline" onClick={() => onOpenChange(false)}>
-								Cancel
+							<Button
+								type="submit"
+								// className="hidden"
+								ref={addDatabaseButtonRef}
+							>
+								Add Database
 							</Button>
-							<Button type="submit">Add Database</Button>
-						</div>
-					</form>
+						</form>
+					</Form>
 				)}
+
+				<div className="flex justify-end gap-2 pt-4">
+					<Button variant="outline" onClick={() => onOpenChange(false)}>
+						Cancel
+					</Button>
+					<Button
+						type="button"
+						disabled={saveDatabaseMutation.isPending}
+						onClick={() => addDatabaseButtonRef.current?.click()}
+					>
+						{saveDatabaseMutation.isPending ? "Adding..." : "Add Database"}
+					</Button>
+				</div>
 			</DialogContent>
 		</Dialog>
 	);
