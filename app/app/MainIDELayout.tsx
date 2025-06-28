@@ -22,7 +22,11 @@ import SwitchCase, { Case } from "@/components/ui/switch-case";
 import { useRef, useEffect } from "react";
 
 type PromptEditorHandle = { savePrompt: () => void };
-type PromptListHandle = { createNewPrompt: () => void };
+type PromptListHandle = {
+	createNewPrompt: () => void;
+	isPromptListLoading?: boolean;
+	isPromptListEmpty?: boolean;
+};
 type DatabaseListHandle = { createNewDatabase: () => void };
 
 export default function MainIDELayout() {
@@ -94,7 +98,10 @@ export default function MainIDELayout() {
 							{/* Left sidebar with prompt list or database config */}
 							<SwitchCase value={selectedTab}>
 								<Case value="prompts">
-									<PromptList ref={promptListRef} activePromptId={selectedPromptId} />
+									<PromptList
+										ref={promptListRef}
+										activePromptId={selectedPromptId}
+									/>
 								</Case>
 								<Case value="database">
 									<DatabaseList ref={databaseListRef} />
@@ -110,50 +117,55 @@ export default function MainIDELayout() {
 							<PromptEditor
 								ref={promptEditorRef}
 								selectedPromptId={selectedPromptId}
+								onCreatePrompt={() => promptListRef.current?.createNewPrompt()}
 							/>
 						</ResizablePanel>
 						<ResizableHandle />
-						<ResizablePanel
-							defaultSize={30}
-							minSize={25}
-							maxSize={30}
-							className="bg-gray-50"
-						>
-							{/* Right sidebar with test cases, security analysis, and history */}
-							<Tabs defaultValue="tests" className="h-full flex flex-col">
-								<div className=" border-b rounded-none w-full">
-									<TabsList className="p-0 bg-transparent border-0">
-										<TabsTrigger
-											value="tests"
-											className="rounded-none border-0 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-blue-500"
-										>
-											Test Cases
-										</TabsTrigger>
-										<TabsTrigger
-											value="security"
-											className="rounded-none border-0 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-blue-500"
-										>
-											Security
-										</TabsTrigger>
-										<TabsTrigger
-											value="history"
-											className="rounded-none border-0 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-blue-500"
-										>
-											History
-										</TabsTrigger>
-									</TabsList>
-								</div>
-								<TabsContent value="tests" className="flex-1 p-0 m-0">
-									<TestCases />
-								</TabsContent>
-								<TabsContent value="security" className="flex-1 p-0 m-0">
-									<SecurityAnalysis />
-								</TabsContent>
-								<TabsContent value="history" className="flex-1 p-0 m-0">
-									{selectedPromptId && <History promptId={selectedPromptId} />}
-								</TabsContent>
-							</Tabs>
-						</ResizablePanel>
+						{selectedPromptId && (
+							<ResizablePanel
+								defaultSize={30}
+								minSize={25}
+								maxSize={30}
+								className="bg-gray-50"
+							>
+								{/* Right sidebar with test cases, security analysis, and history */}
+								<Tabs defaultValue="tests" className="h-full flex flex-col">
+									<div className=" border-b rounded-none w-full">
+										<TabsList className="p-0 bg-transparent border-0">
+											<TabsTrigger
+												value="tests"
+												className="rounded-none border-0 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-blue-500"
+											>
+												Test Cases
+											</TabsTrigger>
+											<TabsTrigger
+												value="security"
+												className="rounded-none border-0 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-blue-500"
+											>
+												Security
+											</TabsTrigger>
+											<TabsTrigger
+												value="history"
+												className="rounded-none border-0 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-blue-500"
+											>
+												History
+											</TabsTrigger>
+										</TabsList>
+									</div>
+									<TabsContent value="tests" className="flex-1 p-0 m-0">
+										<TestCases />
+									</TabsContent>
+									<TabsContent value="security" className="flex-1 p-0 m-0">
+										<SecurityAnalysis />
+									</TabsContent>
+									<TabsContent value="history" className="flex-1 p-0 m-0">
+										{selectedPromptId && (
+											<History promptId={selectedPromptId} />
+										)}
+									</TabsContent>
+								</Tabs>
+							</ResizablePanel>
+						)}
 					</ResizablePanelGroup>
 				</div>
 				<StatusBar />

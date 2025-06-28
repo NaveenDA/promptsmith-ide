@@ -5,19 +5,17 @@ import { Button } from "@/components/ui/button";
 import {
 	ChevronRight,
 	ChevronDown,
-	ArrowUpRight,
 	RotateCcw,
-	Copy,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import Image from "next/image";
 
 interface PromptVersion {
 	id: string;
-	number: number;
+	version: number;
 	content: string;
 	modelParams: {
 		provider: string;
@@ -33,14 +31,20 @@ interface PromptVersion {
 }
 
 export function History({ promptId }: { promptId: string }) {
-	const [expandedVersions, setExpandedVersions] = useState<Record<string, boolean>>({});
+	const [expandedVersions, setExpandedVersions] = useState<
+		Record<string, boolean>
+	>({});
 	const queryClient = useQueryClient();
 
-	const { data: versions = [], isLoading, isError } = useQuery({
-		queryKey: ['prompt-versions', promptId],
+	const {
+		data: versions = [],
+		isLoading,
+		isError,
+	} = useQuery({
+		queryKey: ["prompt-versions", promptId],
 		queryFn: async () => {
 			const res = await fetch(`/api/prompt-versions?promptId=${promptId}`);
-			if (!res.ok) throw new Error('Failed to fetch prompt versions');
+			if (!res.ok) throw new Error("Failed to fetch prompt versions");
 			return res.json();
 		},
 		enabled: !!promptId,
@@ -62,7 +66,9 @@ export function History({ promptId }: { promptId: string }) {
 		onSuccess: () => {
 			toast.success("Prompt restored to this version!");
 			queryClient.invalidateQueries({ queryKey: ["prompt", promptId] });
-			queryClient.invalidateQueries({ queryKey: ["prompt-versions", promptId] });
+			queryClient.invalidateQueries({
+				queryKey: ["prompt-versions", promptId],
+			});
 			queryClient.invalidateQueries({ queryKey: ["prompts"] });
 		},
 	});
@@ -75,7 +81,43 @@ export function History({ promptId }: { promptId: string }) {
 	};
 
 	if (isLoading) return <div className="p-4">Loading history...</div>;
-	if (isError) return <div className="p-4 text-red-500">Failed to load history.</div>;
+	if (isError)
+		return <div className="p-4 text-red-500">Failed to load history.</div>;
+
+	if (!isLoading && versions.length === 0) {
+		return (
+			<div className="flex flex-col items-center justify-center h-full text-gray-400">
+				<svg
+					className="w-12 h-12 mb-2"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth={1.5}
+					viewBox="0 0 24 24"
+				>
+					<title>No history yet</title>
+					<circle
+						cx="12"
+						cy="12"
+						r="9"
+						stroke="currentColor"
+						strokeWidth="1.5"
+						fill="none"
+					/>
+					<path
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						d="M12 7v5l3 2"
+						stroke="currentColor"
+						strokeWidth="1.5"
+					/>
+				</svg>
+				<div className="font-medium">No history yet</div>
+				<div className="text-xs mt-1">
+					Save a version to see prompt history here.
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="h-full flex flex-col bg-white">
@@ -95,7 +137,7 @@ export function History({ promptId }: { promptId: string }) {
 							<div className="flex-1 text-left">
 								<div className="flex items-center gap-2">
 									<span className="font-medium text-gray-700">
-										Version {version.number}
+										Version {version.version}
 									</span>
 									<span className="text-xs text-gray-500">
 										{formatDistanceToNow(new Date(version.createdAt), {
@@ -110,7 +152,8 @@ export function History({ promptId }: { promptId: string }) {
 											alt={version.modelParams.provider || "provider"}
 											width={10}
 											height={10}
-										/>&nbsp;
+										/>
+										&nbsp;
 										{version.modelParams.provider}
 									</Badge>
 									<Badge variant="outline" className="text-xs text-gray-600">
@@ -142,14 +185,6 @@ export function History({ promptId }: { promptId: string }) {
 									>
 										<RotateCcw className="w-3 h-3" />
 										Restore
-									</Button>
-									<Button variant="outline" size="sm" className="gap-2">
-										<Copy className="w-3 h-3" />
-										Duplicate
-									</Button>
-									<Button variant="outline" size="sm" className="gap-2">
-										<ArrowUpRight className="w-3 h-3" />
-										Compare
 									</Button>
 								</div>
 							</div>

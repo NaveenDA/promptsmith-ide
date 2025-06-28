@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, forwardRef, useImperativeHandle, Fragment, useRef, useEffect } from "react";
+import {
+	useState,
+	forwardRef,
+	useImperativeHandle,
+	Fragment,
+	useRef,
+	useEffect,
+} from "react";
 import {
 	AlertCircle,
 	CheckCircle2,
@@ -41,6 +48,9 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useSetAtom } from "jotai";
+import { selectedPromptIdAtom, promptListLoadedAtom } from "@/lib/store";
 
 interface Prompt {
 	id: string;
@@ -64,9 +74,11 @@ interface PromptListProps {
 
 export const PromptList = forwardRef(function PromptList(
 	{ activePromptId }: PromptListProps,
-	ref
+	ref,
 ) {
 	const queryClient = useQueryClient();
+	const setSelectedPromptId = useSetAtom(selectedPromptIdAtom);
+	const setPromptListLoaded = useSetAtom(promptListLoadedAtom);
 	const {
 		data: prompts = [],
 		isLoading,
@@ -76,6 +88,7 @@ export const PromptList = forwardRef(function PromptList(
 		queryFn: async () => {
 			const res = await fetch("/api/prompts");
 			if (!res.ok) throw new Error("Failed to fetch prompts");
+			setPromptListLoaded(true);
 			return res.json();
 		},
 	});
@@ -116,8 +129,9 @@ export const PromptList = forwardRef(function PromptList(
 			if (!res.ok) throw new Error("Failed to add prompt");
 			return res.json();
 		},
-		onSuccess: () => {
+		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: ["prompts"] });
+			if (data?.id) setSelectedPromptId(data.id);
 		},
 	});
 
@@ -154,6 +168,9 @@ export const PromptList = forwardRef(function PromptList(
 
 	useImperativeHandle(ref, () => ({
 		createNewPrompt: addPromptMutation.mutate,
+		isPromptListLoading: isLoading,
+		isPromptListError: isError,
+		isPromptListEmpty: !isLoading && !isError && filteredPrompts.length === 0,
 	}));
 
 	const handleRename = (promptId: string) => {
@@ -196,7 +213,16 @@ export const PromptList = forwardRef(function PromptList(
 		router.push(`/app/prompts/${promptId}`);
 	};
 
-	if (isLoading) return <div className="p-4">Loading prompts...</div>;
+	if (isLoading)
+		return (
+			<div className="space-y-4 p-4">
+				<Skeleton className="h-6 w-1/2" />
+				<Skeleton className="h-4 w-full" />
+				<Skeleton className="h-4 w-5/6" />
+				<Skeleton className="h-4 w-2/3" />
+				<Skeleton className="h-4 w-1/3" />
+			</div>
+		);
 	if (isError)
 		return <div className="p-4 text-red-500">Failed to load prompts.</div>;
 
@@ -274,7 +300,7 @@ export const PromptList = forwardRef(function PromptList(
 								"group flex flex-col px-2 py-1.5 cursor-pointer border-l-2 transition-colors border-b",
 								activePromptId === prompt.id
 									? "bg-blue-50 border-l-blue-500"
-									: "hover:bg-gray-100 border-l-transparent"
+									: "hover:bg-gray-100 border-l-transparent",
 							)}
 							onClick={() => handlePromptClick(prompt.id)}
 						>
@@ -298,6 +324,11 @@ export const PromptList = forwardRef(function PromptList(
 											}}
 											className="h-6 text-xs"
 											autoFocus
+											ref={(el) => {
+												if (el) {
+													inputRefs.current[prompt.id] = el;
+												}
+											}}
 										/>
 									) : (
 										<span className="text-sm truncate font-medium">
@@ -316,13 +347,24 @@ export const PromptList = forwardRef(function PromptList(
 										</Button>
 									</DropdownMenuTrigger>
 									<DropdownMenuContent align="end" className="w-48">
-										<DropdownMenuItem onClick={() => handleRename(prompt.id)}>
+										<DropdownMenuItem
+											onClick={(e) => {
+												e.stopPropagation();
+												// set the selected prompt id
+												setSelectedPromptId(prompt.id);
+
+												handleRename(prompt.id);
+											}}
+										>
 											Rename
 										</DropdownMenuItem>
 										<DropdownMenuSeparator />
 										<DropdownMenuItem
 											className="text-red-600"
-											onClick={() => setDialogOpenId(prompt.id)}
+											onClick={(e) => {
+												e.stopPropagation();
+												setDialogOpenId(prompt.id);
+											}}
 											disabled={deletePromptMutation.isPending}
 										>
 											Delete
@@ -368,12 +410,16 @@ export const PromptList = forwardRef(function PromptList(
 								})}
 							</div>
 						</div>
-						<AlertDialog open={dialogOpenId === prompt.id} onOpenChange={(open) => !open && setDialogOpenId(null)}>
+						<AlertDialog
+							open={dialogOpenId === prompt.id}
+							onOpenChange={(open) => !open && setDialogOpenId(null)}
+						>
 							<AlertDialogContent>
 								<AlertDialogHeader>
 									<AlertDialogTitle>Delete Prompt</AlertDialogTitle>
 									<AlertDialogDescription>
-										Are you sure you want to delete this prompt? This will also delete all its versions. This action cannot be undone.
+										Are you sure you want to delete this prompt? This will also
+										delete all its versions. This action cannot be undone.
 									</AlertDialogDescription>
 								</AlertDialogHeader>
 								<AlertDialogFooter>

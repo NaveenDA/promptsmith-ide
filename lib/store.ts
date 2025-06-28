@@ -85,3 +85,5 @@ export const currentPromptAtom = atom((get) => {
 	const selectedId = get(selectedPromptIdAtom);
 	return sample_prompts.find((p) => p.id === selectedId) || null;
 });
+
+export const promptListLoadedAtom = atom<boolean>(true);

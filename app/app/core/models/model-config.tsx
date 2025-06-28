@@ -128,11 +128,12 @@ export function ModelConfigDialog() {
 									<SelectValue />
 								</SelectTrigger>
 								<SelectContent>
-									{config.provider && AVAILABLE_MODELS[config.provider]?.map((model) => (
-										<SelectItem key={model} value={model}>
-											{model}
-										</SelectItem>
-									))}
+									{config.provider &&
+										AVAILABLE_MODELS[config.provider]?.map((model) => (
+											<SelectItem key={model} value={model}>
+												{model}
+											</SelectItem>
+										))}
 								</SelectContent>
 							</Select>
 						</div>

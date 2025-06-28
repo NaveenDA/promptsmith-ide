@@ -3,22 +3,24 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Save } from "lucide-react";
+import { Plus, Save } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
-import { modelConfigAtom } from "@/lib/store";
+import { modelConfigAtom, promptListLoadedAtom } from "@/lib/store";
 import { ModelConfigDialog } from "@/app/app/core/models/model-config";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import MonacoEditor from "@monaco-editor/react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface PromptEditorProps {
 	selectedPromptId?: string | null;
+	onCreatePrompt?: () => void;
 }
 
 const PromptEditor = forwardRef(function PromptEditor(
-	{ selectedPromptId }: PromptEditorProps,
+	{ selectedPromptId, onCreatePrompt }: PromptEditorProps,
 	ref,
 ) {
 	const [title, setTitle] = useState("New Prompt");
@@ -26,6 +28,8 @@ const PromptEditor = forwardRef(function PromptEditor(
 	const [config, setConfig] = useAtom(modelConfigAtom);
 	const [isFocused, setIsFocused] = useState(false);
 	const [unsaved, setUnsaved] = useState(false);
+	const queryClient = useQueryClient();
+	const isPromptListLoaded = useAtomValue(promptListLoadedAtom);
 
 	// Fetch prompt versions
 	const { data: versions = [], isLoading } = useQuery({
@@ -70,8 +74,21 @@ const PromptEditor = forwardRef(function PromptEditor(
 
 	// Track unsaved changes
 	useEffect(() => {
+		if (!config || !content) {
+			// do nothing
+		}
 		setUnsaved(true);
 	}, [content, config]);
+
+	// Auto-save title changes with debounce
+	useEffect(() => {
+		if (selectedPromptId && title) {
+			const timeout = setTimeout(() => {
+				saveDraftMutation.mutate();
+			}, 500); // 500ms debounce
+			return () => clearTimeout(timeout);
+		}
+	}, [title, selectedPromptId]);
 
 	const versionMutation = useMutation({
 		mutationFn: async () => {
@@ -94,6 +111,9 @@ const PromptEditor = forwardRef(function PromptEditor(
 				toast.info("No changes detected. Version not incremented.");
 			} else {
 				toast.success("Prompt version saved!");
+				queryClient.invalidateQueries({
+					queryKey: ["prompt-versions", selectedPromptId],
+				});
 			}
 		},
 	});
@@ -123,7 +143,42 @@ const PromptEditor = forwardRef(function PromptEditor(
 		savePrompt,
 	}));
 
-	if (isLoading) return <div>Loading prompt...</div>;
+	if (isLoading)
+		return (
+			<div className="space-y-4 p-4">
+				<Skeleton className="h-6 w-1/2" />
+				<Skeleton className="h-4 w-full" />
+				<Skeleton className="h-4 w-5/6" />
+				<Skeleton className="h-4 w-2/3" />
+				<Skeleton className="h-4 w-1/3" />
+			</div>
+		);
+
+	if (!selectedPromptId && isPromptListLoaded) {
+		return (
+			<div className="h-[80vh] flex flex-col items-center justify-center text-center p-8 animate-fade-in">
+				<img
+					src="/logo.svg"
+					alt="PromptSmith Logo"
+					className="w-32 h-32 mb-6 opacity-80"
+				/>
+				<h2 className="text-2xl font-bold mb-2 text-gray-800">
+					Let's craft your next prompt!
+				</h2>
+				<p className="text-gray-500 mb-6 max-w-md mx-auto">
+					Pick a prompt from the list, or hit "Create New Prompt" to start a
+					fresh idea.
+					<br />
+					PromptSmith helps you version, test, and perfect your prompts with
+					ease.
+				</p>
+				<Button variant="default" size="lg" onClick={onCreatePrompt}>
+					<Plus className="w-4 h-4" />
+					Create New Prompt
+				</Button>
+			</div>
+		);
+	}
 
 	return (
 		<div className="h-full flex flex-col">

@@ -20,6 +20,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import FooterSections from "../(website)/footer-sections";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface DocsLayoutProps {
 	children: ReactNode;
@@ -108,7 +109,17 @@ export default function DocsLayout({ children }: DocsLayoutProps) {
 					{/* Sidebar */}
 					<aside className="hidden md:block w-64 shrink-0">
 						<div className="sticky top-24">
-							<Suspense fallback={<div>Loading...</div>}>
+							<Suspense
+								fallback={
+									<div className="space-y-4 p-4">
+										<Skeleton className="h-8 w-1/2" />
+										<Skeleton className="h-4 w-full" />
+										<Skeleton className="h-4 w-5/6" />
+										<Skeleton className="h-4 w-2/3" />
+										<Skeleton className="h-4 w-1/3" />
+									</div>
+								}
+							>
 								<ScrollArea className="h-[calc(100vh-8rem)]">
 									<div className="space-y-6">
 										{navigation.map((section) => (
