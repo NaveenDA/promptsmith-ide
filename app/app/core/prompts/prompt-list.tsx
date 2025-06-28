@@ -1,12 +1,12 @@
 "use client";
 
 import {
-	useState,
 	forwardRef,
-	useImperativeHandle,
 	Fragment,
-	useRef,
 	useEffect,
+	useImperativeHandle,
+	useRef,
+	useState,
 } from "react";
 import {
 	AlertCircle,
@@ -16,7 +16,7 @@ import {
 	Plus,
 	Search,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -52,7 +52,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState, EmptyStateIcons } from "@/components/ui/empty-state";
 import { useSetAtom } from "jotai";
-import { selectedPromptIdAtom, promptListLoadedAtom } from "@/lib/store";
+import { promptListLoadedAtom, selectedPromptIdAtom } from "@/lib/store";
 
 interface Prompt {
 	id: string;
@@ -212,18 +212,9 @@ export const PromptList = forwardRef(function PromptList(
 		router.push(`/app/prompts/${promptId}`);
 	};
 
-	if (isLoading)
-		return (
-			<div className="space-y-4 p-4">
-				<Skeleton className="h-6 w-1/2" />
-				<Skeleton className="h-4 w-full" />
-				<Skeleton className="h-4 w-5/6" />
-				<Skeleton className="h-4 w-2/3" />
-				<Skeleton className="h-4 w-1/3" />
-			</div>
-		);
-	if (isError)
+	if (isError) {
 		return <div className="p-4 text-red-500">Failed to load prompts.</div>;
+	}
 
 	return (
 		<div className="h-full flex flex-col">
@@ -251,6 +242,27 @@ export const PromptList = forwardRef(function PromptList(
 					</div>
 				}
 			/>
+			{isLoading && (
+				<div className="space-y-2 p-4">
+					{[1, 2, 3].map((i) => (
+						<div key={i} className="flex flex-col px-2 py-1.5 border-b">
+							<div className="flex items-center justify-between min-w-0">
+								<div className="flex items-center gap-2 min-w-0 flex-1">
+									<Skeleton className="h-3.5 w-3.5 rounded-full" />
+									<Skeleton className="h-4 w-40" />
+								</div>
+							</div>
+							<div className="flex items-center gap-2 mt-1 pl-5">
+								<Skeleton className="h-4 w-16 rounded-full" />
+								<Skeleton className="h-4 w-20 rounded-full" />
+							</div>
+							<div className="pl-5 mt-0.5">
+								<Skeleton className="h-3 w-24" />
+							</div>
+						</div>
+					))}
+				</div>
+			)}
 			{showSearch && (
 				<AnimatePresence mode="sync">
 					<motion.div
@@ -286,7 +298,7 @@ export const PromptList = forwardRef(function PromptList(
 				</AnimatePresence>
 			)}
 			<div className="flex-1 overflow-auto">
-				{filteredPrompts.length === 0 ? (
+				{!isLoading && filteredPrompts.length === 0 ? (
 					searchQuery ? (
 						<EmptyState
 							icon={<EmptyStateIcons.Search />}

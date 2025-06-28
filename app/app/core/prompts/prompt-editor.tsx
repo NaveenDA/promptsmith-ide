@@ -133,6 +133,8 @@ const PromptEditor = forwardRef(function PromptEditor(
 		onSuccess: () => {
 			setUnsaved(false);
 			toast.success("Draft saved!");
+			// Invalidate the prompts query to refresh the list
+			queryClient.invalidateQueries({ queryKey: ["prompts"] });
 		},
 	});
 
