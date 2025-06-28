@@ -17,7 +17,7 @@ export default function AppLayout({
 				<Header />
 				{children}
 			</TooltipProvider>
-			<Toaster />
+			<Toaster richColors closeButton />
 		</QueryClientProvider>
 	);
 }

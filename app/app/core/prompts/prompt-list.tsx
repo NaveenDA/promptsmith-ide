@@ -331,7 +331,7 @@ export const PromptList = forwardRef(function PromptList(
 								className={cn(
 									"group flex flex-col px-2 py-1.5 cursor-pointer border-l-2 transition-colors border-b",
 									activePromptId === prompt.id
-										? "bg-blue-50 border-l-blue-500"
+										? "bg-orange-50/50 border-l-orange-500"
 										: "hover:bg-gray-100 border-l-transparent",
 								)}
 								onClick={() => handlePromptClick(prompt.id)}

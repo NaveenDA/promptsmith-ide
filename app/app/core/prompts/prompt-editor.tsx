@@ -3,7 +3,7 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Save } from "lucide-react";
+import { Archive, Plus, Save } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { modelConfigAtom, promptListLoadedAtom } from "@/lib/store";
@@ -225,6 +225,7 @@ const PromptEditor = forwardRef(function PromptEditor(
 							onClick={() => saveDraftMutation.mutate()}
 							disabled={!unsaved || saveDraftMutation.isPending}
 						>
+							<Archive className="w-4 h-4" />
 							Save Draft
 						</Button>
 						<Button

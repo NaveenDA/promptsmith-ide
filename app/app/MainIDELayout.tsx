@@ -134,19 +134,19 @@ export default function MainIDELayout() {
 										<TabsList className="p-0 bg-transparent border-0">
 											<TabsTrigger
 												value="tests"
-												className="rounded-none border-0 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-blue-500"
+												className="rounded-none border-0  data-[state=active]:border-b-2 data-[state=active]:border-orange-500 data-[state=active]:bg-orange-50/50"
 											>
 												Test Cases
 											</TabsTrigger>
 											<TabsTrigger
 												value="security"
-												className="rounded-none border-0 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-blue-500"
+												className="rounded-none border-0  data-[state=active]:border-b-2 data-[state=active]:border-orange-500 data-[state=active]:bg-orange-50/50"
 											>
 												Security
 											</TabsTrigger>
 											<TabsTrigger
 												value="history"
-												className="rounded-none border-0 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-blue-500"
+												className="rounded-none border-0  data-[state=active]:border-b-2 data-[state=active]:border-orange-500 data-[state=active]:bg-orange-50/50"
 											>
 												History
 											</TabsTrigger>
