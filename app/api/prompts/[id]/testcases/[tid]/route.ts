@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { testCases } from "@/lib/schema";
 import { and, eq } from "drizzle-orm";
@@ -10,7 +10,7 @@ async function DELETEHandler(
 	userId: string,
 ) {
 	const { params } = context as { params: { tid: string; id: string } };
-	const { tid, id } = await params;
+	const { tid } = await params;
 
 	const [deletedTestCase] = await db
 		.delete(testCases)

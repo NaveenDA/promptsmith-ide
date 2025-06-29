@@ -1,14 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { promptVersions } from "@/lib/schema";
-import { eq, desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { withAuth } from "@/lib/auth-wrapper";
 
 async function POSTHandler(
 	req: NextRequest,
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	_context: unknown,
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	_userId: string,
 ) {
 	const { promptId, content, modelParams } = await req.json();
@@ -52,20 +50,28 @@ async function POSTHandler(
 	return NextResponse.json(newVersion);
 }
 
-async function GETHandler(
-	req: NextRequest,
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	_context: unknown,
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	_userId: string,
-) {
-	const { searchParams } = new URL(req.url);
-	const promptId = searchParams.get("promptId");
-	if (!promptId) return NextResponse.json([], { status: 200 });
+async function GETHandler(_req: NextRequest, context: unknown) {
+	// get the promptId from context
+	const { params } = context as { params: { id: string } };
+	const { id } = await params;
+	console.log("id", id);
+	if (!id) return NextResponse.json([], { status: 200 });
+	console.log("promptId", id);
 	const versions = await db
 		.select()
 		.from(promptVersions)
+		.where(eq(promptVersions.promptId, id))
 		.orderBy(desc(promptVersions.version));
+
+	console.log(
+		"Query",
+		db
+			.select()
+			.from(promptVersions)
+			.where(eq(promptVersions.promptId, id))
+			.orderBy(desc(promptVersions.version))
+			.toSQL(),
+	);
 	return NextResponse.json(versions);
 }
 

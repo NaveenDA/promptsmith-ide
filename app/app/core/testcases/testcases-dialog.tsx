@@ -21,7 +21,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Beaker, Bug, Info, Shield } from "lucide-react";
+import { Info } from "lucide-react";
 import Image from "next/image";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -290,7 +290,11 @@ export function TestCaseDialog({
 													<Button
 														key={category.id}
 														type="button"
-														variant={field.value === category.name ? "default" : "outline"}
+														variant={
+															field.value === category.name
+																? "default"
+																: "outline"
+														}
 														className="flex-1 gap-2"
 														onClick={() => field.onChange(category.name)}
 													>

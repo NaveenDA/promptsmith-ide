@@ -39,7 +39,7 @@ export function History({ promptId }: { promptId: string }) {
 	} = useQuery({
 		queryKey: ["prompt-versions", promptId],
 		queryFn: async () => {
-			const res = await fetch(`/api/prompt-versions?promptId=${promptId}`);
+			const res = await fetch(`/api/prompts/${promptId}/versions`);
 			if (!res.ok) throw new Error("Failed to fetch prompt versions");
 			return res.json();
 		},
@@ -161,7 +161,7 @@ export function History({ promptId }: { promptId: string }) {
 
 						{expandedVersions[version.id] && (
 							<div className="px-3 pb-2">
-								<div className="bg-gray-50 rounded p-2 font-mono text-sm text-gray-600 mb-2">
+								<div className="bg-gray-50 rounded p-2 font-mono text-sm text-gray-600 mb-2 max-h-[50vh] overflow-y-auto">
 									<pre className="whitespace-pre-wrap">{version.content}</pre>
 								</div>
 								{version.performance && (

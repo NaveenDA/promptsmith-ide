@@ -16,8 +16,6 @@ import {
 	ThumbsDown,
 	ThumbsUp,
 	XCircle,
-	Edit,
-	Trash,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -141,12 +139,10 @@ export function TestCases() {
 	);
 	const [selectedTest, setSelectedTest] = useState<string | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
-	const [editingTest, setEditingTest] = useState<
-		{
-			test: TestCase;
-			categoryName: string;
-		} | null
-	>(null);
+	const [editingTest, setEditingTest] = useState<{
+		test: TestCase;
+		categoryName: string;
+	} | null>(null);
 	const [runDialogOpen, setRunDialogOpen] = useState(false);
 	const [selectedTests, setSelectedTests] = useState<TestCase[]>([]);
 	const [useAiJudge, setUseAiJudge] = useState(false);
@@ -175,9 +171,7 @@ export function TestCases() {
 	// Group test cases by category
 	const categories: TestCategory[] = CATEGORIES.map((category) => ({
 		...category,
-		tests: testCases.filter((test: TestCase) =>
-			test.category === category.id
-		),
+		tests: testCases.filter((test: TestCase) => test.category === category.id),
 	}));
 
 	// Mutation for creating test cases
@@ -267,10 +261,7 @@ export function TestCases() {
 				queryKey: ["testcases", promptId],
 			});
 			toast.success("Test case deleted successfully");
-			if (
-				selectedTest &&
-				deleteTestCaseMutation.variables === selectedTest
-			) {
+			if (selectedTest && deleteTestCaseMutation.variables === selectedTest) {
 				setSelectedTest(null);
 			}
 		},
@@ -362,10 +353,7 @@ export function TestCases() {
 		await deleteTestCaseMutation.mutateAsync(testId);
 	};
 
-	const handleDuplicateTest = async (
-		test: TestCase,
-		categoryName: string,
-	) => {
+	const handleDuplicateTest = async (test: TestCase, categoryName: string) => {
 		const categoryId = categoryName
 			.toLowerCase()
 			.replace(" cases", "")
@@ -387,13 +375,13 @@ export function TestCases() {
 
 			// AI validation cost if applicable
 			if (test.validationMethod !== "exact" && useAiJudge) {
-				const validationTokens = ((test.validationRules?.length || 0) +
-					(test.aiValidationPrompt?.length || 0) +
-					test.input.length +
-					200) / // Buffer for validation response
+				const validationTokens =
+					((test.validationRules?.length || 0) +
+						(test.aiValidationPrompt?.length || 0) +
+						test.input.length +
+						200) / // Buffer for validation response
 					4;
-				costs.totalAiValidationCost += (validationTokens / 1000) *
-					0.0015;
+				costs.totalAiValidationCost += (validationTokens / 1000) * 0.0015;
 			}
 		}
 
@@ -471,8 +459,7 @@ export function TestCases() {
 										setEditingTest(null);
 										setDialogOpen(true);
 									}}
-									disabled={!promptId ||
-										categories.length === 0}
+									disabled={!promptId || categories.length === 0}
 								>
 									<Plus className="w-4 h-4" />
 								</Button>
@@ -490,9 +477,7 @@ export function TestCases() {
 									onClick={() => {
 										setSelectedTests(
 											categories.flatMap((c) =>
-												c.tests.filter((t) =>
-													t.status !== "running"
-												)
+												c.tests.filter((t) => t.status !== "running"),
 											),
 										);
 										setRunDialogOpen(true);
@@ -515,9 +500,7 @@ export function TestCases() {
 									onClick={() => {
 										if (!isExpanded) {
 											setExpandedCategories(
-												new Set(
-													categories.map((c) => c.id),
-												),
+												new Set(categories.map((c) => c.id)),
 											);
 											setIsExpanded(true);
 										} else {
@@ -526,9 +509,11 @@ export function TestCases() {
 										}
 									}}
 								>
-									{isExpanded
-										? <ChevronDown className="w-4 h-4" />
-										: <ChevronUp className="w-4 h-4" />}
+									{isExpanded ? (
+										<ChevronDown className="w-4 h-4" />
+									) : (
+										<ChevronUp className="w-4 h-4" />
+									)}
 								</Button>
 							</TooltipTrigger>
 							<TooltipContent>
@@ -541,8 +526,7 @@ export function TestCases() {
 			<div className="">
 				{!promptId && (
 					<div className="text-center text-muted-foreground py-8">
-						No prompt selected. Please select a prompt to view test
-						cases.
+						No prompt selected. Please select a prompt to view test cases.
 					</div>
 				)}
 
@@ -563,21 +547,14 @@ export function TestCases() {
 						type="multiple"
 						className="w-full"
 						value={Array.from(expandedCategories)}
-						onValueChange={(values) =>
-							setExpandedCategories(new Set(values))}
+						onValueChange={(values) => setExpandedCategories(new Set(values))}
 					>
 						{categories.map((category) => (
-							<AccordionItem
-								value={category.id}
-								key={category.id}
-							>
+							<AccordionItem value={category.id} key={category.id}>
 								<AccordionTrigger className="h-10 hover:border-none pl-3">
 									<div className="flex items-center gap-2">
 										<span>{category.name}</span>
-										<Badge
-											variant="outline"
-											className="text-xs "
-										>
+										<Badge variant="outline" className="text-xs ">
 											{category?.tests?.length ?? 0}
 										</Badge>
 									</div>
@@ -589,11 +566,8 @@ export function TestCases() {
 												key={test.id}
 												className={cn(
 													"border-b group relative cursor-pointer transition bg-white p-2",
-													category.tests.indexOf(
-															test,
-														) ===
-															category.tests
-																	.length - 1
+													category.tests.indexOf(test) ===
+														category.tests.length - 1
 														? "border-b-0"
 														: "border-b",
 												)}
@@ -610,17 +584,12 @@ export function TestCases() {
 											>
 												{/* Status Icon */}
 												<p className="flex items-center">
-													{getStatusIcon(test.status)}
-													{" "}
-													&nbsp;{" "}
-													<span className="text-sm ">
-														{test.name}
-													</span>
+													{getStatusIcon(test.status)} &nbsp;{" "}
+													<span className="text-sm ">{test.name}</span>
 												</p>
 												{test.actualOutput && (
 													<p className="text-xs text-gray-500 w-2/3 break-words whitespace-pre-wrap truncate">
-														Output:{" "}
-														{test.actualOutput}
+														Output: {test.actualOutput}
 													</p>
 												)}
 												<div className="flex gap-2 opacity-50">
@@ -628,21 +597,17 @@ export function TestCases() {
 														Cost: ${test.cost}
 													</p>
 													<p className="text-[8px] text-gray-500">
-														Latency:{" "}
-														{test.latency}ms
+														Latency: {test.latency}ms
 													</p>
 												</div>
 												{/* Dropdown menu for actions */}
 												<div className="absolute right-10 top-1/2 -translate-y-1/2 z-10">
 													<DropdownMenu>
-														<DropdownMenuTrigger
-															asChild
-														>
+														<DropdownMenuTrigger asChild>
 															<Button
 																size="icon"
 																variant="ghost"
-																onClick={(e) =>
-																	e.stopPropagation()}
+																onClick={(e) => e.stopPropagation()}
 																title="Actions"
 															>
 																<MoreVertical className="w-4 h-4" />
@@ -650,47 +615,29 @@ export function TestCases() {
 														</DropdownMenuTrigger>
 														<DropdownMenuContent align="end">
 															<DropdownMenuItem
-																onClick={(
-																	e,
-																) => {
+																onClick={(e) => {
 																	e.stopPropagation();
-																	handleRunTest(
-																		test,
-																	);
+																	handleRunTest(test);
 																}}
 															>
 																Re-run
 															</DropdownMenuItem>
 															<DropdownMenuItem
-																onClick={(
-																	e,
-																) => {
+																onClick={(e) => {
 																	e.stopPropagation();
-																	setEditingTest(
-																		{
-																			test,
-																			categoryName:
-																				category
-																					.name,
-																		},
-																	);
-																	setDialogOpen(
-																		true,
-																	);
+																	setEditingTest({
+																		test,
+																		categoryName: category.name,
+																	});
+																	setDialogOpen(true);
 																}}
 															>
 																Edit
 															</DropdownMenuItem>
 															<DropdownMenuItem
-																onClick={(
-																	e,
-																) => {
+																onClick={(e) => {
 																	e.stopPropagation();
-																	handleDuplicateTest(
-																		test,
-																		category
-																			.name,
-																	);
+																	handleDuplicateTest(test, category.name);
 																}}
 															>
 																Duplicate
@@ -698,24 +645,17 @@ export function TestCases() {
 															<DropdownMenuSeparator />
 															<DropdownMenuItem
 																variant="destructive"
-																onClick={(
-																	e,
-																) => {
+																onClick={(e) => {
 																	e.stopPropagation();
 																	e.preventDefault();
 																}}
 															>
 																<AlertDialog>
-																	<AlertDialogTrigger
-																		asChild
-																	>
+																	<AlertDialogTrigger asChild>
 																		<button
 																			className="block"
 																			type="button"
-																			onClick={(
-																				e,
-																			) => e
-																				.stopPropagation()}
+																			onClick={(e) => e.stopPropagation()}
 																		>
 																			Delete
 																		</button>
@@ -723,28 +663,12 @@ export function TestCases() {
 																	<AlertDialogContent>
 																		<AlertDialogHeader>
 																			<AlertDialogTitle>
-																				Are
-																				you
-																				absolutely
-																				sure?
+																				Are you absolutely sure?
 																			</AlertDialogTitle>
 																			<AlertDialogDescription>
-																				This
-																				action
-																				cannot
-																				be
-																				undone.
-																				This
-																				will
-																				permanently
-																				delete
-																				this
-																				test
-																				case
-																				and
-																				remove
-																				its
-																				data.
+																				This action cannot be undone. This will
+																				permanently delete this test case and
+																				remove its data.
 																			</AlertDialogDescription>
 																		</AlertDialogHeader>
 																		<AlertDialogFooter>
@@ -753,9 +677,7 @@ export function TestCases() {
 																			</AlertDialogCancel>
 																			<AlertDialogAction
 																				onClick={() => {
-																					handleDeleteTest(
-																						test.id,
-																					);
+																					handleDeleteTest(test.id);
 																				}}
 																			>
 																				Delete
@@ -774,13 +696,9 @@ export function TestCases() {
 															<Button
 																size="xs"
 																variant="ghost"
-																onClick={(
-																	e,
-																) => {
+																onClick={(e) => {
 																	e.stopPropagation();
-																	handleApprove(
-																		test,
-																	);
+																	handleApprove(test);
 																}}
 																title="Approve"
 																className="scale-75"
@@ -797,13 +715,9 @@ export function TestCases() {
 															<Button
 																size="xs"
 																variant="ghost"
-																onClick={(
-																	e,
-																) => {
+																onClick={(e) => {
 																	e.stopPropagation();
-																	handleDisapprove(
-																		test,
-																	);
+																	handleDisapprove(test);
 																}}
 																title="Disapprove"
 																className="scale-75"
@@ -834,18 +748,13 @@ export function TestCases() {
 					<div className="py-4">
 						<div className="flex items-center gap-4 mb-4">
 							<div className="flex-1">
-								<h3 className="text-sm font-medium mb-1">
-									Selected Tests
-								</h3>
+								<h3 className="text-sm font-medium mb-1">Selected Tests</h3>
 								<p className="text-sm text-gray-500">
 									{selectedTests.length} test
-									{selectedTests.length !== 1 ? "s" : ""}{" "}
-									selected
+									{selectedTests.length !== 1 ? "s" : ""} selected
 								</p>
 							</div>
-							{selectedTests.some((t) =>
-								t.validationMethod !== "exact"
-							) && (
+							{selectedTests.some((t) => t.validationMethod !== "exact") && (
 								<div className="flex items-center gap-2">
 									<Switch
 										id="aiJudge"
@@ -853,10 +762,7 @@ export function TestCases() {
 										onCheckedChange={setUseAiJudge}
 									/>
 									<div className="flex items-center gap-1">
-										<Label
-											htmlFor="aiJudge"
-											className="text-sm"
-										>
+										<Label htmlFor="aiJudge" className="text-sm">
 											Use AI Judge
 										</Label>
 										<TooltipProvider>
@@ -866,9 +772,8 @@ export function TestCases() {
 												</TooltipTrigger>
 												<TooltipContent>
 													<p>
-														AI will automatically
-														validate test outputs
-														using GPT-3.5-turbo
+														AI will automatically validate test outputs using
+														GPT-3.5-turbo
 													</p>
 												</TooltipContent>
 											</Tooltip>
@@ -881,17 +786,13 @@ export function TestCases() {
 						<div className="space-y-3 mb-4">
 							<div className="flex justify-between text-sm">
 								<span>Execution Cost</span>
-								<span>
-									${calculateCosts().totalExecutionCost
-										.toFixed(4)}
-								</span>
+								<span>${calculateCosts().totalExecutionCost.toFixed(4)}</span>
 							</div>
 							{useAiJudge && (
 								<div className="flex justify-between text-sm">
 									<span>AI Validation Cost</span>
 									<span>
-										${calculateCosts().totalAiValidationCost
-											.toFixed(4)}
+										${calculateCosts().totalAiValidationCost.toFixed(4)}
 									</span>
 								</div>
 							)}
@@ -908,10 +809,7 @@ export function TestCases() {
 						</div>
 					</div>
 					<DialogFooter>
-						<Button
-							variant="outline"
-							onClick={() => setRunDialogOpen(false)}
-						>
+						<Button variant="outline" onClick={() => setRunDialogOpen(false)}>
 							Cancel
 						</Button>
 						<Button onClick={handleRunSelectedTests}>
@@ -927,23 +825,24 @@ export function TestCases() {
 				onOpenChange={setDialogOpen}
 				onSave={handleSaveTest}
 				categories={categories}
-				initialData={editingTest
-					? {
-						name: editingTest.test.name,
-						input: editingTest.test.input,
-						expectedOutput: editingTest.test.expectedOutput,
-						categoryName: editingTest.categoryName,
-						validationMethod: editingTest.test.validationMethod,
-						validationRules: editingTest.test.validationRules,
-						aiValidationPrompt: editingTest.test.aiValidationPrompt,
-						useDatabase: editingTest.test.useDatabase,
-						databaseId: editingTest.test.databaseId,
-						embeddingModel: editingTest.test.embeddingModel,
-						numResults: editingTest.test.numResults,
-						similarityThreshold:
-							editingTest.test.similarityThreshold,
-					}
-					: undefined}
+				initialData={
+					editingTest
+						? {
+								name: editingTest.test.name,
+								input: editingTest.test.input,
+								expectedOutput: editingTest.test.expectedOutput,
+								categoryName: editingTest.categoryName,
+								validationMethod: editingTest.test.validationMethod,
+								validationRules: editingTest.test.validationRules,
+								aiValidationPrompt: editingTest.test.aiValidationPrompt,
+								useDatabase: editingTest.test.useDatabase,
+								databaseId: editingTest.test.databaseId,
+								embeddingModel: editingTest.test.embeddingModel,
+								numResults: editingTest.test.numResults,
+								similarityThreshold: editingTest.test.similarityThreshold,
+							}
+						: undefined
+				}
 			/>
 
 			{/* Q&A Dialog */}
@@ -954,8 +853,24 @@ export function TestCases() {
 							<DialogTitle>Test Case Details</DialogTitle>
 							{qaTest && (
 								<div className="flex items-center gap-2">
-									<Badge variant={qaTest.status === "passed" ? "secondary" : qaTest.status === "failed" ? "destructive" : "default"}>{qaTest.status}</Badge>
-									<Button size="sm" variant="secondary" onClick={() => handleRunTest(qaTest)}><Play className="w-4 h-4 mr-1" /> Run Again</Button>
+									<Badge
+										variant={
+											qaTest.status === "passed"
+												? "secondary"
+												: qaTest.status === "failed"
+													? "destructive"
+													: "default"
+										}
+									>
+										{qaTest.status}
+									</Badge>
+									<Button
+										size="sm"
+										variant="secondary"
+										onClick={() => handleRunTest(qaTest)}
+									>
+										<Play className="w-4 h-4 mr-1" /> Run Again
+									</Button>
 								</div>
 							)}
 						</div>
@@ -965,15 +880,28 @@ export function TestCases() {
 							{/* Metadata Section */}
 							<div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
 								<div className="space-y-1">
-									<div><span className="font-semibold">Validation:</span> {qaTest.validationMethod}</div>
-									<div><span className="font-semibold">Model:</span> {qaTest.embeddingModel}</div>
+									<div>
+										<span className="font-semibold">Validation:</span>{" "}
+										{qaTest.validationMethod}
+									</div>
+									<div>
+										<span className="font-semibold">Model:</span>{" "}
+										{qaTest.embeddingModel}
+									</div>
 									{qaTest.useDatabase && qaTest.databaseId && (
-										<div><span className="font-semibold">Database:</span> {qaTest.databaseId} <span className="text-muted-foreground">({qaTest.embeddingModel})</span></div>
+										<div>
+											<span className="font-semibold">Database:</span>{" "}
+											{qaTest.databaseId}{" "}
+											<span className="text-muted-foreground">
+												({qaTest.embeddingModel})
+											</span>
+										</div>
 									)}
 									<div>
 										<span className="font-semibold">Executed:</span>{" "}
 										{qaTest.executedAt
-											? (typeof qaTest.executedAt === "string" || typeof qaTest.executedAt === "number")
+											? typeof qaTest.executedAt === "string" ||
+												typeof qaTest.executedAt === "number"
 												? new Date(qaTest.executedAt).toLocaleString()
 												: qaTest.executedAt instanceof Date
 													? qaTest.executedAt.toLocaleString()
@@ -983,16 +911,29 @@ export function TestCases() {
 									{/* Expected Output */}
 									<div>
 										<span className="font-semibold">Expected Output:</span>
-										<div className="bg-gray-50 rounded p-2 mt-1 whitespace-pre-line">{qaTest.expectedOutput ?? "N/A"}</div>
+										<div className="bg-gray-50 rounded p-2 mt-1 whitespace-pre-line">
+											{qaTest.expectedOutput ?? "N/A"}
+										</div>
 									</div>
 								</div>
 								<div className="space-y-1">
-									<div><span className="font-semibold">Latency:</span> {qaTest.latency} ms</div>
-									<div><span className="font-semibold">Tokens:</span> {qaTest.tokens}</div>
-									<div><span className="font-semibold">Cost:</span> ${qaTest.cost?.toFixed(4)}</div>
+									<div>
+										<span className="font-semibold">Latency:</span>{" "}
+										{qaTest.latency} ms
+									</div>
+									<div>
+										<span className="font-semibold">Tokens:</span>{" "}
+										{qaTest.tokens}
+									</div>
+									<div>
+										<span className="font-semibold">Cost:</span> $
+										{qaTest.cost?.toFixed(4)}
+									</div>
 									<div>
 										<span className="font-semibold">AI Feedback:</span>
-										<div className="bg-gray-50 rounded p-2 mt-1 whitespace-pre-line">{qaTest.aiFeedback}</div>
+										<div className="bg-gray-50 rounded p-2 mt-1 whitespace-pre-line">
+											{qaTest.aiFeedback}
+										</div>
 									</div>
 								</div>
 							</div>
@@ -1005,7 +946,9 @@ export function TestCases() {
 									</pre>
 								</div>
 								<div className="space-y-2 h-full">
-									<p className="font-semibold text-sm text-gray-700">Response</p>
+									<p className="font-semibold text-sm text-gray-700">
+										Response
+									</p>
 									<pre className="bg-gray-100 rounded p-2 text-xs font-mono whitespace-pre-wrap break-words h-64 md:h-full max-h-full overflow-auto">
 										{qaTest.actualOutput || "-"}
 									</pre>
@@ -1014,10 +957,19 @@ export function TestCases() {
 						</>
 					)}
 					<DialogFooter className="mt-4 flex gap-2">
-						{qaTest && <>
-							<Button variant="outline" onClick={() => handleApprove(qaTest)}><ThumbsUp className="w-4 h-4 mr-1 text-green-500" /> Approve</Button>
-							<Button variant="destructive" onClick={() => handleDisapprove(qaTest)}><ThumbsDown className="w-4 h-4 mr-1" /> Disapprove</Button>
-						</>}
+						{qaTest && (
+							<>
+								<Button variant="outline" onClick={() => handleApprove(qaTest)}>
+									<ThumbsUp className="w-4 h-4 mr-1 text-green-500" /> Approve
+								</Button>
+								<Button
+									variant="destructive"
+									onClick={() => handleDisapprove(qaTest)}
+								>
+									<ThumbsDown className="w-4 h-4 mr-1" /> Disapprove
+								</Button>
+							</>
+						)}
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>

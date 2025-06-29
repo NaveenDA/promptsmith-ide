@@ -36,9 +36,7 @@ const PromptEditor = forwardRef(function PromptEditor(
 		queryKey: ["prompt-versions", selectedPromptId],
 		queryFn: async () => {
 			if (!selectedPromptId) return [];
-			const res = await fetch(
-				`/api/prompt-versions?promptId=${selectedPromptId}`,
-			);
+			const res = await fetch(`/api/prompts/${selectedPromptId}/versions`);
 			if (!res.ok) throw new Error("Failed to fetch prompt versions");
 			return res.json();
 		},
@@ -84,7 +82,7 @@ const PromptEditor = forwardRef(function PromptEditor(
 	useEffect(() => {
 		if (selectedPromptId && title) {
 			const timeout = setTimeout(() => {
-				saveDraftMutation.mutate();
+				saveDraftMutation.mutate({ showToast: false });
 			}, 500); // 500ms debounce
 			return () => clearTimeout(timeout);
 		}
@@ -119,8 +117,12 @@ const PromptEditor = forwardRef(function PromptEditor(
 		},
 	});
 
-	const saveDraftMutation = useMutation({
-		mutationFn: async () => {
+	const saveDraftMutation = useMutation<
+		{ data: unknown; showToast: boolean },
+		Error,
+		{ showToast?: boolean }
+	>({
+		mutationFn: async ({ showToast = false } = {}) => {
 			if (!selectedPromptId) throw new Error("No prompt selected");
 			const res = await fetch(`/api/prompts/${selectedPromptId}`, {
 				method: "PUT",
@@ -128,11 +130,13 @@ const PromptEditor = forwardRef(function PromptEditor(
 				body: JSON.stringify({ title, content, modelParams: config }),
 			});
 			if (!res.ok) throw new Error("Failed to save draft");
-			return res.json();
+			return { data: await res.json(), showToast };
 		},
-		onSuccess: () => {
+		onSuccess: (result) => {
 			setUnsaved(false);
-			toast.success("Draft saved!");
+			if (result.showToast) {
+				toast.success("Draft saved!");
+			}
 			// Invalidate the prompts query to refresh the list
 			queryClient.invalidateQueries({ queryKey: ["prompts"] });
 		},
@@ -222,7 +226,7 @@ const PromptEditor = forwardRef(function PromptEditor(
 							variant="outline"
 							size="xs"
 							className="gap-2"
-							onClick={() => saveDraftMutation.mutate()}
+							onClick={() => saveDraftMutation.mutate({ showToast: true })}
 							disabled={!unsaved || saveDraftMutation.isPending}
 						>
 							<Archive className="w-4 h-4" />
