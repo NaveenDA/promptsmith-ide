@@ -1,0 +1,601 @@
+{
+	"id": "00083f49-ed6e-483f-b600-8af2706fc687",
+	"prevId": "51b3f01b-8fa2-4e83-9857-61732db89ba9",
+	"version": "7",
+	"dialect": "postgresql",
+	"tables": {
+		"public.prompt_versions": {
+			"name": "prompt_versions",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"prompt_id": {
+					"name": "prompt_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"version": {
+					"name": "version",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"content": {
+					"name": "content",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"test_cases_total": {
+					"name": "test_cases_total",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"test_cases_passed": {
+					"name": "test_cases_passed",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"security_issues_total": {
+					"name": "security_issues_total",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"security_issues_passed": {
+					"name": "security_issues_passed",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"model_params": {
+					"name": "model_params",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"prompt_versions_prompt_id_prompts_id_fk": {
+					"name": "prompt_versions_prompt_id_prompts_id_fk",
+					"tableFrom": "prompt_versions",
+					"tableTo": "prompts",
+					"columnsFrom": ["prompt_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.prompts": {
+			"name": "prompts",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"user_id": {
+					"name": "user_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"title": {
+					"name": "title",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"content": {
+					"name": "content",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"tags": {
+					"name": "tags",
+					"type": "text[]",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"status": {
+					"name": "status",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'draft'"
+				},
+				"total_tokens": {
+					"name": "total_tokens",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"total_costs": {
+					"name": "total_costs",
+					"type": "real",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"test_cases_total": {
+					"name": "test_cases_total",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"test_cases_passed": {
+					"name": "test_cases_passed",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"security_issues_total": {
+					"name": "security_issues_total",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"security_issues_passed": {
+					"name": "security_issues_passed",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"model_params": {
+					"name": "model_params",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'{}'::jsonb"
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.test_case_groups": {
+			"name": "test_case_groups",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"user_id": {
+					"name": "user_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"prompt_id": {
+					"name": "prompt_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"description": {
+					"name": "description",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"test_case_groups_prompt_id_prompts_id_fk": {
+					"name": "test_case_groups_prompt_id_prompts_id_fk",
+					"tableFrom": "test_case_groups",
+					"tableTo": "prompts",
+					"columnsFrom": ["prompt_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.test_cases": {
+			"name": "test_cases",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"user_id": {
+					"name": "user_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"prompt_id": {
+					"name": "prompt_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"prompt_version_id": {
+					"name": "prompt_version_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"group_id": {
+					"name": "group_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"type": {
+					"name": "type",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"status": {
+					"name": "status",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'not-run'"
+				},
+				"input": {
+					"name": "input",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"expected_output": {
+					"name": "expected_output",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"actual_output": {
+					"name": "actual_output",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"error": {
+					"name": "error",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"validation_method": {
+					"name": "validation_method",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'manual'"
+				},
+				"validation_rules": {
+					"name": "validation_rules",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"ai_validation_prompt": {
+					"name": "ai_validation_prompt",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"review_notes": {
+					"name": "review_notes",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"latency": {
+					"name": "latency",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"tokens": {
+					"name": "tokens",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"cost": {
+					"name": "cost",
+					"type": "real",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"use_database": {
+					"name": "use_database",
+					"type": "boolean",
+					"primaryKey": false,
+					"notNull": true,
+					"default": false
+				},
+				"database_id": {
+					"name": "database_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"embedding_model": {
+					"name": "embedding_model",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"num_results": {
+					"name": "num_results",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false,
+					"default": 3
+				},
+				"similarity_threshold": {
+					"name": "similarity_threshold",
+					"type": "real",
+					"primaryKey": false,
+					"notNull": false,
+					"default": 0.5
+				},
+				"executed_at": {
+					"name": "executed_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"execution_config": {
+					"name": "execution_config",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": false,
+					"default": "'{}'::jsonb"
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"test_cases_prompt_id_prompts_id_fk": {
+					"name": "test_cases_prompt_id_prompts_id_fk",
+					"tableFrom": "test_cases",
+					"tableTo": "prompts",
+					"columnsFrom": ["prompt_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				},
+				"test_cases_prompt_version_id_prompt_versions_id_fk": {
+					"name": "test_cases_prompt_version_id_prompt_versions_id_fk",
+					"tableFrom": "test_cases",
+					"tableTo": "prompt_versions",
+					"columnsFrom": ["prompt_version_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				},
+				"test_cases_group_id_test_case_groups_id_fk": {
+					"name": "test_cases_group_id_test_case_groups_id_fk",
+					"tableFrom": "test_cases",
+					"tableTo": "test_case_groups",
+					"columnsFrom": ["group_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				},
+				"test_cases_database_id_vector_databases_id_fk": {
+					"name": "test_cases_database_id_vector_databases_id_fk",
+					"tableFrom": "test_cases",
+					"tableTo": "vector_databases",
+					"columnsFrom": ["database_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.vector_databases": {
+			"name": "vector_databases",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"user_id": {
+					"name": "user_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"type": {
+					"name": "type",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"description": {
+					"name": "description",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"collection_name": {
+					"name": "collection_name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"connection_config": {
+					"name": "connection_config",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"status": {
+					"name": "status",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'active'"
+				},
+				"document_count": {
+					"name": "document_count",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false,
+					"default": 0
+				},
+				"last_connected": {
+					"name": "last_connected",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		}
+	},
+	"enums": {},
+	"schemas": {},
+	"sequences": {},
+	"roles": {},
+	"policies": {},
+	"views": {},
+	"_meta": {
+		"columns": {},
+		"schemas": {},
+		"tables": {}
+	}
+}

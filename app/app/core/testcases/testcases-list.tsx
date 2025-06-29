@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useAtomValue } from "jotai";
+import { selectedPromptIdAtom } from "@/lib/store";
 import {
 	AlertCircle,
 	CheckCircle2,
@@ -15,8 +16,15 @@ import {
 	ThumbsDown,
 	ThumbsUp,
 	XCircle,
+	Edit,
+	Trash,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { TestCaseDialog } from "./testcases-dialog";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
 	Tooltip,
 	TooltipContent,
@@ -30,8 +38,6 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { TestCaseDialog } from "./testcases-dialog";
-import { Switch } from "@/components/ui/switch";
 import {
 	Dialog,
 	DialogContent,
@@ -39,7 +45,6 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import TitleBar from "@/components/ui/title-bar";
 import {
 	Accordion,
@@ -47,12 +52,26 @@ import {
 	AccordionItem,
 	AccordionTrigger,
 } from "@/components/ui/accordion";
+import { cn } from "@/lib/utils";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 
 interface TestCase {
 	id: string;
 	name: string;
 	status: "passed" | "failed" | "running" | "not-run" | "needs-review";
 	type: "basic" | "edge" | "security";
+	category: "basic" | "edge" | "security";
 	input: string;
 	expectedOutput?: string;
 	actualOutput?: string;
@@ -64,126 +83,242 @@ interface TestCase {
 	validationRules?: string;
 	aiValidationPrompt?: string;
 	reviewNotes?: string;
+	promptId: string;
+	userId: string;
+	useDatabase?: boolean;
+	databaseId?: string;
+	embeddingModel?: string;
+	numResults?: number;
+	similarityThreshold?: number;
+	executedAt?: Date;
+	createdAt: Date;
+	updatedAt: Date;
+	aiFeedback?: string;
 }
 
-interface TestGroup {
+interface TestCaseFormData {
+	name: string;
+	input: string;
+	expectedOutput?: string;
+	categoryName: string;
+	validationMethod: "exact" | "manual" | "ai";
+	validationRules?: string;
+	aiValidationPrompt?: string;
+}
+
+interface TestCategory {
+	id: string;
 	name: string;
 	description: string;
 	tests: TestCase[];
 }
 
-export function TestCases() {
-	const [groups, setGroups] = useState<TestGroup[]>([
-		{
-			name: "Basic Tests",
-			description: "Basic functionality tests",
-			tests: [
-				{
-					id: "1",
-					name: "Happy Sentiment",
-					status: "passed",
-					type: "basic",
-					input: "Hi this is naveen, and I am happy today.",
-					expectedOutput: "positive, happy",
-					actualOutput: "happy",
-					validationMethod: "manual",
-					reviewNotes: "✓ Correctly identified happy sentiment",
-					latency: 1200,
-					tokens: 150,
-					cost: 0.002,
-				},
-				{
-					id: "2",
-					name: "Mixed Sentiment",
-					status: "needs-review",
-					type: "edge",
-					input: "I got promoted but I have to relocate.",
-					actualOutput: "mixed, positive, negative",
-					validationMethod: "ai",
-					validationRules:
-						"Check if output contains both positive and negative aspects",
-					aiValidationPrompt:
-						"Does the output correctly identify mixed sentiments? The text contains both a positive event (promotion) and a potential negative aspect (relocation).",
-					latency: 800,
-					tokens: 100,
-					cost: 0.001,
-				},
-				{
-					// json output
-					id: "3",
-					name: "JSON Output",
-					status: "passed",
-					type: "basic",
-					input: "Hi this is naveen, and I am happy today.",
-					expectedOutput: "positive, happy",
-					validationMethod: "manual",
-					reviewNotes: "✓ Correctly identified happy sentiment",
-					latency: 1200,
-					tokens: 150,
-					cost: 0.002,
-					actualOutput:
-						'{"max_tokens":1000,"temperature":0.5,"top_p":1,"frequency_penalty":0,"presence_penalty":0,"stop":null,"n":1,"stream":false,"logprobs":null,"echo":false,"message":[{"role":"user","content":"What is the melting point of aluminum?"},{"role":"assistant","content":"The melting point of aluminum is 660 °C."}]}',
-				},
-			],
-		},
-		{
-			name: "Edge Tests",
-			description: "Edge functionality tests",
-			tests: [
-				{
-					id: "3",
-					name: "Mixed Sentiment",
-					status: "needs-review",
-					type: "edge",
-					input: "I got promoted but I have to relocate.",
-					actualOutput: "mixed, positive, negative",
-					validationMethod: "ai",
-					validationRules:
-						"Check if output contains both positive and negative aspects",
-					aiValidationPrompt:
-						"Does the output correctly identify mixed sentiments? The text contains both a positive event (promotion) and a potential negative aspect (relocation).",
-					latency: 800,
-					tokens: 100,
-					cost: 0.001,
-				},
-			],
-		},
-		{
-			name: "Security Tests",
-			description: "Tests for security vulnerabilities",
-			tests: [
-				{
-					id: "3",
-					name: "Prompt Injection",
-					status: "passed",
-					type: "security",
-					input: "Attempt to inject malicious prompt...",
-					expectedOutput: "Safe response",
-					latency: 900,
-					tokens: 120,
-					cost: 0.0015,
-					validationMethod: "manual",
-					actualOutput: "Safe response",
-				},
-			],
-		},
-	]);
+// Fixed categories
+const CATEGORIES = [
+	{
+		id: "basic",
+		name: "Basic Tests",
+		description: "Basic functionality tests",
+	},
+	{
+		id: "edge",
+		name: "Edge Cases",
+		description: "Edge case and boundary tests",
+	},
+	{
+		id: "security",
+		name: "Security Tests",
+		description: "Security and safety tests",
+	},
+];
 
-	const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
-		new Set(["Basic Tests"]),
+export function TestCases() {
+	const promptId = useAtomValue(selectedPromptIdAtom);
+	const queryClient = useQueryClient();
+
+	const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+		new Set(["basic"]),
 	);
 	const [selectedTest, setSelectedTest] = useState<string | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
-	const [editingTest, setEditingTest] = useState<{
-		test: TestCase;
-		groupName: string;
-	} | null>(null);
+	const [editingTest, setEditingTest] = useState<
+		{
+			test: TestCase;
+			categoryName: string;
+		} | null
+	>(null);
 	const [runDialogOpen, setRunDialogOpen] = useState(false);
 	const [selectedTests, setSelectedTests] = useState<TestCase[]>([]);
 	const [useAiJudge, setUseAiJudge] = useState(false);
 	const [isExpanded, setIsExpanded] = useState(false);
 	const [qaDialogOpen, setQaDialogOpen] = useState(false);
 	const [qaTest, setQaTest] = useState<TestCase | null>(null);
+
+	// Query for fetching test cases
+	const {
+		data: testCases = [],
+		isLoading,
+		error,
+	} = useQuery({
+		queryKey: ["testcases", promptId],
+		queryFn: async () => {
+			if (!promptId) return [];
+			const response = await fetch(`/api/prompts/${promptId}/testcases`);
+			if (!response.ok) {
+				throw new Error("Failed to fetch test cases");
+			}
+			return response.json() as Promise<TestCase[]>;
+		},
+		enabled: !!promptId,
+	});
+
+	// Group test cases by category
+	const categories: TestCategory[] = CATEGORIES.map((category) => ({
+		...category,
+		tests: testCases.filter((test: TestCase) =>
+			test.category === category.id
+		),
+	}));
+
+	// Mutation for creating test cases
+	const createTestCaseMutation = useMutation({
+		mutationFn: async (data: TestCaseFormData & { categoryId: string }) => {
+			const response = await fetch(`/api/prompts/${promptId}/testcases`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					category: data.categoryId,
+					name: data.name,
+					input: data.input,
+					expectedOutput: data.expectedOutput,
+					validationMethod: data.validationMethod,
+					validationRules: data.validationRules,
+					aiValidationPrompt: data.aiValidationPrompt,
+				}),
+			});
+			if (!response.ok) {
+				throw new Error("Failed to create test case");
+			}
+			return response.json();
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ["testcases", promptId],
+			});
+			toast.success("Test case created successfully");
+		},
+		onError: () => {
+			toast.error("Failed to create test case");
+		},
+	});
+
+	// Mutation for updating test cases
+	const updateTestCaseMutation = useMutation({
+		mutationFn: async ({
+			id,
+			data,
+		}: { id: string; data: TestCaseFormData & { categoryId: string } }) => {
+			const response = await fetch(`/api/testcases/${id}`, {
+				method: "PUT",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					category: data.categoryId,
+					name: data.name,
+					input: data.input,
+					expectedOutput: data.expectedOutput,
+					validationMethod: data.validationMethod,
+					validationRules: data.validationRules,
+					aiValidationPrompt: data.aiValidationPrompt,
+					status: "not-run",
+				}),
+			});
+			if (!response.ok) {
+				throw new Error("Failed to update test case");
+			}
+			return response.json();
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ["testcases", promptId],
+			});
+			toast.success("Test case updated successfully");
+		},
+		onError: () => {
+			toast.error("Failed to update test case");
+		},
+	});
+
+	// Mutation for deleting test cases
+	const deleteTestCaseMutation = useMutation({
+		mutationFn: async (testId: string) => {
+			const response = await fetch(
+				`/api/prompts/${promptId}/testcases/${testId}`,
+				{
+					method: "DELETE",
+				},
+			);
+			if (!response.ok) {
+				throw new Error("Failed to delete test case");
+			}
+			return response.json();
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ["testcases", promptId],
+			});
+			toast.success("Test case deleted successfully");
+			if (
+				selectedTest &&
+				deleteTestCaseMutation.variables === selectedTest
+			) {
+				setSelectedTest(null);
+			}
+		},
+		onError: () => {
+			toast.error("Failed to delete test case");
+		},
+	});
+
+	// Mutation for duplicating test cases
+	const duplicateTestCaseMutation = useMutation({
+		mutationFn: async ({
+			test,
+			categoryId,
+		}: { test: TestCase; categoryId: string }) => {
+			const response = await fetch(`/api/prompts/${promptId}/testcases`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					category: categoryId,
+					name: `${test.name} (Copy)`,
+					type: test.type,
+					input: test.input,
+					expectedOutput: test.expectedOutput,
+					validationMethod: test.validationMethod,
+					validationRules: test.validationRules,
+					aiValidationPrompt: test.aiValidationPrompt,
+					useDatabase: test.useDatabase,
+					databaseId: test.databaseId,
+					embeddingModel: test.embeddingModel,
+					numResults: test.numResults,
+					similarityThreshold: test.similarityThreshold,
+				}),
+			});
+			if (!response.ok) {
+				throw new Error("Failed to duplicate test case");
+			}
+			return response.json();
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ["testcases", promptId],
+			});
+			toast.success("Test case duplicated successfully");
+		},
+		onError: () => {
+			toast.error("Failed to duplicate test case");
+		},
+	});
 
 	const getStatusIcon = (status: TestCase["status"]) => {
 		switch (status) {
@@ -202,92 +337,41 @@ export function TestCases() {
 		}
 	};
 
-	const handleSaveTest = (testData: {
-		name: string;
-		type: "basic" | "edge" | "security";
-		input: string;
-		expectedOutput: string;
-		groupName: string;
-		validationMethod: "exact" | "manual" | "ai";
-		validationRules?: string;
-		aiValidationPrompt?: string;
-	}) => {
-		const newTest: TestCase = {
-			id: editingTest?.test.id || Math.random().toString(36).substring(7),
-			name: testData.name,
-			status: "not-run",
-			type: testData.type,
-			input: testData.input,
-			expectedOutput: testData.expectedOutput,
-			validationMethod: testData.validationMethod,
-			validationRules: testData.validationRules,
-			aiValidationPrompt: testData.aiValidationPrompt,
-		};
+	const handleSaveTest = async (testData: TestCaseFormData) => {
+		const categoryId = testData.categoryName
+			.toLowerCase()
+			.replace(" cases", "")
+			.replace(" tests", "")
+			.replace(" ", "");
 
-		setGroups((currentGroups) => {
-			if (editingTest) {
-				// Editing existing test
-				return currentGroups.map((group) => {
-					if (group.name === editingTest.groupName) {
-						return {
-							...group,
-							tests: group.tests.map((t) =>
-								t.id === editingTest.test.id ? newTest : t,
-							),
-						};
-					}
-					return group;
-				});
-			}
-			// Adding new test
-			return currentGroups.map((group) => {
-				if (group.name === testData.groupName) {
-					return {
-						...group,
-						tests: [...group.tests, newTest],
-					};
-				}
-				return group;
+		if (editingTest) {
+			await updateTestCaseMutation.mutateAsync({
+				id: editingTest.test.id,
+				data: { ...testData, categoryId },
 			});
-		});
-	};
-
-	const handleDeleteTest = (testId: string, groupName: string) => {
-		setGroups((currentGroups) =>
-			currentGroups.map((group) => {
-				if (group.name === groupName) {
-					return {
-						...group,
-						tests: group.tests.filter((t) => t.id !== testId),
-					};
-				}
-				return group;
-			}),
-		);
-		if (selectedTest === testId) {
-			setSelectedTest(null);
+		} else {
+			await createTestCaseMutation.mutateAsync({
+				...testData,
+				categoryId,
+			});
 		}
+		setEditingTest(null);
 	};
 
-	const handleDuplicateTest = (test: TestCase, groupName: string) => {
-		const newTest: TestCase = {
-			...test,
-			id: Math.random().toString(36).substring(7),
-			name: `${test.name} (Copy)`,
-			status: "not-run",
-		};
+	const handleDeleteTest = async (testId: string) => {
+		await deleteTestCaseMutation.mutateAsync(testId);
+	};
 
-		setGroups((currentGroups) =>
-			currentGroups.map((group) => {
-				if (group.name === groupName) {
-					return {
-						...group,
-						tests: [...group.tests, newTest],
-					};
-				}
-				return group;
-			}),
-		);
+	const handleDuplicateTest = async (
+		test: TestCase,
+		categoryName: string,
+	) => {
+		const categoryId = categoryName
+			.toLowerCase()
+			.replace(" cases", "")
+			.replace(" tests", "")
+			.replace(" ", "");
+		await duplicateTestCaseMutation.mutateAsync({ test, categoryId });
 	};
 
 	// Calculate total and AI validation costs for selected tests
@@ -303,13 +387,13 @@ export function TestCases() {
 
 			// AI validation cost if applicable
 			if (test.validationMethod !== "exact" && useAiJudge) {
-				const validationTokens =
-					((test.validationRules?.length || 0) +
-						(test.aiValidationPrompt?.length || 0) +
-						test.input.length +
-						200) / // Buffer for validation response
+				const validationTokens = ((test.validationRules?.length || 0) +
+					(test.aiValidationPrompt?.length || 0) +
+					test.input.length +
+					200) / // Buffer for validation response
 					4;
-				costs.totalAiValidationCost += (validationTokens / 1000) * 0.0015;
+				costs.totalAiValidationCost += (validationTokens / 1000) *
+					0.0015;
 			}
 		}
 
@@ -321,8 +405,8 @@ export function TestCases() {
 		setRunDialogOpen(false);
 
 		// Run each test
-		for (const group of groups) {
-			for (const test of group.tests) {
+		for (const category of categories) {
+			for (const test of category.tests) {
 				if (selectedTestIds.has(test.id)) {
 					handleRunTest(test);
 				}
@@ -331,81 +415,9 @@ export function TestCases() {
 	};
 
 	const handleRunTest = async (test: TestCase) => {
-		// Update test status to running
-		setGroups((currentGroups) =>
-			currentGroups.map((group) => ({
-				...group,
-				tests: group.tests.map((t) =>
-					t.id === test.id ? { ...t, status: "running" } : t,
-				),
-			})),
-		);
-
-		// TODO: Actual test execution logic here
-		const result = {
-			output: "happy, positive",
-			latency: 950,
-			tokens: 120,
-			cost: 0.0015,
-		};
-
-		// If using AI judge and test method isn't exact, validate the output
-		let status: TestCase["status"] = "needs-review";
-		let reviewNotes: string | undefined;
-		let additionalCost = 0;
-
-		if (test.validationMethod === "exact") {
-			status = test.expectedOutput === result.output ? "passed" : "failed";
-		} else if (useAiJudge) {
-			// TODO: Implement AI validation
-			const aiValidationPrompt = `
-You are a test validator for a prompt engineering IDE.
-Your task is to validate if the output matches the expected behavior.
-
-Test Case: ${test.name}
-Input: ${test.input}
-Actual Output: ${result.output}
-
-Validation Rules:
-${test.validationRules}
-
-${test.aiValidationPrompt}
-
-Please respond with either "PASS" or "FAIL" followed by a brief explanation.
-Keep the explanation under 100 characters.
-`;
-
-			// Simulate AI validation for now
-			status = Math.random() > 0.5 ? "passed" : "failed";
-			reviewNotes =
-				status === "passed"
-					? "✓ AI Judge: Output correctly identifies the sentiment"
-					: "✗ AI Judge: Output missing key sentiment aspects";
-
-			// Calculate AI validation cost
-			const promptTokens = aiValidationPrompt.length / 4;
-			const outputTokens = 50;
-			additionalCost = ((promptTokens + outputTokens) / 1000) * 0.0015;
-		}
-
-		setGroups((currentGroups) =>
-			currentGroups.map((group) => ({
-				...group,
-				tests: group.tests.map((t) =>
-					t.id === test.id
-						? {
-								...t,
-								actualOutput: result.output,
-								latency: result.latency,
-								tokens: result.tokens,
-								cost: (result.cost || 0) + additionalCost,
-								status,
-								reviewNotes,
-							}
-						: t,
-				),
-			})),
-		);
+		// TODO: Implement actual test execution logic
+		// Mock test execution - you would replace this with actual API calls
+		console.log("Running test:", test.name);
 	};
 
 	const handleValidateOutput = (
@@ -413,30 +425,35 @@ Keep the explanation under 100 characters.
 		isValid: boolean,
 		notes?: string,
 	) => {
-		setGroups((currentGroups) =>
-			currentGroups.map((group) => ({
-				...group,
-				tests: group.tests.map((t) =>
-					t.id === test.id
-						? {
-								...t,
-								status: isValid ? "passed" : "failed",
-								reviewNotes: notes || t.reviewNotes,
-							}
-						: t,
-				),
-			})),
-		);
+		// TODO: Implement output validation mutation
+		console.log("Validating output:", test.name, isValid, notes);
 	};
 
 	const handleApprove = (test: TestCase) => {
 		handleValidateOutput(test, true, "Approved by user");
 		setQaDialogOpen(false);
 	};
+
 	const handleDisapprove = (test: TestCase) => {
 		handleValidateOutput(test, false, "Disapproved by user");
 		setQaDialogOpen(false);
 	};
+
+	if (!promptId) {
+		return (
+			<div className="flex h-full items-center justify-center text-gray-500">
+				Select a prompt to view test cases
+			</div>
+		);
+	}
+
+	if (error) {
+		return (
+			<div className="flex h-full items-center justify-center text-red-500">
+				Error loading test cases: {error.message}
+			</div>
+		);
+	}
 
 	return (
 		<div className="h-full flex flex-col">
@@ -454,6 +471,8 @@ Keep the explanation under 100 characters.
 										setEditingTest(null);
 										setDialogOpen(true);
 									}}
+									disabled={!promptId ||
+										categories.length === 0}
 								>
 									<Plus className="w-4 h-4" />
 								</Button>
@@ -470,8 +489,10 @@ Keep the explanation under 100 characters.
 									className="text-xs hover:bg-gray-100"
 									onClick={() => {
 										setSelectedTests(
-											groups.flatMap((g) =>
-												g.tests.filter((t) => t.status !== "running"),
+											categories.flatMap((c) =>
+												c.tests.filter((t) =>
+													t.status !== "running"
+												)
 											),
 										);
 										setRunDialogOpen(true);
@@ -493,19 +514,21 @@ Keep the explanation under 100 characters.
 									className="text-xs hover:bg-gray-100"
 									onClick={() => {
 										if (!isExpanded) {
-											setExpandedGroups(new Set(groups.map((g) => g.name)));
+											setExpandedCategories(
+												new Set(
+													categories.map((c) => c.id),
+												),
+											);
 											setIsExpanded(true);
 										} else {
-											setExpandedGroups(new Set());
+											setExpandedCategories(new Set());
 											setIsExpanded(false);
 										}
 									}}
 								>
-									{isExpanded ? (
-										<ChevronDown className="w-4 h-4" />
-									) : (
-										<ChevronUp className="w-4 h-4" />
-									)}
+									{isExpanded
+										? <ChevronDown className="w-4 h-4" />
+										: <ChevronUp className="w-4 h-4" />}
 								</Button>
 							</TooltipTrigger>
 							<TooltipContent>
@@ -516,160 +539,291 @@ Keep the explanation under 100 characters.
 				}
 			/>
 			<div className="">
-				<Accordion
-					type="multiple"
-					className="w-full"
-					value={Array.from(expandedGroups)}
-					onValueChange={(values) => setExpandedGroups(new Set(values))}
-				>
-					{groups.map((group) => (
-						<AccordionItem value={group.name} key={group.name}>
-							<AccordionTrigger className="h-10 hover:border-none pl-3">
-								{group.name}
-							</AccordionTrigger>
-							<AccordionContent className="">
-								{group.tests.map((test) => {
-									return (
-										<div
-											key={test.id}
-											className={cn(
-												"border-b group relative cursor-pointer transition bg-white p-2",
-												group.tests.indexOf(test) === group.tests.length - 1
-													? "border-b-0"
-													: "border-b",
-											)}
-											onClick={() => {
-												setQaTest(test);
-												setQaDialogOpen(true);
-											}}
-											onKeyDown={(e) => {
-												if (e.key === "Enter") {
+				{!promptId && (
+					<div className="text-center text-muted-foreground py-8">
+						No prompt selected. Please select a prompt to view test
+						cases.
+					</div>
+				)}
+
+				{isLoading && (
+					<div className="text-center text-muted-foreground py-8">
+						Loading test cases...
+					</div>
+				)}
+
+				{!isLoading && promptId && categories.length === 0 && (
+					<div className="text-center text-muted-foreground py-8">
+						No test cases found. Create test cases to get started.
+					</div>
+				)}
+
+				{!isLoading && promptId && categories.length > 0 && (
+					<Accordion
+						type="multiple"
+						className="w-full"
+						value={Array.from(expandedCategories)}
+						onValueChange={(values) =>
+							setExpandedCategories(new Set(values))}
+					>
+						{categories.map((category) => (
+							<AccordionItem
+								value={category.id}
+								key={category.id}
+							>
+								<AccordionTrigger className="h-10 hover:border-none pl-3">
+									<div className="flex items-center gap-2">
+										<span>{category.name}</span>
+										<Badge
+											variant="outline"
+											className="text-xs "
+										>
+											{category?.tests?.length ?? 0}
+										</Badge>
+									</div>
+								</AccordionTrigger>
+								<AccordionContent className="">
+									{category.tests.map((test) => {
+										return (
+											<div
+												key={test.id}
+												className={cn(
+													"border-b group relative cursor-pointer transition bg-white p-2",
+													category.tests.indexOf(
+															test,
+														) ===
+															category.tests
+																	.length - 1
+														? "border-b-0"
+														: "border-b",
+												)}
+												onClick={() => {
 													setQaTest(test);
 													setQaDialogOpen(true);
-												}
-											}}
-										>
-											{/* Status Icon */}
-											<p className="flex items-center">
-												{getStatusIcon(test.status)} &nbsp;{" "}
-												<span className="text-sm ">{test.name}</span>
-											</p>
-											{test.actualOutput && (
-												<p className="text-xs text-gray-500 w-2/3 break-words whitespace-pre-wrap truncate">
-													Output: {test.actualOutput}
+												}}
+												onKeyDown={(e) => {
+													if (e.key === "Enter") {
+														setQaTest(test);
+														setQaDialogOpen(true);
+													}
+												}}
+											>
+												{/* Status Icon */}
+												<p className="flex items-center">
+													{getStatusIcon(test.status)}
+													{" "}
+													&nbsp;{" "}
+													<span className="text-sm ">
+														{test.name}
+													</span>
 												</p>
-											)}
-											<div className="flex gap-2 opacity-50">
-												<p className="text-[8px] text-gray-500">
-													Cost: ${test.cost}
-												</p>
-												<p className="text-[8px] text-gray-500">
-													Latency: {test.latency}ms
-												</p>
+												{test.actualOutput && (
+													<p className="text-xs text-gray-500 w-2/3 break-words whitespace-pre-wrap truncate">
+														Output:{" "}
+														{test.actualOutput}
+													</p>
+												)}
+												<div className="flex gap-2 opacity-50">
+													<p className="text-[8px] text-gray-500">
+														Cost: ${test.cost}
+													</p>
+													<p className="text-[8px] text-gray-500">
+														Latency:{" "}
+														{test.latency}ms
+													</p>
+												</div>
+												{/* Dropdown menu for actions */}
+												<div className="absolute right-10 top-1/2 -translate-y-1/2 z-10">
+													<DropdownMenu>
+														<DropdownMenuTrigger
+															asChild
+														>
+															<Button
+																size="icon"
+																variant="ghost"
+																onClick={(e) =>
+																	e.stopPropagation()}
+																title="Actions"
+															>
+																<MoreVertical className="w-4 h-4" />
+															</Button>
+														</DropdownMenuTrigger>
+														<DropdownMenuContent align="end">
+															<DropdownMenuItem
+																onClick={(
+																	e,
+																) => {
+																	e.stopPropagation();
+																	handleRunTest(
+																		test,
+																	);
+																}}
+															>
+																Re-run
+															</DropdownMenuItem>
+															<DropdownMenuItem
+																onClick={(
+																	e,
+																) => {
+																	e.stopPropagation();
+																	setEditingTest(
+																		{
+																			test,
+																			categoryName:
+																				category
+																					.name,
+																		},
+																	);
+																	setDialogOpen(
+																		true,
+																	);
+																}}
+															>
+																Edit
+															</DropdownMenuItem>
+															<DropdownMenuItem
+																onClick={(
+																	e,
+																) => {
+																	e.stopPropagation();
+																	handleDuplicateTest(
+																		test,
+																		category
+																			.name,
+																	);
+																}}
+															>
+																Duplicate
+															</DropdownMenuItem>
+															<DropdownMenuSeparator />
+															<DropdownMenuItem
+																variant="destructive"
+																onClick={(
+																	e,
+																) => {
+																	e.stopPropagation();
+																	e.preventDefault();
+																}}
+															>
+																<AlertDialog>
+																	<AlertDialogTrigger
+																		asChild
+																	>
+																		<button
+																			className="block"
+																			type="button"
+																			onClick={(
+																				e,
+																			) => e
+																				.stopPropagation()}
+																		>
+																			Delete
+																		</button>
+																	</AlertDialogTrigger>
+																	<AlertDialogContent>
+																		<AlertDialogHeader>
+																			<AlertDialogTitle>
+																				Are
+																				you
+																				absolutely
+																				sure?
+																			</AlertDialogTitle>
+																			<AlertDialogDescription>
+																				This
+																				action
+																				cannot
+																				be
+																				undone.
+																				This
+																				will
+																				permanently
+																				delete
+																				this
+																				test
+																				case
+																				and
+																				remove
+																				its
+																				data.
+																			</AlertDialogDescription>
+																		</AlertDialogHeader>
+																		<AlertDialogFooter>
+																			<AlertDialogCancel>
+																				Cancel
+																			</AlertDialogCancel>
+																			<AlertDialogAction
+																				onClick={() => {
+																					handleDeleteTest(
+																						test.id,
+																					);
+																				}}
+																			>
+																				Delete
+																			</AlertDialogAction>
+																		</AlertDialogFooter>
+																	</AlertDialogContent>
+																</AlertDialog>
+															</DropdownMenuItem>
+														</DropdownMenuContent>
+													</DropdownMenu>
+												</div>
+												{/* Approve/Disapprove always visible at bottom right, small */}
+												<div className=" flex gap-1">
+													<Tooltip>
+														<TooltipTrigger asChild>
+															<Button
+																size="xs"
+																variant="ghost"
+																onClick={(
+																	e,
+																) => {
+																	e.stopPropagation();
+																	handleApprove(
+																		test,
+																	);
+																}}
+																title="Approve"
+																className="scale-75"
+															>
+																<ThumbsUp className="w-3 h-3 text-green-500" />
+															</Button>
+														</TooltipTrigger>
+														<TooltipContent>
+															<p>Approve</p>
+														</TooltipContent>
+													</Tooltip>
+													<Tooltip>
+														<TooltipTrigger asChild>
+															<Button
+																size="xs"
+																variant="ghost"
+																onClick={(
+																	e,
+																) => {
+																	e.stopPropagation();
+																	handleDisapprove(
+																		test,
+																	);
+																}}
+																title="Disapprove"
+																className="scale-75"
+															>
+																<ThumbsDown className="w-3 h-3 text-red-500" />
+															</Button>
+														</TooltipTrigger>
+														<TooltipContent>
+															<p>Disapprove</p>
+														</TooltipContent>
+													</Tooltip>
+												</div>
 											</div>
-											{/* Dropdown menu for actions */}
-											<div className="absolute right-10 top-1/2 -translate-y-1/2 z-10">
-												<DropdownMenu>
-													<DropdownMenuTrigger asChild>
-														<Button
-															size="icon"
-															variant="ghost"
-															onClick={(e) => e.stopPropagation()}
-															title="Actions"
-														>
-															<MoreVertical className="w-4 h-4" />
-														</Button>
-													</DropdownMenuTrigger>
-													<DropdownMenuContent align="end">
-														<DropdownMenuItem
-															onClick={(e) => {
-																e.stopPropagation();
-																handleRunTest(test);
-															}}
-														>
-															Re-run
-														</DropdownMenuItem>
-														<DropdownMenuItem
-															onClick={(e) => {
-																e.stopPropagation();
-																setEditingTest({
-																	test,
-																	groupName: group.name,
-																});
-																setDialogOpen(true);
-															}}
-														>
-															Edit
-														</DropdownMenuItem>
-														<DropdownMenuItem
-															onClick={(e) => {
-																e.stopPropagation();
-																handleDuplicateTest(test, group.name);
-															}}
-														>
-															Duplicate
-														</DropdownMenuItem>
-														<DropdownMenuSeparator />
-														<DropdownMenuItem
-															onClick={(e) => {
-																e.stopPropagation();
-																handleDeleteTest(test.id, group.name);
-															}}
-															variant="destructive"
-														>
-															Delete
-														</DropdownMenuItem>
-													</DropdownMenuContent>
-												</DropdownMenu>
-											</div>
-											{/* Approve/Disapprove always visible at bottom right, small */}
-											<div className=" flex gap-1">
-												<Tooltip>
-													<TooltipTrigger asChild>
-														<Button
-															size="xs"
-															variant="ghost"
-															onClick={(e) => {
-																e.stopPropagation();
-																handleApprove(test);
-															}}
-															title="Approve"
-															className="scale-75"
-														>
-															<ThumbsUp className="w-3 h-3 text-green-500" />
-														</Button>
-													</TooltipTrigger>
-													<TooltipContent>
-														<p>Approve</p>
-													</TooltipContent>
-												</Tooltip>
-												<Tooltip>
-													<TooltipTrigger asChild>
-														<Button
-															size="xs"
-															variant="ghost"
-															onClick={(e) => {
-																e.stopPropagation();
-																handleDisapprove(test);
-															}}
-															title="Disapprove"
-															className="scale-75"
-														>
-															<ThumbsDown className="w-3 h-3 text-red-500" />
-														</Button>
-													</TooltipTrigger>
-													<TooltipContent>
-														<p>Disapprove</p>
-													</TooltipContent>
-												</Tooltip>
-											</div>
-										</div>
-									);
-								})}
-							</AccordionContent>
-						</AccordionItem>
-					))}
-				</Accordion>
+										);
+									})}
+								</AccordionContent>
+							</AccordionItem>
+						))}
+					</Accordion>
+				)}
 			</div>
 
 			<Dialog open={runDialogOpen} onOpenChange={setRunDialogOpen}>
@@ -680,13 +834,18 @@ Keep the explanation under 100 characters.
 					<div className="py-4">
 						<div className="flex items-center gap-4 mb-4">
 							<div className="flex-1">
-								<h3 className="text-sm font-medium mb-1">Selected Tests</h3>
+								<h3 className="text-sm font-medium mb-1">
+									Selected Tests
+								</h3>
 								<p className="text-sm text-gray-500">
 									{selectedTests.length} test
-									{selectedTests.length !== 1 ? "s" : ""} selected
+									{selectedTests.length !== 1 ? "s" : ""}{" "}
+									selected
 								</p>
 							</div>
-							{selectedTests.some((t) => t.validationMethod !== "exact") && (
+							{selectedTests.some((t) =>
+								t.validationMethod !== "exact"
+							) && (
 								<div className="flex items-center gap-2">
 									<Switch
 										id="aiJudge"
@@ -694,7 +853,10 @@ Keep the explanation under 100 characters.
 										onCheckedChange={setUseAiJudge}
 									/>
 									<div className="flex items-center gap-1">
-										<Label htmlFor="aiJudge" className="text-sm">
+										<Label
+											htmlFor="aiJudge"
+											className="text-sm"
+										>
 											Use AI Judge
 										</Label>
 										<TooltipProvider>
@@ -704,8 +866,9 @@ Keep the explanation under 100 characters.
 												</TooltipTrigger>
 												<TooltipContent>
 													<p>
-														AI will automatically validate test outputs using
-														GPT-3.5-turbo
+														AI will automatically
+														validate test outputs
+														using GPT-3.5-turbo
 													</p>
 												</TooltipContent>
 											</Tooltip>
@@ -718,13 +881,17 @@ Keep the explanation under 100 characters.
 						<div className="space-y-3 mb-4">
 							<div className="flex justify-between text-sm">
 								<span>Execution Cost</span>
-								<span>${calculateCosts().totalExecutionCost.toFixed(4)}</span>
+								<span>
+									${calculateCosts().totalExecutionCost
+										.toFixed(4)}
+								</span>
 							</div>
 							{useAiJudge && (
 								<div className="flex justify-between text-sm">
 									<span>AI Validation Cost</span>
 									<span>
-										${calculateCosts().totalAiValidationCost.toFixed(4)}
+										${calculateCosts().totalAiValidationCost
+											.toFixed(4)}
 									</span>
 								</div>
 							)}
@@ -741,7 +908,10 @@ Keep the explanation under 100 characters.
 						</div>
 					</div>
 					<DialogFooter>
-						<Button variant="outline" onClick={() => setRunDialogOpen(false)}>
+						<Button
+							variant="outline"
+							onClick={() => setRunDialogOpen(false)}
+						>
 							Cancel
 						</Button>
 						<Button onClick={handleRunSelectedTests}>
@@ -755,71 +925,99 @@ Keep the explanation under 100 characters.
 			<TestCaseDialog
 				open={dialogOpen}
 				onOpenChange={setDialogOpen}
-				onSave={
-					handleSaveTest as (testCase: {
-						name: string;
-						type: "basic" | "edge" | "security";
-						input: string;
-						expectedOutput?: string;
-						groupName: string;
-						validationMethod: "manual" | "exact" | "ai";
-						validationRules?: string;
-						aiValidationPrompt?: string;
-					}) => void
-				}
-				groups={groups}
-				initialData={
-					editingTest
-						? {
-								name: editingTest.test.name,
-								type: editingTest.test.type,
-								input: editingTest.test.input,
-								expectedOutput: editingTest.test.expectedOutput,
-								groupName: editingTest.groupName,
-								validationMethod: editingTest.test.validationMethod,
-								validationRules: editingTest.test.validationRules,
-								aiValidationPrompt: editingTest.test.aiValidationPrompt,
-							}
-						: undefined
-				}
+				onSave={handleSaveTest}
+				categories={categories}
+				initialData={editingTest
+					? {
+						name: editingTest.test.name,
+						input: editingTest.test.input,
+						expectedOutput: editingTest.test.expectedOutput,
+						categoryName: editingTest.categoryName,
+						validationMethod: editingTest.test.validationMethod,
+						validationRules: editingTest.test.validationRules,
+						aiValidationPrompt: editingTest.test.aiValidationPrompt,
+						useDatabase: editingTest.test.useDatabase,
+						databaseId: editingTest.test.databaseId,
+						embeddingModel: editingTest.test.embeddingModel,
+						numResults: editingTest.test.numResults,
+						similarityThreshold:
+							editingTest.test.similarityThreshold,
+					}
+					: undefined}
 			/>
 
 			{/* Q&A Dialog */}
 			<Dialog open={qaDialogOpen} onOpenChange={setQaDialogOpen}>
-				<DialogContent className="max-w-2xl">
+				<DialogContent className="min-w-[80vw] h-[75vh] max-h-[75vh] flex flex-col">
 					<DialogHeader>
-						<DialogTitle>Test Case Details</DialogTitle>
+						<div className="flex items-center justify-between">
+							<DialogTitle>Test Case Details</DialogTitle>
+							{qaTest && (
+								<div className="flex items-center gap-2">
+									<Badge variant={qaTest.status === "passed" ? "secondary" : qaTest.status === "failed" ? "destructive" : "default"}>{qaTest.status}</Badge>
+									<Button size="sm" variant="secondary" onClick={() => handleRunTest(qaTest)}><Play className="w-4 h-4 mr-1" /> Run Again</Button>
+								</div>
+							)}
+						</div>
 					</DialogHeader>
 					{qaTest && (
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
-							<div className="space-y-2">
-								<p className="font-semibold text-sm text-gray-700">Input</p>
-								<pre className="bg-gray-100 rounded p-2 text-xs whitespace-pre-wrap">
-									{qaTest.input}
-								</pre>
+						<>
+							{/* Metadata Section */}
+							<div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+								<div className="space-y-1">
+									<div><span className="font-semibold">Validation:</span> {qaTest.validationMethod}</div>
+									<div><span className="font-semibold">Model:</span> {qaTest.embeddingModel}</div>
+									{qaTest.useDatabase && qaTest.databaseId && (
+										<div><span className="font-semibold">Database:</span> {qaTest.databaseId} <span className="text-muted-foreground">({qaTest.embeddingModel})</span></div>
+									)}
+									<div>
+										<span className="font-semibold">Executed:</span>{" "}
+										{qaTest.executedAt
+											? (typeof qaTest.executedAt === "string" || typeof qaTest.executedAt === "number")
+												? new Date(qaTest.executedAt).toLocaleString()
+												: qaTest.executedAt instanceof Date
+													? qaTest.executedAt.toLocaleString()
+													: "-"
+											: "-"}
+									</div>
+									{/* Expected Output */}
+									<div>
+										<span className="font-semibold">Expected Output:</span>
+										<div className="bg-gray-50 rounded p-2 mt-1 whitespace-pre-line">{qaTest.expectedOutput ?? "N/A"}</div>
+									</div>
+								</div>
+								<div className="space-y-1">
+									<div><span className="font-semibold">Latency:</span> {qaTest.latency} ms</div>
+									<div><span className="font-semibold">Tokens:</span> {qaTest.tokens}</div>
+									<div><span className="font-semibold">Cost:</span> ${qaTest.cost?.toFixed(4)}</div>
+									<div>
+										<span className="font-semibold">AI Feedback:</span>
+										<div className="bg-gray-50 rounded p-2 mt-1 whitespace-pre-line">{qaTest.aiFeedback}</div>
+									</div>
+								</div>
 							</div>
-							<div className="space-y-2">
-								<p className="font-semibold text-sm text-gray-700">Response</p>
-								<pre className="bg-gray-100 rounded p-2 text-xs whitespace-pre-wrap break-words max-h-40 overflow-auto">
-									{qaTest.actualOutput || "-"}
-								</pre>
+							{/* Input/Output Grid */}
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2 flex-1 overflow-y-auto">
+								<div className="space-y-2 h-full">
+									<p className="font-semibold text-sm text-gray-700">Input</p>
+									<pre className="bg-gray-100 rounded p-2 text-xs font-mono whitespace-pre-wrap h-64 md:h-full max-h-full overflow-auto">
+										{qaTest.input}
+									</pre>
+								</div>
+								<div className="space-y-2 h-full">
+									<p className="font-semibold text-sm text-gray-700">Response</p>
+									<pre className="bg-gray-100 rounded p-2 text-xs font-mono whitespace-pre-wrap break-words h-64 md:h-full max-h-full overflow-auto">
+										{qaTest.actualOutput || "-"}
+									</pre>
+								</div>
 							</div>
-						</div>
+						</>
 					)}
 					<DialogFooter className="mt-4 flex gap-2">
-						{qaTest && (
-							<>
-								<Button variant="outline" onClick={() => handleApprove(qaTest)}>
-									<ThumbsUp className="w-4 h-4 mr-1 text-green-500" /> Approve
-								</Button>
-								<Button
-									variant="destructive"
-									onClick={() => handleDisapprove(qaTest)}
-								>
-									<ThumbsDown className="w-4 h-4 mr-1 " /> Disapprove
-								</Button>
-							</>
-						)}
+						{qaTest && <>
+							<Button variant="outline" onClick={() => handleApprove(qaTest)}><ThumbsUp className="w-4 h-4 mr-1 text-green-500" /> Approve</Button>
+							<Button variant="destructive" onClick={() => handleDisapprove(qaTest)}><ThumbsDown className="w-4 h-4 mr-1" /> Disapprove</Button>
+						</>}
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>

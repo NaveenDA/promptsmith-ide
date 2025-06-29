@@ -36,6 +36,20 @@
 			"when": 1751133153772,
 			"tag": "0004_next_slapstick",
 			"breakpoints": true
+		},
+		{
+			"idx": 5,
+			"version": "7",
+			"when": 1751139668605,
+			"tag": "0005_chilly_whizzer",
+			"breakpoints": true
+		},
+		{
+			"idx": 6,
+			"version": "7",
+			"when": 1751146176994,
+			"tag": "0006_wise_killraven",
+			"breakpoints": true
 		}
 	]
 }
