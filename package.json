@@ -39,7 +39,7 @@
 		"date-fns": "^4.1.0",
 		"dotenv": "^16.6.0",
 		"drizzle-orm": "^0.44.2",
-		"framer-motion": "^12.19.1",
+		"framer-motion": "^12.23.24",
 		"fuse.js": "^7.1.0",
 		"gray-matter": "^4.0.3",
 		"jotai": "^2.12.5",
